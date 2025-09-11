@@ -1,55 +1,55 @@
-# Gestor de Arreglos en Conferencias
+# ArregloConferencias
 
-Aplicación web para la gestión de arreglos en conferencias de los testigos de Jehová. Esta herramienta permite administrar salones del reino, oradores, bosquejos, asignaciones y generar informes.
+Aplicación web para gestionar arreglos en conferencias de congregaciones.
 
 ## Características
 
-- Gestión de salones del reino
-- Administración de oradores
+- Gestión de congregaciones
+- Control de oradores
 - Biblioteca de bosquejos
 - Calendario de arreglos
-- Asignación de oradores a eventos
+- Asignación de oradores
 - Generación de informes
-- Panel de configuración personalizable
+- Interfaz intuitiva con modo claro/oscuro
 
-## Requisitos
-
-- Node.js (v14 o superior)
-- NPM (v6 o superior)
-
-## Instalación
+## Cómo usar
 
 1. Clona el repositorio:
    ```bash
-   git clone [URL_DEL_REPOSITORIO]
-   cd gestor-arreglos-conferencias
+   git clone https://github.com/tu-usuario/ArregloConferencias.git
+   cd ArregloConferencias
    ```
 
-2. Instala las dependencias:
-   ```bash
-   npm install
-   ```
+2. Abre `index.html` en tu navegador
 
-3. Inicia el servidor de desarrollo:
-   ```bash
-   npm run dev
-   ```
+## Tecnologías utilizadas
 
-4. Abre tu navegador y visita:
-   ```
-   http://localhost:3000
-   ```
+- HTML5, CSS3, JavaScript puro
+- Diseño responsivo
+- Modo claro/oscuro automático
+- Almacenamiento local para preferencias
 
-## Estructura del Proyecto
+## Estructura del proyecto
 
 ```
-gestor-arreglos-conferencias/
-├── assets/               # Archivos estáticos (imágenes, fuentes, etc.)
-├── pages/                # Páginas HTML
-│   ├── index.html        # Página de inicio/dashboard
-│   ├── congregaciones.html # Gestión de congregaciones
-│   ├── oradores.html     # Gestión de oradores
-│   ├── bosquejos.html    # Biblioteca de bosquejos
+ArregloConferencias/
+├── assets/          # Recursos estáticos
+├── pages/           # Páginas de la aplicación
+├── scripts/         # Código JavaScript
+│   ├── app.js       # Lógica principal
+│   ├── theme.js     # Gestión de temas
+│   └── sidebar.js   # Navegación lateral
+├── index.html       # Página principal
+└── style.css        # Estilos principales
+```
+
+## Licencia
+
+MIT License
+
+---
+
+Desarrollado para el servicio de las congregaciones.
 │   ├── arreglos.html     # Calendario de arreglos
 │   ├── asignaciones.html # Asignación de oradores
 │   ├── informes.html     # Generación de informes
