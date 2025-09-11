@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bosquejos - Gestor de Arreglos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body>
+    <div class="dashboard">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-left">
+          <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-bars"></i>
+          </button>
+          <h1>Bosquejos</h1>
+        </div>
+        <div class="header-right">
+          <div class="user-info">
+            <span class="user-name">Usuario</span>
+            <span class="user-role">Administrador</span>
+          </div>
+          <div class="header-actions">
+            <button class="btn-icon" title="Notificaciones">
+              <i class="fas fa-bell"></i>
+            </button>
+            <button id="themeToggle" class="btn-icon" title="Cambiar tema">
+              <i class="fas fa-moon"></i>
+            </button>
+            <button class="btn-icon" title="Configuración">
+              <i class="fas fa-cog"></i>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Sidebar -->
+      <aside class="sidebar" id="sidebar">
+        <nav class="sidebar-nav">
+          <ul>
+
+<li class="nav-item">
+  <a href="../index.html" class="nav-link" id="nav-home">
+    <i class="fas fa-home"></i>
+    <span>Inicio</span>
+  </a>
+</li>
+<li class="nav-item">
+  <a href="congregaciones.html" class="nav-link" id="nav-congregaciones">
+    <i class="fas fa-users"></i>
+    <span>Congregaciones</span>
+  </a>
+</li>
+<li class="nav-item">
+  <a href="oradores.html" class="nav-link" id="nav-oradores">
+    <i class="fas fa-user-tie"></i>
+    <span>Oradores</span>
+  </a>
+</li>
+<li class="nav-item">
+  <a href="bosquejos.html" class="nav-link" id="nav-bosquejos">
+    <i class="fas fa-book"></i>
+    <span>Bosquejos</span>
+  </a>
+</li>
+<li class="nav-item">
+  <a href="arreglos.html" class="nav-link" id="nav-arreglos">
+    <i class="fas fa-calendar-alt"></i>
+    <span>Arreglos</span>
+  </a>
+</li>
+<li class="nav-item">
+  <a href="asignaciones.html" class="nav-link" id="nav-asignaciones">
+    <i class="fas fa-tasks"></i>
+    <span>Asignaciones</span>
+  </a>
+</li>
+<li class="nav-item">
+  <a href="informes.html" class="nav-link" id="nav-informes">
+    <i class="fas fa-chart-bar"></i>
+    <span>Informes</span>
+  </a>
+</li>
+<li class="nav-item">
+  <a href="ajustes.html" class="nav-link" id="nav-ajustes">
+    <i class="fas fa-cog"></i>
+    <span>Ajustes</span>
+  </a>
+</li>
+          </ul>
+        </nav>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content" id="mainContent">
+        <div class="page-header">
+          <h2>Bosquejos</h2>
+          <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item"><a href="../index.html">Inicio</a></li>
+              <li class="breadcrumb-item active">Bosquejos</li>
+            </ol>
+          </nav>
+        </div>
+
+        <div class="content-section">
+          <div class="section-header">
+            <h3>Lista de Bosquejos</h3>
+            <button class="btn btn-primary">
+              <i class="fas fa-plus"></i> Nuevo Bosquejo
+            </button>
+          </div>
+          
+          <div class="search-bar">
+            <div class="search-input">
+              <i class="fas fa-search"></i>
+              <input type="text" placeholder="Buscar bosquejos...">
+            </div>
+            <div class="filters">
+              <select class="form-select">
+                <option value="">Todos los temas</option>
+                <option value="bautismo">Bautismo</option>
+                <option value="oracion">Oración</option>
+                <option value="estudio">Estudio Bíblico</option>
+              </select>
+              <select class="form-select">
+                <option value="">Todas las categorías</option>
+                <option value="estudio">Estudio</option>
+                <option value="discurso">Discurso</option>
+                <option value="reunion">Reunión</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Título</th>
+                  <th>Tema</th>
+                  <th>Categoría</th>
+                  <th>Duración</th>
+                  <th>Fecha de creación</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>El poder de la oración</td>
+                  <td>Oración</td>
+                  <td>Discurso</td>
+                  <td>30 min</td>
+                  <td>01/09/2025</td>
+                  <td>
+                    <button class="btn-icon" title="Ver">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn-icon" title="Editar">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-icon" title="Eliminar">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+                <!-- More rows -->
+              </tbody>
+            </table>
+          </div>
+          
+          <div class="pagination">
+            <button class="btn btn-sm btn-outline" disabled>
+              <i class="fas fa-chevron-left"></i> Anterior
+            </button>
+            <span>Página 1 de 5</span>
+            <button class="btn btn-sm btn-outline">
+              Siguiente <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+      </main>
+
+      <footer class="footer">
+        <div class="footer-content">
+          <p>© 2025 – Gestor de Arreglos en Conferencias</p>
+          <p>Versión 1.0.0</p>
+        </div>
+      </footer>
+    </div>
+
+    <script type="module" src="../scripts/app.js"></script>
+      <script src="../scripts/theme.js"></script>
+  </body>
+</html>

@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ajustes - Gestor de Arreglos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body>
+    <div class="dashboard">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-left">
+          <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-bars"></i>
+          </button>
+          <h1>Configuración</h1>
+        </div>
+        <div class="header-right">
+          <div class="user-info">
+            <span class="user-name">Usuario</span>
+            <span class="user-role">Administrador</span>
+          </div>
+          <div class="header-actions">
+            <button class="btn-icon" title="Notificaciones">
+              <i class="fas fa-bell"></i>
+            </button>
+            <button id="themeToggle" class="btn-icon" title="Cambiar tema">
+              <i class="fas fa-moon"></i>
+            </button>
+            <button class="btn-icon" title="Configuración">
+              <i class="fas fa-cog"></i>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Sidebar -->
+      <aside class="sidebar" id="sidebar">
+        <nav class="sidebar-nav">
+          <ul>
+
+<li class="nav-item">
+  <a href="../index.html" class="nav-link" id="nav-home">
+    <i class="fas fa-home"></i>
+    <span>Inicio</span>
+  </a>
+</li>
+<li class="nav-item">
+  <a href="congregaciones.html" class="nav-link" id="nav-congregaciones">
+    <i class="fas fa-users"></i>
+    <span>Congregaciones</span>
+  </a>
+</li>
+<li class="nav-item">
+  <a href="oradores.html" class="nav-link" id="nav-oradores">
+    <i class="fas fa-user-tie"></i>
+    <span>Oradores</span>
+  </a>
+</li>
+<li class="nav-item">
+  <a href="bosquejos.html" class="nav-link" id="nav-bosquejos">
+    <i class="fas fa-book"></i>
+    <span>Bosquejos</span>
+  </a>
+</li>
+<li class="nav-item">
+  <a href="arreglos.html" class="nav-link" id="nav-arreglos">
+    <i class="fas fa-calendar-alt"></i>
+    <span>Arreglos</span>
+  </a>
+</li>
+<li class="nav-item">
+  <a href="asignaciones.html" class="nav-link" id="nav-asignaciones">
+    <i class="fas fa-tasks"></i>
+    <span>Asignaciones</span>
+  </a>
+</li>
+<li class="nav-item">
+  <a href="informes.html" class="nav-link" id="nav-informes">
+    <i class="fas fa-chart-bar"></i>
+    <span>Informes</span>
+  </a>
+</li>
+<li class="nav-item">
+  <a href="ajustes.html" class="nav-link" id="nav-ajustes">
+    <i class="fas fa-cog"></i>
+    <span>Ajustes</span>
+  </a>
+</li>
+          </ul>
+        </nav>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content" id="mainContent">
+        <div class="page-header">
+          <h2>Configuración del Sistema</h2>
+          <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item"><a href="../index.html">Inicio</a></li>
+              <li class="breadcrumb-item active">Ajustes</li>
+            </ol>
+          </nav>
+        </div>
+
+        <div class="settings-container">
+          <div class="settings-sidebar">
+            <div class="settings-menu">
+              <button class="settings-menu-item active" data-target="general">
+                <i class="fas fa-cog"></i> General
+              </button>
+              <button class="settings-menu-item" data-target="usuarios">
+                <i class="fas fa-users"></i> Usuarios
+              </button>
+              <button class="settings-menu-item" data-target="notificaciones">
+                <i class="fas fa-bell"></i> Notificaciones
+              </button>
+              <button class="settings-menu-item" data-target="seguridad">
+                <i class="fas fa-shield-alt"></i> Seguridad
+              </button>
+              <button class="settings-menu-item" data-target="integraciones">
+                <i class="fas fa-plug"></i> Integraciones
+              </button>
+              <button class="settings-menu-item" data-target="respaldo">
+                <i class="fas fa-database"></i> Respaldo
+              </button>
+            </div>
+            <div class="system-info">
+              <h4>Información del Sistema</h4>
+              <p><strong>Versión:</strong> 1.0.0</p>
+              <p><strong>Última actualización:</strong> 11/09/2025</p>
+              <p><strong>Base de datos:</strong> SQLite</p>
+              <button class="btn btn-outline btn-sm mt-3">
+                <i class="fas fa-sync-alt"></i> Buscar actualizaciones
+              </button>
+            </div>
+          </div>
+
+          <div class="settings-content">
+            <!-- General Settings -->
+            <div class="settings-section active" id="general-settings">
+              <h3>Configuración General</h3>
+              <div class="settings-form">
+                <div class="form-group">
+                  <label>Nombre de la Organización</label>
+                  <input type="text" class="form-control" value="Congregación Central">
+                </div>
+                
+                <div class="form-group">
+                  <label>Idioma</label>
+                  <select class="form-control">
+                    <option>Español</option>
+                    <option>English</option>
+                    <option>Português</option>
+                    <option>Français</option>
+                  </select>
+                </div>
+                
+                <div class="form-group">
+                  <label>Zona Horaria</label>
+                  <select class="form-control">
+                    <option>America/Mexico_City (UTC-6)</option>
+                    <option>America/New_York (UTC-5)</option>
+                    <option>America/Chicago (UTC-6)</option>
+                    <option>America/Denver (UTC-7)</option>
+                    <option>America/Los_Angeles (UTC-8)</option>
+                  </select>
+                </div>
+                
+                <div class="form-group">
+                  <label>Formato de Fecha</label>
+                  <div class="radio-group">
+                    <label class="radio-label">
+                      <input type="radio" name="dateFormat" checked>
+                      <span>DD/MM/YYYY</span>
+                    </label>
+                    <label class="radio-label">
+                      <input type="radio" name="dateFormat">
+                      <span>MM/DD/YYYY</span>
+                    </label>
+                    <label class="radio-label">
+                      <input type="radio" name="dateFormat">
+                      <span>YYYY-MM-DD</span>
+                    </label>
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label>Tema</label>
+                  <div class="theme-options">
+                    <div class="theme-option">
+                      <input type="radio" name="theme" id="light-theme" checked>
+                      <label for="light-theme" class="theme-label light">
+                        <i class="fas fa-sun"></i>
+                        <span>Claro</span>
+                      </label>
+                    </div>
+                    <div class="theme-option">
+                      <input type="radio" name="theme" id="dark-theme">
+                      <label for="dark-theme" class="theme-label dark">
+                        <i class="fas fa-moon"></i>
+                        <span>Oscuro</span>
+                      </label>
+                    </div>
+                    <div class="theme-option">
+                      <input type="radio" name="theme" id="system-theme">
+                      <label for="system-theme" class="theme-label system">
+                        <i class="fas fa-desktop"></i>
+                        <span>Sistema</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="form-actions">
+                  <button class="btn btn-primary">
+                    <i class="fas fa-save"></i> Guardar Cambios
+                  </button>
+                  <button class="btn btn-outline">
+                    <i class="fas fa-undo"></i> Restablecer
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Other settings sections (hidden by default) -->
+            <div class="settings-section" id="usuarios-settings">
+              <h3>Gestión de Usuarios</h3>
+              <p>Configuración de usuarios y permisos.</p>
+            </div>
+            
+            <div class="settings-section" id="notificaciones-settings">
+              <h3>Configuración de Notificaciones</h3>
+              <p>Preferencias de notificaciones.</p>
+            </div>
+            
+            <div class="settings-section" id="seguridad-settings">
+              <h3>Configuración de Seguridad</h3>
+              <p>Opciones de seguridad y privacidad.</p>
+            </div>
+            
+            <div class="settings-section" id="integraciones-settings">
+              <h3>Integraciones</h3>
+              <p>Configuración de integraciones con otros servicios.</p>
+            </div>
+            
+            <div class="settings-section" id="respaldo-settings">
+              <h3>Respaldo y Restauración</h3>
+              <p>Opciones de respaldo y restauración de datos.</p>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <footer class="footer">
+        <div class="footer-content">
+          <p>© 2025 – Gestor de Arreglos en Conferencias</p>
+          <p>Versión 1.0.0</p>
+        </div>
+      </footer>
+    </div>
+
+    <script type="module" src="../scripts/app.js"></script>
+    <script>
+      // Settings tabs functionality
+      document.querySelectorAll('.settings-menu-item').forEach(item => {
+        item.addEventListener('click', () => {
+          // Remove active class from all items and sections
+          document.querySelectorAll('.settings-menu-item').forEach(i => i.classList.remove('active'));
+          document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+          
+          // Add active class to clicked item and corresponding section
+          item.classList.add('active');
+          const targetId = `${item.dataset.target}-settings`;
+          document.getElementById(targetId).classList.add('active');
+        });
+      });
+      
+      // Theme switcher
+      document.querySelectorAll('input[name="theme"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          if (e.target.checked) {
+            const theme = e.target.id.replace('-theme', '');
+            document.documentElement.setAttribute('data-theme', theme);
+            // Save theme preference (you would typically save this to localStorage)
+            localStorage.setItem('theme', theme);
+          }
+        });
+      });
+      
+      // Load saved theme preference
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      document.getElementById(`${savedTheme}-theme`).checked = true;
+    </script>
+      <script src="../scripts/theme.js"></script>
+  </body>
+</html>
