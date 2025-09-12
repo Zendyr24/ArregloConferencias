@@ -8,6 +8,7 @@ export function initializeSidebar() {
 
   // Toggle sidebar on mobile
   const toggleSidebar = () => {
+    console.log("muestra")
     sidebar.classList.toggle('show');
     overlay.classList.toggle('show');
     document.body.style.overflow = sidebar.classList.contains('show') ? 'hidden' : '';

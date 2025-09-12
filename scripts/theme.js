@@ -25,24 +25,11 @@ function applyThemeWithoutFlash() {
   }, 10);
 }
 
-// Aplicar el tema inmediatamente
-document.addEventListener('DOMContentLoaded', applyThemeWithoutFlash, false);
-
-// Asegurar que el tema se aplique incluso si el DOM ya está cargado
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', applyThemeWithoutFlash);
-} else {
-  applyThemeWithoutFlash();
-}
-
 // Theme management
 class ThemeManager {
   constructor() {
-    // Inicializar cuando el DOM esté listo
-    document.addEventListener('DOMContentLoaded', () => {
-      this.themeToggle = document.getElementById('themeToggle');
-      this.init();
-    });
+    this.themeToggle = document.getElementById('themeToggle');
+    this.init();
   }
 
   // Initialize theme
@@ -87,18 +74,24 @@ class ThemeManager {
     
     const icon = this.themeToggle.querySelector('i');
     if (theme === 'dark') {
-      icon.classList.remove('fa-moon');
-      icon.classList.add('fa-sun');
+      icon?.classList?.remove('fa-moon');
+      icon?.classList?.add('fa-sun');
       this.themeToggle.setAttribute('title', 'Cambiar a modo claro');
     } else {
-      icon.classList.remove('fa-sun');
-      icon.classList.add('fa-moon');
+      icon?.classList?.remove('fa-sun');
+      icon?.classList?.add('fa-moon');
       this.themeToggle.setAttribute('title', 'Cambiar a modo oscuro');
     }
   }
 }
 
+// Aplicar el tema inmediatamente
+applyThemeWithoutFlash();
+
 // Initialize theme manager when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
   new ThemeManager();
 });
+
+// Exportar solo lo necesario
+export { ThemeManager };

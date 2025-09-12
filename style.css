@@ -284,39 +284,29 @@ button, .btn {
   }
   
   .sidebar {
-    position: fixed;
-    top: 0;
-    left: -100%;
-    width: 280px;
-    height: 100vh;
-    z-index: 1000;
-    transition: var(--transition);
+    transform: translateX(-100%);
+    z-index: 1100;
   }
   
-  .sidebar.active {
-    left: 0;
-  }
-  
-  .overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 999;
-    opacity: 0;
-    visibility: hidden;
-    transition: var(--transition);
-  }
-  
-  .overlay.active {
-    opacity: 1;
-    visibility: visible;
+  .sidebar.show {
+    transform: translateX(0);
+    box-shadow: 2px 0 15px rgba(0, 0, 0, 0.2);
   }
   
   .main-content {
-    padding: var(--spacing-md);
+    position: relative;
+    z-index: 1;
+    margin-left: 0;
+  }
+  
+  .dashboard-cards {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+  
+  .sidebar-toggle {
+    display: block;
+    position: relative;
+    z-index: 1200;
   }
 }
 
@@ -914,9 +904,12 @@ table.data-table.hover tbody tr:hover {
   position: fixed;
   width: var(--sidebar-width);
   overflow-y: auto;
-  transition: var(--transition);
-  z-index: 1000;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  z-index: 1100;
   padding: 1rem 0;
+  left: 0;
+  top: 0;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar-nav {
@@ -1157,18 +1150,28 @@ table.data-table.hover tbody tr:hover {
   
   .sidebar {
     transform: translateX(-100%);
+    z-index: 1100;
   }
   
   .sidebar.show {
     transform: translateX(0);
+    box-shadow: 2px 0 15px rgba(0, 0, 0, 0.2);
   }
   
   .main-content {
+    position: relative;
+    z-index: 1;
     margin-left: 0;
   }
   
   .dashboard-cards {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+  
+  .sidebar-toggle {
+    display: block;
+    position: relative;
+    z-index: 1200;
   }
 }
 
@@ -1247,9 +1250,10 @@ table.data-table.hover tbody tr:hover {
   right: 0;
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
-  z-index: 900;
+  z-index: 1000;
   opacity: 0;
   transition: opacity 0.3s ease;
+  backdrop-filter: blur(2px);
 }
 
 .overlay.show {
