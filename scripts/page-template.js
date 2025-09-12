@@ -8,50 +8,89 @@
  * @returns {string} Complete HTML page
  */
 function generatePage({
-  title = 'Gestor de Arreglos en Conferencias',
-  activeNav = 'nav-home',
-  content = '',
-  breadcrumbs = [{ text: 'Inicio', href: 'index.html' }]
+  title = "Gestor de Arreglos en Conferencias",
+  activeNav = "nav-home",
+  content = "",
+  breadcrumbs = [{ text: "Inicio", href: "index.html" }],
 } = {}) {
   // Add current page to breadcrumbs if not already included
-  if (breadcrumbs.length === 0 || breadcrumbs[breadcrumbs.length - 1].text !== title) {
-    breadcrumbs.push({ text: title, href: '#' });
+  if (
+    breadcrumbs.length === 0 ||
+    breadcrumbs[breadcrumbs.length - 1].text !== title
+  ) {
+    breadcrumbs.push({ text: title, href: "#" });
   }
 
   // Generate breadcrumb HTML
   const breadcrumbHTML = `
     <nav aria-label="breadcrumb">
       <ol class="breadcrumb">
-        ${breadcrumbs.map(item => 
-          item.href === '#' 
-            ? `<li class="breadcrumb-item active">${item.text}</li>`
-            : `<li class="breadcrumb-item"><a href="${item.href}">${item.text}</a></li>`
-        ).join('\n')}
+        ${breadcrumbs
+          .map((item) =>
+            item.href === "#"
+              ? `<li class="breadcrumb-item active">${item.text}</li>`
+              : `<li class="breadcrumb-item"><a href="${item.href}">${item.text}</a></li>`
+          )
+          .join("\n")}
       </ol>
     </nav>
   `;
 
   // Generate navigation menu items
   const navItems = [
-    { id: 'nav-home', icon: 'home', text: 'Inicio', href: 'index.html' },
-    { id: 'nav-congregaciones', icon: 'users', text: 'Congregaciones', href: 'congregaciones.html' },
-    { id: 'nav-oradores', icon: 'user-tie', text: 'Oradores', href: 'oradores.html' },
-    { id: 'nav-bosquejos', icon: 'book', text: 'Bosquejos', href: 'bosquejos.html' },
-    { id: 'nav-arreglos', icon: 'calendar-alt', text: 'Arreglos', href: 'arreglos.html' },
-    { id: 'nav-asignaciones', icon: 'tasks', text: 'Asignaciones', href: 'asignaciones.html' },
-    { id: 'nav-informes', icon: 'chart-bar', text: 'Informes', href: 'informes.html' },
-    { id: 'nav-ajustes', icon: 'cog', text: 'Ajustes', href: 'ajustes.html' }
+    { id: "nav-home", icon: "home", text: "Inicio", href: "index.html" },
+    {
+      id: "nav-congregaciones",
+      icon: "users",
+      text: "Congregaciones",
+      href: "congregaciones.html",
+    },
+    {
+      id: "nav-oradores",
+      icon: "user-tie",
+      text: "Oradores",
+      href: "oradores.html",
+    },
+    {
+      id: "nav-bosquejos",
+      icon: "book",
+      text: "Bosquejos",
+      href: "bosquejos.html",
+    },
+    {
+      id: "nav-arreglos",
+      icon: "calendar-alt",
+      text: "Arreglos",
+      href: "arreglos.html",
+    },
+    {
+      id: "nav-asignaciones",
+      icon: "tasks",
+      text: "Asignaciones",
+      href: "asignaciones.html",
+    },
+    {
+      id: "nav-informes",
+      icon: "chart-bar",
+      text: "Informes",
+      href: "informes.html",
+    },
+    { id: "nav-ajustes", icon: "cog", text: "Ajustes", href: "ajustes.html" },
   ];
 
   // Generate navigation menu HTML
-  const navMenuHTML = navItems.map(item => `
-    <li class="nav-item${activeNav === item.id ? ' active' : ''}">
+  const navMenuHTML = navItems
+    .map(
+      (item) => `
+    <li class="nav-item${activeNav === item.id ? " active" : ""}">
       <a href="${item.href}" class="nav-link" id="${item.id}">
         <i class="fas fa-${item.icon}"></i>
         <span>${item.text}</span>
       </a>
     </li>
-  `).join('');
+  `
+    )
+    .join("");
 
   return `
   <!DOCTYPE html>
@@ -127,8 +166,8 @@ function generatePage({
 
 // Helper function to create a table section
 function createTableSection(columns, data, options = {}) {
-  const { title, addButtonText = 'Agregar', search = true } = options;
-  
+  const { title, addButtonText = "Agregar", search = true } = options;
+
   return `
     <div class="content-section">
       <div class="section-header">
@@ -138,24 +177,32 @@ function createTableSection(columns, data, options = {}) {
         </button>
       </div>
       
-      ${search ? `
+      ${
+        search
+          ? `
       <div class="search-bar">
         <div class="search-input">
           <i class="fas fa-search"></i>
           <input type="text" placeholder="Buscar...">
         </div>
       </div>
-      ` : ''}
+      `
+          : ""
+      }
       
       <div class="table-responsive">
         <table class="data-table">
           <thead>
-            <tr>${columns.map(col => `<th>${col}</th>`).join('')}</tr>
+            <tr>${columns.map((col) => `<th>${col}</th>`).join("")}</tr>
           </thead>
           <tbody>
-            ${data.map(row => `
-              <tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>
-            `).join('')}
+            ${data
+              .map(
+                (row) => `
+              <tr>${row.map((cell) => `<td>${cell}</td>`).join("")}</tr>
+            `
+              )
+              .join("")}
           </tbody>
         </table>
       </div>
@@ -164,6 +211,6 @@ function createTableSection(columns, data, options = {}) {
 }
 
 // Export functions for use in other files
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== "undefined" && module.exports) {
   module.exports = { generatePage, createTableSection };
 }

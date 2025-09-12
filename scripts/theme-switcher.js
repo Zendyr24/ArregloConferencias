@@ -1,17 +1,17 @@
 export function initializeThemeSwitcher() {
-  const themeSwitcher = document.getElementById('theme-switcher');
+  const themeSwitcher = document.getElementById("theme-switcher");
   if (!themeSwitcher) return;
 
-  themeSwitcher.addEventListener('click', () => {
+  themeSwitcher.addEventListener("click", () => {
     const root = document.documentElement;
-    const currentTheme = root.getAttribute('data-theme');
+    const currentTheme = root.getAttribute("data-theme");
 
-    if (currentTheme === 'dark') {
-      root.removeAttribute('data-theme');
-      themeSwitcher.textContent = '🌙';
+    if (currentTheme === "dark") {
+      root.removeAttribute("data-theme");
+      themeSwitcher.textContent = "🌙";
     } else {
-      root.setAttribute('data-theme', 'dark');
-      themeSwitcher.textContent = '☀️';
+      root.setAttribute("data-theme", "dark");
+      themeSwitcher.textContent = "☀️";
     }
   });
 }
