@@ -66,8 +66,10 @@ function actualizarTabla() {
     mobileTableContainer.innerHTML = '';
   }
   
-  // Actualizar la tabla de escritorio
+    // Actualizar la tabla de escritorio
   if (tablaBosquejos) {
+    tablaBosquejos.innerHTML = ''; // Limpiar la tabla
+    
     if (bosquejosPaginados.length === 0) {
       const tr = document.createElement('tr');
       tr.innerHTML = `
@@ -83,13 +85,13 @@ function actualizarTabla() {
           <td class="col-numero">${bosquejo.numero}</td>
           <td class="col-titulo">${bosquejo.titulo || ''}</td>
           <td class="col-acciones text-center">
-            <button class="btn-icon" onclick="verBosquejo(${bosquejo.id})" title="Ver">
+            <button class="btn-icon" data-action="view" data-id="${bosquejo.id}" title="Ver">
               <i class="fas fa-eye"></i>
             </button>
-            <button class="btn-icon" onclick="editarBosquejo(${bosquejo.id})" title="Editar">
+            <button class="btn-icon" data-action="edit" data-id="${bosquejo.id}" title="Editar">
               <i class="fas fa-edit"></i>
             </button>
-            <button class="btn-icon text-danger" onclick="eliminarBosquejo(${bosquejo.id})" title="Eliminar">
+            <button class="btn-icon text-danger" data-action="delete" data-id="${bosquejo.id}" title="Eliminar">
               <i class="fas fa-trash"></i>
             </button>
           </td>
@@ -104,8 +106,11 @@ function actualizarTabla() {
     const emptyMessage = document.createElement('div');
     emptyMessage.className = 'mobile-table-row text-center py-4';
     emptyMessage.textContent = 'No se encontraron bosquejos. ¡Crea tu primer bosquejo!';
+    mobileTableContainer.innerHTML = '';
     mobileTableContainer.appendChild(emptyMessage);
   } else {
+    mobileTableContainer.innerHTML = ''; // Limpiar el contenedor móvil
+    
     bosquejosPaginados.forEach(bosquejo => {
       const card = document.createElement('div');
       card.className = 'mobile-table-row';
@@ -119,14 +124,17 @@ function actualizarTabla() {
           <span class="value">${bosquejo.titulo || 'Sin título'}</span>
         </div>
         <div class="mobile-table-actions">
-          <button class="btn btn-sm btn-outline" onclick="verBosquejo(${bosquejo.id})" title="Ver">
-            <i class="fas fa-eye"></i> Ver
+          <button class="btn-action" data-action="view" data-id="${bosquejo.id}" title="Ver">
+            <i class="fas fa-eye"></i>
+            <span>Ver</span>
           </button>
-          <button class="btn btn-sm btn-outline" onclick="editarBosquejo(${bosquejo.id})" title="Editar">
-            <i class="fas fa-edit"></i> Editar
+          <button class="btn-action" data-action="edit" data-id="${bosquejo.id}" title="Editar">
+            <i class="fas fa-edit"></i>
+            <span>Editar</span>
           </button>
-          <button class="btn btn-sm btn-outline text-danger" onclick="eliminarBosquejo(${bosquejo.id})" title="Eliminar">
+          <button class="btn-action text-danger" data-action="delete" data-id="${bosquejo.id}" title="Eliminar">
             <i class="fas fa-trash"></i>
+            <span>Eliminar</span>
           </button>
         </div>
       `;
@@ -134,45 +142,90 @@ function actualizarTabla() {
     });
   }
   
-  // Mostrar/ocultar tablas según el ancho de la pantalla
-  const isMobile = window.innerWidth < 768;
-  document.querySelectorAll('table.data-table').forEach(el => {
-    el.style.display = isMobile ? 'none' : 'table';
-  });
-  if (mobileTableContainer) {
-    mobileTableContainer.style.display = isMobile ? 'block' : 'none';
-  }
-  
-  // Limpiar tabla
-  tablaBosquejos.innerHTML = '';
-  
-  // Llenar la tabla con los bosquejos de la página actual
-  if (bosquejosPaginados.length > 0) {
-    bosquejosPaginados.forEach(bosquejo => {
-      const fila = document.createElement('tr');
-      fila.innerHTML = `
-        <td>${bosquejo.numero || ''}</td>
-        <td>${bosquejo.titulo || ''}</td>
-        <td class="text-center">
-          <button class="btn-icon" title="Ver" data-id="${bosquejo.id}">
-            <i class="fas fa-eye"></i>
-          </button>
-          <button class="btn-icon" title="Editar" data-id="${bosquejo.id}">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="btn-icon text-danger" title="Eliminar" data-id="${bosquejo.id}">
-            <i class="fas fa-trash"></i>
-          </button>
-        </td>
-      `;
-      tablaBosquejos.appendChild(fila);
+    // Mostrar/ocultar tablas según el ancho de la pantalla
+  function updateTableVisibility() {
+    const isMobile = window.innerWidth < 768;
+    document.querySelectorAll('table.data-table').forEach(el => {
+      el.style.display = isMobile ? 'none' : 'table';
     });
-  } else {
-    // Mostrar mensaje cuando no hay datos
-    const fila = document.createElement('tr');
-    fila.innerHTML = '<td colspan="3" class="text-center">No se encontraron bosquejos</td>';
-    tablaBosquejos.appendChild(fila);
+    if (mobileTableContainer) {
+      mobileTableContainer.style.display = isMobile ? 'block' : 'none';
+    }
   }
+  
+  // Actualizar visibilidad al cargar y al cambiar el tamaño de la ventana
+  updateTableVisibility();
+  window.addEventListener('resize', updateTableVisibility);
+  
+    // Función para manejar los clics en los botones de acción (tanto en escritorio como móvil)
+  function handleButtonClick(e) {
+    // Buscar el botón más cercano con el atributo data-action
+    const button = e.target.closest('[data-action]');
+    if (!button) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const action = button.getAttribute('data-action');
+    const id = parseInt(button.getAttribute('data-id'));
+    
+    if (isNaN(id)) {
+      console.error('ID no válido:', id);
+      return;
+    }
+    
+    console.log('Botón presionado:', { action, id, target: e.target });
+    
+    switch(action) {
+      case 'view':
+        console.log('Ver bosquejo:', id);
+        if (typeof verBosquejo === 'function') {
+          verBosquejo(id);
+        } else {
+          console.error('La función verBosquejo no está definida');
+        }
+        break;
+      case 'edit':
+        console.log('Editar bosquejo:', id);
+        if (typeof mostrarModalEditarBosquejo === 'function') {
+          mostrarModalEditarBosquejo(id);
+        } else if (typeof editarBosquejo === 'function') {
+          editarBosquejo(id);
+        } else {
+          console.error('No se encontró la función para editar');
+        }
+        break;
+      case 'delete':
+        console.log('Eliminar bosquejo:', id);
+        if (confirm('¿Estás seguro de que deseas eliminar este bosquejo?')) {
+          if (typeof eliminarBosquejo === 'function') {
+            eliminarBosquejo(id);
+          } else {
+            console.error('La función eliminarBosquejo no está definida');
+          }
+        }
+        break;
+      default:
+        console.warn('Acción no reconocida:', action);
+    }
+  }
+  
+      // Configurar el manejador de eventos una sola vez al cargar la página
+  if (!window._bosquejosEventListenersInitialized) {
+    // Usar captura para asegurar que los eventos se manejen en la fase de captura
+    document.addEventListener('click', handleButtonClick, true);
+    
+    // Asegurarse de que las funciones estén disponibles globalmente
+    window.verBosquejo = verBosquejo;
+    window.mostrarModalEditarBosquejo = mostrarModalEditarBosquejo;
+    window.eliminarBosquejo = eliminarBosquejo;
+    window.editarBosquejo = editarBosquejo;
+    
+    window._bosquejosEventListenersInitialized = true;
+    console.log('Manejadores de eventos inicializados');
+  }
+  
+  // No necesitamos llamar a handleActionButtons aquí ya que usamos un solo manejador global
   
   // Actualizar controles de paginación
   actualizarControlesPaginacion();
@@ -274,32 +327,62 @@ function agregarEventListenersBotones() {
 // Función para ver los detalles de un bosquejo
 function verBosquejo(id) {
   console.log('Ver bosquejo:', id);
-  // Implementar lógica para ver los detalles del bosquejo
-  alert(`Ver bosquejo con ID: ${id}`);
+  // Buscar el bosquejo en la lista actual
+  const bosquejo = allBosquejos.find(b => b.id === id);
+  if (bosquejo) {
+    // Mostrar los detalles en un modal o alerta
+    const mensaje = `Número: ${bosquejo.numero}\n` +
+                   `Título: ${bosquejo.titulo || 'Sin título'}\n` +
+                   `ID: ${bosquejo.id}`;
+    alert(mensaje);
+  } else {
+    console.error('No se encontró el bosquejo con ID:', id);
+    alert('No se pudo cargar la información del bosquejo');
+  }
 }
 
 // Función para editar un bosquejo (mantenida por compatibilidad)
 function editarBosquejo(id) {
-  mostrarModalEditarBosquejo(id);
+  console.log('Editando bosquejo (función de compatibilidad):', id);
+  if (typeof mostrarModalEditarBosquejo === 'function') {
+    mostrarModalEditarBosquejo(id);
+  } else {
+    console.error('La función mostrarModalEditarBosquejo no está definida');
+    // Implementación alternativa
+    const bosquejo = allBosquejos.find(b => b.id === id);
+    if (bosquejo) {
+      // Rellenar el formulario manualmente
+      document.getElementById('bosquejoId').value = id;
+      document.getElementById('numero').value = bosquejo.numero || '';
+      document.getElementById('titulo').value = bosquejo.titulo || '';
+      // Mostrar el modal
+      mostrarModal();
+    } else {
+      alert('No se pudo cargar el bosquejo para editar');
+    }
+  }
 }
 
 // Función para eliminar un bosquejo
 async function eliminarBosquejo(id) {
-  if (confirm('¿Estás seguro de que deseas eliminar este bosquejo?')) {
-    try {
-      const { error } = await db.eliminar('bosquejos', id);
-      
-      if (error) throw error;
-      
+  if (!confirm('¿Estás seguro de que deseas eliminar este bosquejo?')) {
+    return;
+  }
+  
+  try {
+    console.log('Eliminando bosquejo:', id);
+    // Aquí iría la lógica para eliminar el bosquejo
+    const response = await db.borrarBosquejo(id);
+    if (response.success) {
+      mostrarAlerta('Bosquejo eliminado correctamente', 'success');
       // Recargar la lista de bosquejos
       cargarBosquejos();
-      
-      // Mostrar mensaje de éxito
-      alert('Bosquejo eliminado correctamente');
-    } catch (error) {
-      console.error('Error al eliminar el bosquejo:', error);
-      alert('Error al eliminar el bosquejo. Por favor, intente de nuevo.');
+    } else {
+      throw new Error(response.error || 'Error al eliminar el bosquejo');
     }
+  } catch (error) {
+    console.error('Error al eliminar bosquejo:', error);
+    mostrarAlerta('Error al eliminar el bosquejo: ' + error.message, 'error');
   }
 }
 

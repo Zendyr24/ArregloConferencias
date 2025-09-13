@@ -1,0 +1,226 @@
+/* Estilos específicos para la página de Bosquejos */
+
+/* Contenedor principal de la tabla móvil */
+.mobile-table {
+  display: none; /* Oculto por defecto, se muestra con media queries */
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+/* Fila de la tabla móvil */
+.mobile-table-row {
+  background: var(--color-surface);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid var(--color-border);
+}
+
+.mobile-table-row:active {
+  transform: translateY(1px);
+  box-shadow: var(--shadow-xs);
+}
+
+/* Celdas de la tabla móvil */
+.mobile-table-cell {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.mobile-table-cell:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+/* Etiquetas de la tabla móvil */
+.mobile-table-cell .label {
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  margin-right: 1rem;
+}
+
+/* Contenedor de acciones móviles */
+.mobile-table-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+/* Botones de acción móviles */
+.btn-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--border-radius);
+  background: var(--color-bg-secondary);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.btn-action:hover {
+  background: var(--color-bg-tertiary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-action:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.btn-action i {
+  margin-right: 0.5rem;
+  font-size: 1rem;
+}
+
+/* Estilo para el botón de eliminar */
+.btn-action.text-danger {
+  color: var(--color-danger);
+  border-color: var(--color-danger-light);
+  background-color: var(--color-danger-bg);
+}
+
+.btn-action.text-danger:hover {
+  background-color: var(--color-danger-light);
+  color: white;
+}
+
+/* Media queries para mostrar/ocultar tablas según el tamaño de pantalla */
+@media (max-width: 767.98px) {
+  .mobile-table {
+    display: block;
+  }
+  
+  .data-table {
+    display: none;
+  }
+}
+
+/* Estilos para pantallas muy pequeñas */
+@media (max-width: 480px) {
+  .btn-action span {
+    display: none;
+  }
+  
+  .btn-action i {
+    margin-right: 0;
+    font-size: 1.1rem;
+  }
+  
+  .btn-action {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 50%;
+  }
+}
+
+/* Ajustes para los botones de acción en la tabla de escritorio */
+.data-table .btn-icon {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.data-table .btn-icon:hover {
+  background: var(--color-bg-secondary);
+  color: var(--color-primary);
+}
+
+.data-table .btn-icon.text-danger:hover {
+  color: var(--color-danger);
+}
+
+/* Asegurar que los botones de acción tengan un tamaño consistente */
+.col-acciones {
+  white-space: nowrap;
+  width: 1%;
+}
+
+/* Estilos para la paginación móvil */
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: var(--color-surface);
+  border-radius: var(--border-radius);
+  margin-top: 1.5rem;
+}
+
+.pagination-info {
+  margin: 0 1rem;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+/* Ajustes para los botones de navegación */
+.page-nav {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-nav:not(:disabled):hover {
+  background-color: var(--color-bg-secondary);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.page-nav:disabled {
+  color: var(--color-text-disabled);
+  background-color: var(--color-bg-secondary);
+  border-color: var(--color-border);
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+.page-nav i {
+  font-size: 0.95em;
+  transition: transform 0.2s ease;
+  color: inherit;
+}
+
+.page-nav:not(:disabled):hover i {
+  transform: translateX(-1px);
+}
+
+.page-nav:not(:disabled):hover:last-child i {
+  transform: translateX(1px);
+}
