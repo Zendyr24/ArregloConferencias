@@ -267,17 +267,84 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// Evento para la búsqueda
-inputBusqueda.addEventListener('input', (e) => {
-  const busqueda = e.target.value.toLowerCase();
+// Función para filtrar la tabla
+function filtrarTabla(terminoBusqueda) {
   const filas = document.querySelectorAll('.data-table tbody tr');
+  let resultadosEncontrados = 0;
   
   filas.forEach(fila => {
-    const textoFila = fila.textContent.toLowerCase();
-    if (textoFila.includes(busqueda)) {
+    // Obtener el texto de las celdas de número y título
+    const celdaNumero = fila.cells[0].textContent.trim();
+    const celdaTitulo = fila.cells[1].textContent.trim();
+    const textoCompleto = `${celdaNumero} ${celdaTitulo}`.toLowerCase();
+    
+    if (textoCompleto.includes(terminoBusqueda.toLowerCase())) {
       fila.style.display = '';
+      resultadosEncontrados++;
     } else {
       fila.style.display = 'none';
     }
   });
+  
+  // Mostrar mensaje si no hay resultados
+  const mensajeSinResultados = document.getElementById('mensajeSinResultados');
+  if (resultadosEncontrados === 0 && terminoBusqueda !== '') {
+    if (!mensajeSinResultados) {
+      const filaMensaje = document.createElement('tr');
+      filaMensaje.id = 'mensajeSinResultados';
+      filaMensaje.innerHTML = `
+        <td colspan="3" class="text-center py-4">
+          <i class="fas fa-search mb-2" style="font-size: 1.5rem; opacity: 0.5;"></i>
+          <p class="mb-0">No se encontraron resultados para "${terminoBusqueda}"</p>
+        </td>
+      `;
+      document.querySelector('.data-table tbody').appendChild(filaMensaje);
+    }
+  } else if (mensajeSinResultados) {
+    mensajeSinResultados.remove();
+  }
+}
+
+// Evento para la búsqueda con debounce
+let timeoutBusqueda = null;
+inputBusqueda.addEventListener('input', (e) => {
+  const termino = e.target.value.trim();
+  
+  // Limpiar el timeout anterior
+  clearTimeout(timeoutBusqueda);
+  
+  // Establecer un nuevo timeout
+  timeoutBusqueda = setTimeout(() => {
+    filtrarTabla(termino);
+  }, 300); // 300ms de retraso
+});
+
+// Limpiar la búsqueda al hacer clic en la X
+const btnLimpiarBusqueda = document.createElement('button');
+btnLimpiarBusqueda.type = 'button';
+btnLimpiarBusqueda.className = 'btn-clear-search';
+btnLimpiarBusqueda.innerHTML = '<i class="fas fa-times"></i>';
+btnLimpiarBusqueda.title = 'Limpiar búsqueda';
+btnLimpiarBusqueda.style.display = 'none';
+
+// Insertar el botón después del input de búsqueda
+inputBusqueda.parentNode.insertBefore(btnLimpiarBusqueda, inputBusqueda.nextSibling);
+
+// Mostrar/ocultar el botón de limpiar según si hay texto
+inputBusqueda.addEventListener('input', (e) => {
+  if (e.target.value.trim() !== '') {
+    btnLimpiarBusqueda.style.display = 'flex';
+  } else {
+    btnLimpiarBusqueda.style.display = 'none';
+    // Si se limpia el input, mostrar todos los resultados
+    filtrarTabla('');
+  }
+});
+
+// Limpiar la búsqueda al hacer clic en el botón
+btnLimpiarBusqueda.addEventListener('click', () => {
+  inputBusqueda.value = '';
+  btnLimpiarBusqueda.style.display = 'none';
+  filtrarTabla('');
+  inputBusqueda.focus();
 });
