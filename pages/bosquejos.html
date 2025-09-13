@@ -117,21 +117,7 @@
           <div class="search-bar">
             <div class="search-input">
               <i class="fas fa-search"></i>
-              <input type="text" placeholder="Buscar bosquejos...">
-            </div>
-            <div class="filters">
-              <select class="form-select">
-                <option value="">Todos los temas</option>
-                <option value="bautismo">Bautismo</option>
-                <option value="oracion">Oración</option>
-                <option value="estudio">Estudio Bíblico</option>
-              </select>
-              <select class="form-select">
-                <option value="">Todas las categorías</option>
-                <option value="estudio">Estudio</option>
-                <option value="discurso">Discurso</option>
-                <option value="reunion">Reunión</option>
-              </select>
+              <input type="text" placeholder="Buscar bosquejos por número o título...">
             </div>
           </div>
           
@@ -139,34 +125,13 @@
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Título</th>
-                  <th>Tema</th>
-                  <th>Categoría</th>
-                  <th>Duración</th>
-                  <th>Fecha de creación</th>
-                  <th>Acciones</th>
+                  <th class="col-numero">Número</th>
+                  <th class="col-titulo">Título</th>
+                  <th class="col-acciones text-center">Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>El poder de la oración</td>
-                  <td>Oración</td>
-                  <td>Discurso</td>
-                  <td>30 min</td>
-                  <td>01/09/2025</td>
-                  <td>
-                    <button class="btn-icon" title="Ver">
-                      <i class="fas fa-eye"></i>
-                    </button>
-                    <button class="btn-icon" title="Editar">
-                      <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn-icon" title="Eliminar">
-                      <i class="fas fa-trash"></i>
-                    </button>
-                  </td>
-                </tr>
-                <!-- More rows -->
+                <!-- Las filas se cargarán dinámicamente desde JavaScript -->
               </tbody>
             </table>
           </div>
@@ -191,7 +156,39 @@
       </footer>
     </div>
 
+    <!-- Modal para nuevo bosquejo -->
+    <div class="modal" id="modalBosquejo" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Nuevo Bosquejo</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="formBosquejo">
+              <input type="hidden" id="bosquejoId">
+              <div class="mb-3">
+                <label for="numero" class="form-label">Número</label>
+                <input type="number" class="form-control" id="numero" required min="1">
+              </div>
+              <div class="mb-3">
+                <label for="titulo" class="form-label">Título</label>
+                <input type="text" class="form-control" id="titulo" required>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script type="module" src="../scripts/app.js"></script>
-      <script type="module" src="../scripts/theme.js"></script>
+    <script type="module" src="../scripts/theme.js"></script>
+    <script type="module" src="../scripts/bosquejos.js"></script>
   </body>
 </html>

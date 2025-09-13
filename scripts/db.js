@@ -29,4 +29,16 @@ export const db = {
     const { error } = await supabase.from(tabla).delete().eq("id", id);
     return { error };
   },
+
+  // Obtener un registro por su ID
+  async obtenerPorId(tabla, id) {
+    const { data, error } = await supabase
+      .from(tabla)
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) return { data: null, error };
+    return { data, error: null };
+  },
 };

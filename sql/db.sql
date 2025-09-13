@@ -14,6 +14,7 @@ CREATE TABLE public.users (
   rol VARCHAR(255),
   contraseña VARCHAR(255),
   congregacion_id INT,
+  email VARCHAR(255) UNIQUE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   FOREIGN KEY (congregacion_id) REFERENCES public.congregacion(id)
 );
