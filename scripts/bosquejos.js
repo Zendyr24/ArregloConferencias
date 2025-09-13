@@ -452,11 +452,45 @@ async function exportToPDF() {
   }
 }
 
+// Función para alternar el panel de importación/exportación
+function toggleImportExportPanel() {
+  const panel = document.getElementById('importExportPanel');
+  const toggleButton = document.getElementById('toggleImportExport');
+  
+  if (panel && toggleButton) {
+    panel.classList.toggle('visible');
+    toggleButton.classList.toggle('collapsed');
+    
+    // Cambiar el ícono
+    const icon = toggleButton.querySelector('i');
+    if (icon) {
+      icon.className = panel.classList.contains('visible') ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
+    }
+  }
+}
+
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
   // Botones del modal
   if (btnNuevoBosquejo) btnNuevoBosquejo.addEventListener('click', mostrarModalNuevoBosquejo);
   if (btnExportarPDF) btnExportarPDF.addEventListener('click', exportToPDF);
+  
+  // Toggle del panel de importación/exportación
+  const toggleButton = document.getElementById('toggleImportExport');
+  if (toggleButton) {
+    toggleButton.addEventListener('click', toggleImportExportPanel);
+    // Inicializar como colapsado
+    toggleButton.classList.add('collapsed');
+    // Asegurarse de que el panel esté oculto al cargar
+    const panel = document.getElementById('importExportPanel');
+    if (panel) {
+      panel.style.display = 'none';
+      // Usar setTimeout para permitir que se apliquen los estilos iniciales
+      setTimeout(() => {
+        panel.style.display = '';
+      }, 10);
+    }
+  }
   if (formBosquejo) formBosquejo.addEventListener('submit', manejarEnvioFormulario);
   if (btnCerrarModal) btnCerrarModal.addEventListener('click', ocultarModal);
   if (btnCancelar) btnCancelar.addEventListener('click', ocultarModal);

@@ -240,20 +240,36 @@
       <main class="main-content" id="mainContent">
         <div class="content-section">
           <div class="section-header">
-            <h3>Lista de Bosquejos</h3>
-            <div class="btn-group">
-              <button class="btn btn-outline" id="btnImportar">
-                <i class="fas fa-file-import"></i> Importar Excel
-              </button>
-              <button class="btn btn-outline" id="btnExportar">
-                <i class="fas fa-file-export"></i> Exportar Excel
-              </button>
-              <button class="btn btn-outline" id="btnExportarPDF">
-                <i class="fas fa-file-pdf"></i> Exportar PDF
-              </button>
-              <button class="btn btn-primary" id="btnNuevoBosquejo">
-                <i class="fas fa-plus"></i> Nuevo Bosquejo
-              </button>
+            <div class="section-header-row">
+              <h3>Lista de Bosquejos</h3>
+              <div class="btn-group">
+                <button class="btn btn-outline" id="toggleImportExport">
+                  Importar/Exportar
+                  <i class="fas fa-chevron-down ms-2"></i>
+                </button>
+                <button class="btn btn-primary" id="btnNuevoBosquejo">
+                  <i class="fas fa-plus"></i> Nuevo Bosquejo
+                </button>
+              </div>
+            </div>
+            
+            <div class="import-export-panel" id="importExportPanel" style="display: none;">
+              <div class="import-export-buttons">
+                <div class="btn-group">
+                  <button class="btn btn-outline" id="btnImportar">
+                    <i class="fas fa-file-import"></i> Importar Excel
+                  </button>
+                  <button class="btn btn-outline" id="btnExportar">
+                    <i class="fas fa-file-export"></i> Exportar Excel
+                  </button>
+                  <button class="btn btn-outline" id="btnExportarPDF">
+                    <i class="fas fa-file-pdf"></i> Exportar PDF
+                  </button>
+                </div>
+                <div class="import-export-hint">
+                  <i class="fas fa-info-circle"></i> Gestiona la importación y exportación de datos
+                </div>
+              </div>
             </div>
           </div>
           
