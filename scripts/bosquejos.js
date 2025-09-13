@@ -3,6 +3,11 @@ import { db } from './db.js';
 
 // Elementos del DOM
 const tablaBosquejos = document.querySelector('.data-table tbody');
+const paginationStart = document.getElementById('pagination-start');
+const paginationEnd = document.getElementById('pagination-end');
+const paginationTotal = document.getElementById('pagination-total');
+const paginationPrev = document.getElementById('pagination-prev');
+const paginationNext = document.getElementById('pagination-next');
 const btnNuevoBosquejo = document.querySelector('.btn-primary');
 const inputBusqueda = document.querySelector('.search-input input');
 const modalBosquejo = document.getElementById('modalBosquejo');
@@ -13,61 +18,121 @@ const btnCancelar = document.querySelector('.btn-secondary');
 const numeroInput = document.getElementById('numero');
 const tituloInput = document.getElementById('titulo');
 const bosquejoIdInput = document.getElementById('bosquejoId');
+const btnExportar = document.getElementById('btnExportar');
 
 // Variables de estado
 let editando = false;
+let currentPage = 1;
+const itemsPerPage = 50;
+let totalBosquejos = 0;
+let allBosquejos = [];
 
 // Cargar bosquejos al iniciar la página
-document.addEventListener('DOMContentLoaded', cargarBosquejos);
+document.addEventListener('DOMContentLoaded', () => {
+  // Configurar event listeners una sola vez
+  if (paginationPrev) {
+    paginationPrev.addEventListener('click', () => cambiarPagina('prev'));
+  }
+  if (paginationNext) {
+    paginationNext.addEventListener('click', () => cambiarPagina('next'));
+  }
+  
+  // Cargar los datos iniciales
+  cargarBosquejos();
+});
 
-// Función para cargar los bosquejos desde Supabase
+// Función para actualizar la tabla con los bosquejos de la página actual
+function actualizarTabla() {
+  // Calcular índices de los elementos a mostrar
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const bosquejosPaginados = allBosquejos.slice(startIndex, endIndex);
+  
+  // Limpiar tabla
+  tablaBosquejos.innerHTML = '';
+  
+  // Llenar la tabla con los bosquejos de la página actual
+  if (bosquejosPaginados.length > 0) {
+    bosquejosPaginados.forEach(bosquejo => {
+      const fila = document.createElement('tr');
+      fila.innerHTML = `
+        <td>${bosquejo.numero || ''}</td>
+        <td>${bosquejo.titulo || ''}</td>
+        <td class="text-center">
+          <button class="btn-icon" title="Ver" data-id="${bosquejo.id}">
+            <i class="fas fa-eye"></i>
+          </button>
+          <button class="btn-icon" title="Editar" data-id="${bosquejo.id}">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="btn-icon text-danger" title="Eliminar" data-id="${bosquejo.id}">
+            <i class="fas fa-trash"></i>
+          </button>
+        </td>
+      `;
+      tablaBosquejos.appendChild(fila);
+    });
+  } else {
+    // Mostrar mensaje cuando no hay datos
+    const fila = document.createElement('tr');
+    fila.innerHTML = '<td colspan="3" class="text-center">No se encontraron bosquejos</td>';
+    tablaBosquejos.appendChild(fila);
+  }
+  
+  // Actualizar controles de paginación
+  actualizarControlesPaginacion();
+}
+
+// Función para actualizar los controles de paginación
+function actualizarControlesPaginacion() {
+  const totalPages = Math.ceil(totalBosquejos / itemsPerPage);
+  const startItem = totalBosquejos > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
+  const endItem = Math.min(currentPage * itemsPerPage, totalBosquejos);
+  
+  // Actualizar información de paginación
+  if (paginationStart) paginationStart.textContent = startItem;
+  if (paginationEnd) paginationEnd.textContent = endItem;
+  if (paginationTotal) paginationTotal.textContent = totalBosquejos;
+  
+  // Actualizar estado de los botones
+  if (paginationPrev) {
+    paginationPrev.disabled = currentPage === 1;
+  }
+  if (paginationNext) {
+    paginationNext.disabled = currentPage >= totalPages || totalBosquejos === 0;
+  }
+}
+
+// Función para cambiar de página
+function cambiarPagina(direccion) {
+  const totalPages = Math.ceil(totalBosquejos / itemsPerPage);
+  
+  if (direccion === 'prev' && currentPage > 1) {
+    currentPage--;
+  } else if (direccion === 'next' && currentPage < totalPages) {
+    currentPage++;
+  } else if (typeof direccion === 'number' && direccion > 0 && direccion <= totalPages) {
+    currentPage = direccion;
+  }
+  
+  actualizarTabla();
+}
+
 async function cargarBosquejos() {
   try {
     const { data: bosquejos, error } = await db.obtenerTodos('bosquejos');
     
     if (error) throw error;
     
-    // Limpiar tabla
-    tablaBosquejos.innerHTML = '';
+    // Guardar y ordenar los bosquejos
+    allBosquejos = Array.isArray(bosquejos) ? bosquejos : [];
+    allBosquejos.sort((a, b) => (a.numero || 0) - (b.numero || 0));
+    totalBosquejos = allBosquejos.length;
     
-    // Verificar si hay bosquejos
-    if (bosquejos && bosquejos.length > 0) {
-      // Ordenar bosquejos por número
-      bosquejos.sort((a, b) => a.numero - b.numero);
-      
-      // Llenar la tabla con los bosquejos
-      bosquejos.forEach(bosquejo => {
-        const fila = document.createElement('tr');
-        fila.innerHTML = `
-          <td>${bosquejo.numero || ''}</td>
-          <td>${bosquejo.titulo || ''}</td>
-          <td class="text-center">
-            <button class="btn-icon" title="Ver" data-id="${bosquejo.id}">
-              <i class="fas fa-eye"></i>
-            </button>
-            <button class="btn-icon" title="Editar" data-id="${bosquejo.id}">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button class="btn-icon" title="Eliminar" data-id="${bosquejo.id}">
-              <i class="fas fa-trash"></i>
-            </button>
-          </td>
-        `;
-        tablaBosquejos.appendChild(fila);
-      });
-      
-      // Agregar event listeners a los botones
-      agregarEventListenersBotones();
-    } else {
-      // Mostrar mensaje si no hay bosquejos
-      const fila = document.createElement('tr');
-      fila.innerHTML = `
-        <td colspan="3" class="text-center">
-          No hay bosquejos disponibles. Haz clic en "Nuevo Bosquejo" para agregar uno.
-        </td>
-      `;
-      tablaBosquejos.appendChild(fila);
-    }
+    // Actualizar la tabla con la primera página
+    currentPage = 1;
+    actualizarTabla();
+    
   } catch (error) {
     console.error('Error al cargar los bosquejos:', error);
     // Mostrar mensaje de error
@@ -79,6 +144,9 @@ async function cargarBosquejos() {
     `;
     tablaBosquejos.appendChild(fila);
   }
+  
+  // Asegurarse de que los botones de acción tengan sus event listeners
+  agregarEventListenersBotones();
 }
 
 // Función para agregar event listeners a los botones de acción
@@ -179,22 +247,85 @@ async function mostrarModalEditarBosquejo(id) {
 
 // Mostrar el modal
 function mostrarModal() {
+  // Hacer el modal accesible antes de mostrarlo
+  modalBosquejo.removeAttribute('aria-hidden');
+  modalBosquejo.setAttribute('aria-modal', 'true');
+  
+  // Mostrar el modal
   modalBosquejo.classList.add('show');
   document.body.style.overflow = 'hidden';
   
+  // Guardar el elemento que tenía el foco antes de abrir el modal
+  modalBosquejo._focusedElementBeforeModal = document.activeElement;
+  
   // Enfocar el primer campo del formulario
-  if (!editando) {
-    setTimeout(() => numeroInput.focus(), 100);
-  } else {
-    setTimeout(() => tituloInput.focus(), 100);
-  }
+  const focusTarget = editando ? tituloInput : numeroInput;
+  
+  // Usar requestAnimationFrame para asegurar que el foco se establezca en el siguiente ciclo de renderizado
+  requestAnimationFrame(() => {
+    focusTarget.focus();
+    
+    // Agregar manejador para atrapar el foco dentro del modal
+    modalBosquejo._handleKeyDown = function(e) {
+      // Cerrar con la tecla Escape
+      if (e.key === 'Escape') {
+        ocultarModal();
+        return;
+      }
+      
+      // Atrapar el foco dentro del modal
+      if (e.key === 'Tab') {
+        const focusableElements = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+        const focusable = [...modalBosquejo.querySelectorAll(focusableElements)]
+          .filter(el => !el.hasAttribute('disabled') && !el.getAttribute('aria-hidden'));
+        
+        const firstFocusable = focusable[0];
+        const lastFocusable = focusable[focusable.length - 1];
+        
+        if (e.shiftKey) {
+          if (document.activeElement === firstFocusable) {
+            lastFocusable.focus();
+            e.preventDefault();
+          }
+        } else {
+          if (document.activeElement === lastFocusable) {
+            firstFocusable.focus();
+            e.preventDefault();
+          }
+        }
+      }
+    };
+    
+    modalBosquejo.addEventListener('keydown', modalBosquejo._handleKeyDown);
+  });
 }
 
 // Ocultar el modal
 function ocultarModal() {
-  modalBosquejo.classList.remove('show');
-  document.body.style.overflow = '';
-  formBosquejo.reset();
+  // Limpiar el manejador de eventos del teclado
+  if (modalBosquejo._handleKeyDown) {
+    modalBosquejo.removeEventListener('keydown', modalBosquejo._handleKeyDown);
+    delete modalBosquejo._handleKeyDown;
+  }
+  
+  // Restaurar el foco al elemento que lo tenía antes de abrir el modal
+  requestAnimationFrame(() => {
+    if (modalBosquejo._focusedElementBeforeModal && 
+        'focus' in modalBosquejo._focusedElementBeforeModal) {
+      modalBosquejo._focusedElementBeforeModal.focus();
+    }
+    delete modalBosquejo._focusedElementBeforeModal;
+    
+    // Ocultar el modal
+    modalBosquejo.classList.remove('show');
+    modalBosquejo.setAttribute('aria-hidden', 'true');
+    modalBosquejo.removeAttribute('aria-modal');
+    document.body.style.overflow = '';
+    
+    // Limpiar el formulario
+    formBosquejo.reset();
+    formBosquejo.classList.remove('was-validated');
+  });
 }
 
 // Manejar el envío del formulario
@@ -248,10 +379,147 @@ function mostrarAlerta(mensaje, tipo = 'info') {
 }
 
 // Event Listeners
-btnNuevoBosquejo.addEventListener('click', mostrarModalNuevoBosquejo);
-formBosquejo.addEventListener('submit', manejarEnvioFormulario);
-btnCerrarModal.addEventListener('click', ocultarModal);
-btnCancelar.addEventListener('click', ocultarModal);
+document.addEventListener('DOMContentLoaded', () => {
+  // Botones del modal
+  if (btnNuevoBosquejo) btnNuevoBosquejo.addEventListener('click', mostrarModalNuevoBosquejo);
+  if (formBosquejo) formBosquejo.addEventListener('submit', manejarEnvioFormulario);
+  if (btnCerrarModal) btnCerrarModal.addEventListener('click', ocultarModal);
+  if (btnCancelar) btnCancelar.addEventListener('click', ocultarModal);
+  
+  // Botones de importar/exportar
+  const btnExportar = document.getElementById('btnExportar');
+  const btnImportar = document.getElementById('btnImportar');
+  const fileInput = document.getElementById('inputArchivo');
+  
+  if (btnExportar) {
+    btnExportar.addEventListener('click', exportToExcel);
+  }
+  
+  if (btnImportar && fileInput) {
+    btnImportar.addEventListener('click', () => fileInput.click());
+    
+    fileInput.addEventListener('change', async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      const originalState = {
+        html: btnImportar.innerHTML,
+        disabled: btnImportar.disabled
+      };
+      
+      try {
+        // Mostrar indicador de carga
+        btnImportar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importando...';
+        btnImportar.disabled = true;
+        
+        // Leer el archivo
+        const fileContent = await new Promise((resolve, reject) => {
+          reader.onload = (e) => resolve(e.target.result);
+          reader.onerror = (error) => reject(error);
+          reader.readAsBinaryString(file);
+        });
+        
+        // Procesar el archivo Excel
+        const workbook = XLSX.read(fileContent, { type: 'binary' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const data = XLSX.utils.sheet_to_json(worksheet);
+        
+        if (!data || data.length === 0) {
+          throw new Error('El archivo está vacío o no contiene datos válidos');
+        }
+        
+        // Validar y procesar los datos
+        const bosquejos = data.map((row, index) => {
+          const numero = parseInt(row['Número'] || row['numero'] || row['Nº']);
+          const titulo = String(row['Título'] || row['titulo'] || '').trim();
+          
+          if (isNaN(numero) || !titulo) {
+            throw new Error(`Fila ${index + 2}: Número y título son campos requeridos`);
+          }
+          
+          return { numero, titulo };
+        });
+        
+        // Verificar duplicados en el archivo
+        const numeros = new Set();
+        for (const b of bosquejos) {
+          if (numeros.has(b.numero)) {
+            throw new Error(`El número ${b.numero} está duplicado en el archivo`);
+          }
+          numeros.add(b.numero);
+        }
+        
+        // Obtener bosquejos existentes para verificar duplicados
+        const { data: bosquejosExistentes, error: errorBusqueda } = await db.obtenerTodos('bosquejos');
+        if (errorBusqueda) throw errorBusqueda;
+        
+        // Verificar duplicados con la base de datos
+        const numerosExistentes = new Set(bosquejosExistentes.map(b => b.numero));
+        const duplicados = bosquejos.filter(b => numerosExistentes.has(b.numero));
+        
+        if (duplicados.length > 0) {
+          const confirmar = confirm(`Se encontraron ${duplicados.length} bosquejos existentes. ¿Desea actualizarlos?`);
+          if (!confirmar) return;
+        }
+        
+        // Procesar la importación
+        let exitosos = 0;
+        let actualizados = 0;
+        const errores = [];
+        
+        for (const bosquejo of bosquejos) {
+          try {
+            const existente = bosquejosExistentes.find(b => b.numero === bosquejo.numero);
+            
+            if (existente) {
+              // Actualizar existente si el título es diferente
+              if (existente.titulo !== bosquejo.titulo) {
+                const { error } = await db.actualizar('bosquejos', existente.id, bosquejo);
+                if (error) throw error;
+                actualizados++;
+              }
+            } else {
+              // Insertar nuevo
+              const { error } = await db.insertar('bosquejos', bosquejo);
+              if (error) throw error;
+              exitosos++;
+            }
+          } catch (error) {
+            console.error(`Error al procesar bosquejo ${bosquejo.numero}:`, error);
+            errores.push(`Error en bosquejo ${bosquejo.numero}: ${error.message}`);
+          }
+        }
+        
+        // Mostrar resumen
+        let mensaje = `Importación completada: ${exitosos} nuevos, ${actualizados} actualizados`;
+        if (errores.length > 0) {
+          mensaje += `, ${errores.length} errores`;
+          console.error('Errores durante la importación:', errores);
+        }
+        
+        mostrarAlerta(mensaje, errores.length > 0 ? 'warning' : 'success');
+        
+        // Recargar la lista
+        await cargarBosquejos();
+        
+      } catch (error) {
+        console.error('Error al importar desde Excel:', error);
+        mostrarAlerta(`Error al importar: ${error.message}`, 'error');
+      } finally {
+        // Restaurar el estado del botón
+        btnImportar.innerHTML = originalState.html;
+        btnImportar.disabled = originalState.disabled;
+        
+        // Limpiar el input de archivo
+        event.target.value = '';
+      }
+    });
+  }
+  
+  // Event listeners for the import button are already set up above
+});
 
 // Cerrar modal al hacer clic fuera del contenido
 modalBosquejo.addEventListener('click', (e) => {
@@ -269,39 +537,53 @@ document.addEventListener('keydown', (e) => {
 
 // Función para filtrar la tabla
 function filtrarTabla(terminoBusqueda) {
-  const filas = document.querySelectorAll('.data-table tbody tr');
+  const filas = document.querySelectorAll('.data-table tbody tr:not(#mensajeSinResultados)');
   let resultadosEncontrados = 0;
+  const tbody = document.querySelector('.data-table tbody');
   
+  // Mostrar todas las filas primero (excepto el mensaje)
   filas.forEach(fila => {
-    // Obtener el texto de las celdas de número y título
-    const celdaNumero = fila.cells[0].textContent.trim();
-    const celdaTitulo = fila.cells[1].textContent.trim();
-    const textoCompleto = `${celdaNumero} ${celdaTitulo}`.toLowerCase();
-    
-    if (textoCompleto.includes(terminoBusqueda.toLowerCase())) {
-      fila.style.display = '';
-      resultadosEncontrados++;
-    } else {
-      fila.style.display = 'none';
-    }
+    fila.style.display = '';
   });
   
-  // Mostrar mensaje si no hay resultados
+  // Si hay término de búsqueda, aplicar el filtro
+  if (terminoBusqueda) {
+    filas.forEach(fila => {
+      // Obtener el texto de las celdas de número y título
+      const celdaNumero = fila.cells[0]?.textContent?.trim() || '';
+      const celdaTitulo = fila.cells[1]?.textContent?.trim() || '';
+      const textoCompleto = `${celdaNumero} ${celdaTitulo}`.toLowerCase();
+      
+      if (textoCompleto.includes(terminoBusqueda.toLowerCase())) {
+        resultadosEncontrados++;
+      } else {
+        fila.style.display = 'none';
+      }
+    });
+  } else {
+    // Si no hay término de búsqueda, mostrar todo
+    resultadosEncontrados = filas.length;
+  }
+  
+  // Manejar el mensaje de "sin resultados"
   const mensajeSinResultados = document.getElementById('mensajeSinResultados');
-  if (resultadosEncontrados === 0 && terminoBusqueda !== '') {
-    if (!mensajeSinResultados) {
-      const filaMensaje = document.createElement('tr');
-      filaMensaje.id = 'mensajeSinResultados';
-      filaMensaje.innerHTML = `
-        <td colspan="3" class="text-center py-4">
-          <i class="fas fa-search mb-2" style="font-size: 1.5rem; opacity: 0.5;"></i>
-          <p class="mb-0">No se encontraron resultados para "${terminoBusqueda}"</p>
-        </td>
-      `;
-      document.querySelector('.data-table tbody').appendChild(filaMensaje);
-    }
-  } else if (mensajeSinResultados) {
+  
+  // Eliminar mensaje anterior si existe
+  if (mensajeSinResultados) {
     mensajeSinResultados.remove();
+  }
+  
+  // Mostrar mensaje si no hay resultados y hay término de búsqueda
+  if (resultadosEncontrados === 0 && terminoBusqueda) {
+    const filaMensaje = document.createElement('tr');
+    filaMensaje.id = 'mensajeSinResultados';
+    filaMensaje.innerHTML = `
+      <td colspan="3" class="text-center py-4">
+        <i class="fas fa-search mb-2" style="font-size: 1.5rem; opacity: 0.5;"></i>
+        <p class="mb-0">No se encontraron resultados para "${terminoBusqueda}"</p>
+      </td>
+    `;
+    tbody.appendChild(filaMensaje);
   }
 }
 
@@ -348,3 +630,52 @@ btnLimpiarBusqueda.addEventListener('click', () => {
   filtrarTabla('');
   inputBusqueda.focus();
 });
+
+// Función para exportar a Excel
+async function exportToExcel() {
+  const btnExportar = document.getElementById('btnExportar');
+  if (!btnExportar) return;
+  
+  const originalState = {
+    html: btnExportar.innerHTML,
+    disabled: btnExportar.disabled
+  };
+  
+  try {
+    // Mostrar indicador de carga
+    btnExportar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exportando...';
+    btnExportar.disabled = true;
+    
+    // Obtener los datos actuales de la tabla
+    const { data: bosquejos, error } = await db.obtenerTodos('bosquejos');
+    
+    if (error) throw error;
+    
+    // Ordenar los bosquejos por número
+    const bosquejosOrdenados = [...bosquejos].sort((a, b) => a.numero - b.numero);
+    
+    // Crear libro de Excel
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(bosquejosOrdenados.map(b => ({
+      'Número': b.numero,
+      'Título': b.titulo
+    })));
+    
+    XLSX.utils.book_append_sheet(wb, ws, 'Bosquejos');
+    
+    // Generar archivo
+    const fecha = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(wb, `bosquejos_${fecha}.xlsx`);
+    
+    mostrarAlerta('Exportación completada con éxito', 'success');
+  } catch (error) {
+    console.error('Error al exportar a Excel:', error);
+    mostrarAlerta('Error al exportar a Excel. Por favor, intente de nuevo.', 'error');
+  } finally {
+    // Restaurar el estado del botón
+    btnExportar.innerHTML = originalState.html;
+    btnExportar.disabled = originalState.disabled;
+  }
+}
+
+// Eliminando el manejador de eventos duplicado ya que ahora está en DOMContentLoaded

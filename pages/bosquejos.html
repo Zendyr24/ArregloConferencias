@@ -6,6 +6,148 @@
     <title>Bosquejos - Gestor de Arreglos</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Estilos para la paginación */
+        .pagination-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin: 1.5rem 0;
+            width: 100%;
+        }
+        
+        .pagination-info {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            color: #4a5568;
+            font-weight: 500;
+            min-width: 180px;
+            text-align: center;
+        }
+        
+        .pagination {
+            display: flex;
+            gap: 0.5rem;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+        
+        .pagination .page-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 36px;
+            height: 36px;
+            padding: 0 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background-color: white;
+            color: #4a5568;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .pagination .page-link:hover:not(:disabled) {
+            background-color: #f7fafc;
+            border-color: #cbd5e0;
+            color: #2d3748;
+        }
+        
+        .pagination .page-item.disabled .page-link {
+            color: #a0aec0;
+            background-color: #f7fafc;
+            border-color: #e2e8f0;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        .pagination .page-item.active .page-link {
+            background-color: #4f46e5;
+            border-color: #4f46e5;
+            color: white;
+        }
+        
+        /* Botones de navegación - Estilo actualizado para coincidir con la aplicación */
+        .pagination .page-nav {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 36px;
+            height: 36px;
+            padding: 0 12px;
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
+            background-color: var(--color-surface);
+            color: var(--color-text);
+            font-family: 'Inter', sans-serif;
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .pagination .page-nav:not(:disabled):hover {
+            background-color: var(--color-bg-secondary);
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .pagination .page-nav:not(:disabled):active {
+            transform: translateY(0);
+            background-color: var(--color-primary-light);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .pagination .page-nav:disabled {
+            color: var(--color-text-disabled);
+            background-color: var(--color-bg-secondary);
+            border-color: var(--color-border);
+            cursor: not-allowed;
+            opacity: 0.6;
+            box-shadow: none;
+        }
+        
+        .pagination .page-nav i {
+            font-size: 0.95em;
+            transition: transform 0.2s ease;
+            color: inherit;
+        }
+        
+        .pagination .page-nav:not(:disabled):hover i {
+            transform: translateX(-1px);
+        }
+        
+        .pagination .page-nav:not(:disabled):hover:last-child i {
+            transform: translateX(1px);
+        }
+        
+        /* Contenedor de paginación */
+        .pagination-container {
+            background-color: var(--color-surface);
+            border-radius: var(--border-radius);
+            padding: 8px 16px;
+            box-shadow: var(--shadow-sm);
+            margin: 16px 0;
+        }
+        
+        .pagination-info {
+            color: var(--color-text-secondary);
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            min-width: 160px;
+            text-align: center;
+        }
+    </style>
     <link rel="stylesheet" href="../style.css" />
   </head>
   <body>
@@ -99,9 +241,17 @@
         <div class="content-section">
           <div class="section-header">
             <h3>Lista de Bosquejos</h3>
-            <button class="btn btn-primary">
-              <i class="fas fa-plus"></i> Nuevo Bosquejo
-            </button>
+            <div class="btn-group">
+              <button class="btn btn-outline" id="btnImportar">
+                <i class="fas fa-file-import"></i> Importar Excel
+              </button>
+              <button class="btn btn-outline" id="btnExportar">
+                <i class="fas fa-file-export"></i> Exportar Excel
+              </button>
+              <button class="btn btn-primary" id="btnNuevoBosquejo">
+                <i class="fas fa-plus"></i> Nuevo Bosquejo
+              </button>
+            </div>
           </div>
           
           <div class="search-bar">
@@ -124,16 +274,21 @@
                 <!-- Las filas se cargarán dinámicamente desde JavaScript -->
               </tbody>
             </table>
-          </div>
-          
-          <div class="pagination">
-            <button class="btn btn-sm btn-outline" disabled>
-              <i class="fas fa-chevron-left"></i> Anterior
-            </button>
-            <span>Página 1 de 5</span>
-            <button class="btn btn-sm btn-outline">
-              Siguiente <i class="fas fa-chevron-right"></i>
-            </button>
+            
+            <!-- Controles de paginación -->
+            <div class="pagination-container">
+              <button class="page-nav" id="pagination-prev" disabled>
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              
+              <div class="pagination-info">
+                <span id="pagination-start">0</span> - <span id="pagination-end">0</span> de <span id="pagination-total">0</span>
+              </div>
+              
+              <button class="page-nav" id="pagination-next" disabled>
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
           </div>
         </div>
       </main>
@@ -147,13 +302,14 @@
     </div>
 
     <!-- Modal para nuevo bosquejo -->
-    <div class="modal" id="modalBosquejo" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal" id="modalBosquejo" tabindex="-1" role="dialog" aria-labelledby="modalBosquejoTitle" aria-modal="false">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Nuevo Bosquejo</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar">
-              <i class="fas fa-times"></i>
+            <h2 class="modal-title h5" id="modalBosquejoTitle">Nuevo Bosquejo</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar modal">
+              <span class="sr-only">Cerrar</span>
+              <i class="fas fa-times" aria-hidden="true"></i>
             </button>
           </div>
           <div class="modal-body">
@@ -178,7 +334,13 @@
     </div>
 
     <script type="module" src="../scripts/app.js"></script>
-    <script type="module" src="../scripts/theme.js"></script>
-    <script type="module" src="../scripts/bosquejos.js"></script>
+    <!-- Input oculto para importar archivos -->
+    <input type="file" id="inputArchivo" accept=".xlsx, .xls" style="display: none;">
+    
+    <!-- SheetJS CDN para manejo de Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+    
+    <script src="../scripts/supabase.js" type="module"></script>
+    <script src="../scripts/bosquejos.js" type="module"></script>
   </body>
 </html>
