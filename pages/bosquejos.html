@@ -4,149 +4,155 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Bosquejos - Gestor de Arreglos</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
     <style>
-        /* Estilos para la paginación */
-        .pagination-container {
-            display: flex;
-            flex-direction: row;
-            justify-content: center;
-            align-items: center;
-            gap: 1rem;
-            margin: 1.5rem 0;
-            width: 100%;
-        }
-        
-        .pagination-info {
-            font-family: 'Inter', sans-serif;
-            font-size: 0.9rem;
-            color: #4a5568;
-            font-weight: 500;
-            min-width: 180px;
-            text-align: center;
-        }
-        
-        .pagination {
-            display: flex;
-            gap: 0.5rem;
-            margin: 0;
-            padding: 0;
-            list-style: none;
-        }
-        
-        .pagination .page-link {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 36px;
-            height: 36px;
-            padding: 0 0.75rem;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            background-color: white;
-            color: #4a5568;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.9rem;
-            font-weight: 500;
-            text-decoration: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        
-        .pagination .page-link:hover:not(:disabled) {
-            background-color: #f7fafc;
-            border-color: #cbd5e0;
-            color: #2d3748;
-        }
-        
-        .pagination .page-item.disabled .page-link {
-            color: #a0aec0;
-            background-color: #f7fafc;
-            border-color: #e2e8f0;
-            cursor: not-allowed;
-            opacity: 0.7;
-        }
-        
-        .pagination .page-item.active .page-link {
-            background-color: #4f46e5;
-            border-color: #4f46e5;
-            color: white;
-        }
-        
-        /* Botones de navegación - Estilo actualizado para coincidir con la aplicación */
-        .pagination .page-nav {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 36px;
-            height: 36px;
-            padding: 0 12px;
-            border: 1px solid var(--color-border);
-            border-radius: var(--border-radius);
-            background-color: var(--color-surface);
-            color: var(--color-text);
-            font-family: 'Inter', sans-serif;
-            font-size: var(--font-size-sm);
-            font-weight: 500;
-            cursor: pointer;
-            transition: var(--transition);
-            box-shadow: var(--shadow-sm);
-        }
-        
-        .pagination .page-nav:not(:disabled):hover {
-            background-color: var(--color-bg-secondary);
-            border-color: var(--color-primary);
-            color: var(--color-primary);
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-md);
-        }
-        
-        .pagination .page-nav:not(:disabled):active {
-            transform: translateY(0);
-            background-color: var(--color-primary-light);
-            box-shadow: var(--shadow-sm);
-        }
-        
-        .pagination .page-nav:disabled {
-            color: var(--color-text-disabled);
-            background-color: var(--color-bg-secondary);
-            border-color: var(--color-border);
-            cursor: not-allowed;
-            opacity: 0.6;
-            box-shadow: none;
-        }
-        
-        .pagination .page-nav i {
-            font-size: 0.95em;
-            transition: transform 0.2s ease;
-            color: inherit;
-        }
-        
-        .pagination .page-nav:not(:disabled):hover i {
-            transform: translateX(-1px);
-        }
-        
-        .pagination .page-nav:not(:disabled):hover:last-child i {
-            transform: translateX(1px);
-        }
-        
-        /* Contenedor de paginación */
-        .pagination-container {
-            background-color: var(--color-surface);
-            border-radius: var(--border-radius);
-            padding: 8px 16px;
-            box-shadow: var(--shadow-sm);
-            margin: 16px 0;
-        }
-        
-        .pagination-info {
-            color: var(--color-text-secondary);
-            font-size: var(--font-size-sm);
-            font-weight: 500;
-            min-width: 160px;
-            text-align: center;
-        }
+      /* Estilos para la paginación */
+      .pagination-container {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+        margin: 1.5rem 0;
+        width: 100%;
+      }
+
+      .pagination-info {
+        font-family: "Inter", sans-serif;
+        font-size: 0.9rem;
+        color: #4a5568;
+        font-weight: 500;
+        min-width: 180px;
+        text-align: center;
+      }
+
+      .pagination {
+        display: flex;
+        gap: 0.5rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .pagination .page-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 36px;
+        height: 36px;
+        padding: 0 0.75rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        background-color: white;
+        color: #4a5568;
+        font-family: "Inter", sans-serif;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .pagination .page-link:hover:not(:disabled) {
+        background-color: #f7fafc;
+        border-color: #cbd5e0;
+        color: #2d3748;
+      }
+
+      .pagination .page-item.disabled .page-link {
+        color: #a0aec0;
+        background-color: #f7fafc;
+        border-color: #e2e8f0;
+        cursor: not-allowed;
+        opacity: 0.7;
+      }
+
+      .pagination .page-item.active .page-link {
+        background-color: #4f46e5;
+        border-color: #4f46e5;
+        color: white;
+      }
+
+      /* Botones de navegación - Estilo actualizado para coincidir con la aplicación */
+      .pagination .page-nav {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 36px;
+        height: 36px;
+        padding: 0 12px;
+        border: 1px solid var(--color-border);
+        border-radius: var(--border-radius);
+        background-color: var(--color-surface);
+        color: var(--color-text);
+        font-family: "Inter", sans-serif;
+        font-size: var(--font-size-sm);
+        font-weight: 500;
+        cursor: pointer;
+        transition: var(--transition);
+        box-shadow: var(--shadow-sm);
+      }
+
+      .pagination .page-nav:not(:disabled):hover {
+        background-color: var(--color-bg-secondary);
+        border-color: var(--color-primary);
+        color: var(--color-primary);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
+      }
+
+      .pagination .page-nav:not(:disabled):active {
+        transform: translateY(0);
+        background-color: var(--color-primary-light);
+        box-shadow: var(--shadow-sm);
+      }
+
+      .pagination .page-nav:disabled {
+        color: var(--color-text-disabled);
+        background-color: var(--color-bg-secondary);
+        border-color: var(--color-border);
+        cursor: not-allowed;
+        opacity: 0.6;
+        box-shadow: none;
+      }
+
+      .pagination .page-nav i {
+        font-size: 0.95em;
+        transition: transform 0.2s ease;
+        color: inherit;
+      }
+
+      .pagination .page-nav:not(:disabled):hover i {
+        transform: translateX(-1px);
+      }
+
+      .pagination .page-nav:not(:disabled):hover:last-child i {
+        transform: translateX(1px);
+      }
+
+      /* Contenedor de paginación */
+      .pagination-container {
+        background-color: var(--color-surface);
+        border-radius: var(--border-radius);
+        padding: 8px 16px;
+        box-shadow: var(--shadow-sm);
+        margin: 16px 0;
+      }
+
+      .pagination-info {
+        color: var(--color-text-secondary);
+        font-size: var(--font-size-sm);
+        font-weight: 500;
+        min-width: 160px;
+        text-align: center;
+      }
     </style>
     <link rel="stylesheet" href="../style.css" />
   </head>
@@ -183,55 +189,62 @@
       <aside class="sidebar" id="sidebar">
         <nav class="sidebar-nav">
           <ul>
-
-<li class="nav-item">
-  <a href="../index.html" class="nav-link" id="nav-home">
-    <i class="fas fa-home"></i>
-    <span>Inicio</span>
-  </a>
-</li>
-<li class="nav-item">
-  <a href="congregaciones.html" class="nav-link" id="nav-congregaciones">
-    <i class="fas fa-users"></i>
-    <span>Congregaciones</span>
-  </a>
-</li>
-<li class="nav-item">
-  <a href="oradores.html" class="nav-link" id="nav-oradores">
-    <i class="fas fa-user-tie"></i>
-    <span>Oradores</span>
-  </a>
-</li>
-<li class="nav-item">
-  <a href="bosquejos.html" class="nav-link" id="nav-bosquejos">
-    <i class="fas fa-book"></i>
-    <span>Bosquejos</span>
-  </a>
-</li>
-<li class="nav-item">
-  <a href="arreglos.html" class="nav-link" id="nav-arreglos">
-    <i class="fas fa-calendar-alt"></i>
-    <span>Arreglos</span>
-  </a>
-</li>
-<li class="nav-item">
-  <a href="asignaciones.html" class="nav-link" id="nav-asignaciones">
-    <i class="fas fa-tasks"></i>
-    <span>Asignaciones</span>
-  </a>
-</li>
-<li class="nav-item">
-  <a href="informes.html" class="nav-link" id="nav-informes">
-    <i class="fas fa-chart-bar"></i>
-    <span>Informes</span>
-  </a>
-</li>
-<li class="nav-item">
-  <a href="ajustes.html" class="nav-link" id="nav-ajustes">
-    <i class="fas fa-cog"></i>
-    <span>Ajustes</span>
-  </a>
-</li>
+            <li class="nav-item">
+              <a href="../index.html" class="nav-link" id="nav-home">
+                <i class="fas fa-home"></i>
+                <span>Inicio</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                href="congregaciones.html"
+                class="nav-link"
+                id="nav-congregaciones"
+              >
+                <i class="fas fa-users"></i>
+                <span>Congregaciones</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="oradores.html" class="nav-link" id="nav-oradores">
+                <i class="fas fa-user-tie"></i>
+                <span>Oradores</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="bosquejos.html" class="nav-link" id="nav-bosquejos">
+                <i class="fas fa-book"></i>
+                <span>Bosquejos</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="arreglos.html" class="nav-link" id="nav-arreglos">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Arreglos</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                href="asignaciones.html"
+                class="nav-link"
+                id="nav-asignaciones"
+              >
+                <i class="fas fa-tasks"></i>
+                <span>Asignaciones</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="informes.html" class="nav-link" id="nav-informes">
+                <i class="fas fa-chart-bar"></i>
+                <span>Informes</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="ajustes.html" class="nav-link" id="nav-ajustes">
+                <i class="fas fa-cog"></i>
+                <span>Ajustes</span>
+              </a>
+            </li>
           </ul>
         </nav>
       </aside>
@@ -243,17 +256,21 @@
             <div class="section-header-row">
               <h3>Lista de Bosquejos</h3>
               <div class="btn-group">
+                <button class="btn btn-primary" id="btnNuevoBosquejo">
+                  <i class="fas fa-plus"></i> Nuevo Bosquejo
+                </button>
                 <button class="btn btn-outline" id="toggleImportExport">
                   Importar/Exportar
                   <i class="fas fa-chevron-down ms-2"></i>
                 </button>
-                <button class="btn btn-primary" id="btnNuevoBosquejo">
-                  <i class="fas fa-plus"></i> Nuevo Bosquejo
-                </button>
               </div>
             </div>
-            
-            <div class="import-export-panel" id="importExportPanel" style="display: none;">
+
+            <div
+              class="import-export-panel"
+              id="importExportPanel"
+              style="display: none"
+            >
               <div class="import-export-buttons">
                 <div class="btn-group">
                   <button class="btn btn-outline" id="btnImportar">
@@ -267,19 +284,23 @@
                   </button>
                 </div>
                 <div class="import-export-hint">
-                  <i class="fas fa-info-circle"></i> Gestiona la importación y exportación de datos
+                  <i class="fas fa-info-circle"></i> Gestiona la importación y
+                  exportación de datos
                 </div>
               </div>
             </div>
           </div>
-          
+
           <div class="search-bar">
             <div class="search-input">
               <i class="fas fa-search"></i>
-              <input type="text" placeholder="Buscar bosquejos por número o título...">
+              <input
+                type="text"
+                placeholder="Buscar bosquejos por número o título..."
+              />
             </div>
           </div>
-          
+
           <div class="table-responsive">
             <table class="data-table">
               <thead>
@@ -293,17 +314,19 @@
                 <!-- Las filas se cargarán dinámicamente desde JavaScript -->
               </tbody>
             </table>
-            
+
             <!-- Controles de paginación -->
             <div class="pagination-container">
               <button class="page-nav" id="pagination-prev" disabled>
                 <i class="fas fa-chevron-left"></i>
               </button>
-              
+
               <div class="pagination-info">
-                <span id="pagination-start">0</span> - <span id="pagination-end">0</span> de <span id="pagination-total">0</span>
+                <span id="pagination-start">0</span> -
+                <span id="pagination-end">0</span> de
+                <span id="pagination-total">0</span>
               </div>
-              
+
               <button class="page-nav" id="pagination-next" disabled>
                 <i class="fas fa-chevron-right"></i>
               </button>
@@ -321,29 +344,55 @@
     </div>
 
     <!-- Modal para nuevo bosquejo -->
-    <div class="modal" id="modalBosquejo" tabindex="-1" role="dialog" aria-labelledby="modalBosquejoTitle" aria-modal="false">
+    <div
+      class="modal"
+      id="modalBosquejo"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="modalBosquejoTitle"
+      aria-modal="false"
+    >
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h2 class="modal-title h5" id="modalBosquejoTitle">Nuevo Bosquejo</h2>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar modal">
+            <h2 class="modal-title h5" id="modalBosquejoTitle">
+              Nuevo Bosquejo
+            </h2>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Cerrar modal"
+            >
               <span class="sr-only">Cerrar</span>
               <i class="fas fa-times" aria-hidden="true"></i>
             </button>
           </div>
           <div class="modal-body">
             <form id="formBosquejo">
-              <input type="hidden" id="bosquejoId">
+              <input type="hidden" id="bosquejoId" />
               <div class="mb-3">
                 <label for="numero" class="form-label">Número</label>
-                <input type="number" class="form-control" id="numero" required min="1">
+                <input
+                  type="number"
+                  class="form-control"
+                  id="numero"
+                  required
+                  min="1"
+                />
               </div>
               <div class="mb-3">
                 <label for="titulo" class="form-label">Título</label>
-                <input type="text" class="form-control" id="titulo" required>
+                <input type="text" class="form-control" id="titulo" required />
               </div>
               <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                >
+                  Cancelar
+                </button>
                 <button type="submit" class="btn btn-primary">Guardar</button>
               </div>
             </form>
@@ -354,11 +403,16 @@
 
     <script type="module" src="../scripts/app.js"></script>
     <!-- Input oculto para importar archivos -->
-    <input type="file" id="inputArchivo" accept=".xlsx, .xls" style="display: none;">
-    
+    <input
+      type="file"
+      id="inputArchivo"
+      accept=".xlsx, .xls"
+      style="display: none"
+    />
+
     <!-- SheetJS CDN para manejo de Excel -->
     <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
-    
+
     <!-- jsPDF y jspdf-autotable para exportar a PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
@@ -366,7 +420,7 @@
       window.jsPDF = window.jspdf.jsPDF;
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
-    
+
     <script src="../scripts/supabase.js" type="module"></script>
     <script src="../scripts/bosquejos.js" type="module"></script>
   </body>

@@ -48,6 +48,101 @@ function actualizarTabla() {
   const endIndex = startIndex + itemsPerPage;
   const bosquejosPaginados = allBosquejos.slice(startIndex, endIndex);
   
+  // Limpiar tablas existentes
+  if (tablaBosquejos) {
+    tablaBosquejos.innerHTML = '';
+  }
+  
+  // Obtener o crear el contenedor de la tabla móvil
+  let mobileTableContainer = document.querySelector('.mobile-table');
+  if (!mobileTableContainer) {
+    mobileTableContainer = document.createElement('div');
+    mobileTableContainer.className = 'mobile-table';
+    const tableParent = document.querySelector('.table-responsive');
+    if (tableParent) {
+      tableParent.insertBefore(mobileTableContainer, tableParent.firstChild);
+    }
+  } else {
+    mobileTableContainer.innerHTML = '';
+  }
+  
+  // Actualizar la tabla de escritorio
+  if (tablaBosquejos) {
+    if (bosquejosPaginados.length === 0) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td colspan="3" class="text-center py-4">
+          No se encontraron bosquejos. ¡Crea tu primer bosquejo!
+        </td>
+      `;
+      tablaBosquejos.appendChild(tr);
+    } else {
+      bosquejosPaginados.forEach(bosquejo => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="col-numero">${bosquejo.numero}</td>
+          <td class="col-titulo">${bosquejo.titulo || ''}</td>
+          <td class="col-acciones text-center">
+            <button class="btn-icon" onclick="verBosquejo(${bosquejo.id})" title="Ver">
+              <i class="fas fa-eye"></i>
+            </button>
+            <button class="btn-icon" onclick="editarBosquejo(${bosquejo.id})" title="Editar">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn-icon text-danger" onclick="eliminarBosquejo(${bosquejo.id})" title="Eliminar">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        `;
+        tablaBosquejos.appendChild(tr);
+      });
+    }
+  }
+  
+  // Actualizar la vista móvil
+  if (bosquejosPaginados.length === 0) {
+    const emptyMessage = document.createElement('div');
+    emptyMessage.className = 'mobile-table-row text-center py-4';
+    emptyMessage.textContent = 'No se encontraron bosquejos. ¡Crea tu primer bosquejo!';
+    mobileTableContainer.appendChild(emptyMessage);
+  } else {
+    bosquejosPaginados.forEach(bosquejo => {
+      const card = document.createElement('div');
+      card.className = 'mobile-table-row';
+      card.innerHTML = `
+        <div class="mobile-table-cell">
+          <span class="label">Número:</span>
+          <span class="value">${bosquejo.numero}</span>
+        </div>
+        <div class="mobile-table-cell">
+          <span class="label">Título:</span>
+          <span class="value">${bosquejo.titulo || 'Sin título'}</span>
+        </div>
+        <div class="mobile-table-actions">
+          <button class="btn btn-sm btn-outline" onclick="verBosquejo(${bosquejo.id})" title="Ver">
+            <i class="fas fa-eye"></i> Ver
+          </button>
+          <button class="btn btn-sm btn-outline" onclick="editarBosquejo(${bosquejo.id})" title="Editar">
+            <i class="fas fa-edit"></i> Editar
+          </button>
+          <button class="btn btn-sm btn-outline text-danger" onclick="eliminarBosquejo(${bosquejo.id})" title="Eliminar">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      `;
+      mobileTableContainer.appendChild(card);
+    });
+  }
+  
+  // Mostrar/ocultar tablas según el ancho de la pantalla
+  const isMobile = window.innerWidth < 768;
+  document.querySelectorAll('table.data-table').forEach(el => {
+    el.style.display = isMobile ? 'none' : 'table';
+  });
+  if (mobileTableContainer) {
+    mobileTableContainer.style.display = isMobile ? 'block' : 'none';
+  }
+  
   // Limpiar tabla
   tablaBosquejos.innerHTML = '';
   
@@ -452,6 +547,21 @@ async function exportToPDF() {
   }
 }
 
+// Función para manejar el cambio de tamaño de la ventana
+function handleWindowResize() {
+  const isMobile = window.innerWidth < 768;
+  const desktopTable = document.querySelector('table.data-table');
+  const mobileTable = document.querySelector('.mobile-table');
+  
+  if (desktopTable) {
+    desktopTable.style.display = isMobile ? 'none' : 'table';
+  }
+  
+  if (mobileTable) {
+    mobileTable.style.display = isMobile ? 'block' : 'none';
+  }
+}
+
 // Función para alternar el panel de importación/exportación
 function toggleImportExportPanel() {
   const panel = document.getElementById('importExportPanel');
@@ -470,6 +580,8 @@ function toggleImportExportPanel() {
 }
 
 // Event Listeners
+window.addEventListener('resize', handleWindowResize);
+
 document.addEventListener('DOMContentLoaded', () => {
   // Botones del modal
   if (btnNuevoBosquejo) btnNuevoBosquejo.addEventListener('click', mostrarModalNuevoBosquejo);
