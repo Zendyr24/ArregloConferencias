@@ -378,10 +378,85 @@ function mostrarAlerta(mensaje, tipo = 'info') {
   alert(`${tipo.toUpperCase()}: ${mensaje}`);
 }
 
+// Función para exportar a PDF
+async function exportToPDF() {
+  try {
+    // Mostrar indicador de carga
+    const originalButtonText = btnExportarPDF.innerHTML;
+    btnExportarPDF.disabled = true;
+    btnExportarPDF.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando PDF...';
+    
+    // Obtener los datos ordenados
+    const bosquejos = [...allBosquejos].sort((a, b) => a.numero - b.numero);
+    
+    // Crear un nuevo documento PDF
+    const doc = new window.jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+    
+    // Agregar título
+    doc.setFontSize(18);
+    doc.text('Lista de Bosquejos', 14, 22);
+    
+    // Agregar fecha de generación
+    doc.setFontSize(10);
+    doc.text(`Generado el: ${new Date().toLocaleDateString()}`, 14, 30);
+    
+    // Configurar la tabla
+    const headers = [['Número', 'Título']];
+    const data = bosquejos.map(bosquejo => [
+      bosquejo.numero.toString(),
+      bosquejo.titulo || ''
+    ]);
+    
+    // Agregar tabla al documento
+    doc.autoTable({
+      head: headers,
+      body: data,
+      startY: 40,
+      styles: {
+        fontSize: 10,
+        cellPadding: 3,
+        overflow: 'linebreak',
+        lineWidth: 0.1,
+        lineColor: [0, 0, 0],
+        fillColor: [255, 255, 255],
+        textColor: [0, 0, 0],
+        font: 'helvetica'
+      },
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold'
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245]
+      },
+      margin: { top: 40 }
+    });
+    
+    // Guardar el PDF
+    doc.save(`bosquejos_${new Date().toISOString().split('T')[0]}.pdf`);
+    
+  } catch (error) {
+    console.error('Error al generar el PDF:', error);
+    mostrarAlerta('Error al generar el PDF: ' + error.message, 'error');
+  } finally {
+    // Restaurar el botón
+    if (btnExportarPDF) {
+      btnExportarPDF.disabled = false;
+      btnExportarPDF.innerHTML = '<i class="fas fa-file-pdf"></i> Exportar PDF';
+    }
+  }
+}
+
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
   // Botones del modal
   if (btnNuevoBosquejo) btnNuevoBosquejo.addEventListener('click', mostrarModalNuevoBosquejo);
+  if (btnExportarPDF) btnExportarPDF.addEventListener('click', exportToPDF);
   if (formBosquejo) formBosquejo.addEventListener('submit', manejarEnvioFormulario);
   if (btnCerrarModal) btnCerrarModal.addEventListener('click', ocultarModal);
   if (btnCancelar) btnCancelar.addEventListener('click', ocultarModal);

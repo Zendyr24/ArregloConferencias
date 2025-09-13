@@ -248,6 +248,9 @@
               <button class="btn btn-outline" id="btnExportar">
                 <i class="fas fa-file-export"></i> Exportar Excel
               </button>
+              <button class="btn btn-outline" id="btnExportarPDF">
+                <i class="fas fa-file-pdf"></i> Exportar PDF
+              </button>
               <button class="btn btn-primary" id="btnNuevoBosquejo">
                 <i class="fas fa-plus"></i> Nuevo Bosquejo
               </button>
@@ -339,6 +342,14 @@
     
     <!-- SheetJS CDN para manejo de Excel -->
     <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+    
+    <!-- jsPDF y jspdf-autotable para exportar a PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+      // Hacer que jsPDF esté disponible globalmente
+      window.jsPDF = window.jspdf.jsPDF;
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
     
     <script src="../scripts/supabase.js" type="module"></script>
     <script src="../scripts/bosquejos.js" type="module"></script>
