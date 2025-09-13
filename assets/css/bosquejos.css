@@ -45,6 +45,51 @@
   margin-right: 1rem;
 }
 
+/* Estilos para el botón de limpiar búsqueda */
+.btn-clear-search {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.btn-clear-search:hover {
+  background-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.btn-clear-search i {
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* Asegurar que el contenedor de búsqueda tenga posición relativa */
+.search-container {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  max-width: 300px;
+}
+
+/* Ajustar el input de búsqueda para dejar espacio al botón */
+.search-container input[type="search"] {
+  padding-right: 40px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
 /* Contenedor de acciones móviles */
 .mobile-table-actions {
   display: flex;

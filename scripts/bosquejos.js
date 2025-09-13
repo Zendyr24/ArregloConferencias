@@ -27,6 +27,38 @@ const itemsPerPage = 50;
 let totalBosquejos = 0;
 let allBosquejos = [];
 
+// Función para cargar los bosquejos desde la base de datos
+async function cargarBosquejos() {
+  try {
+    mostrarCarga(true);
+    const { data: bosquejos, error } = await db.obtenerTodos('bosquejos');
+    
+    if (error) throw error;
+    
+    allBosquejos = bosquejos.sort((a, b) => a.numero - b.numero);
+    allBosquejosFiltrados = [...allBosquejos];
+    totalBosquejos = allBosquejos.length;
+    
+    actualizarTabla();
+    actualizarControlesPaginacion();
+    return allBosquejos;
+  } catch (error) {
+    console.error('Error al cargar los bosquejos:', error);
+    mostrarAlerta('Error al cargar los bosquejos. Por favor, intente de nuevo.', 'error');
+    return [];
+  } finally {
+    mostrarCarga(false);
+  }
+}
+
+// Función para mostrar/ocultar indicador de carga
+function mostrarCarga(mostrar) {
+  const loader = document.getElementById('loader');
+  if (loader) {
+    loader.style.display = mostrar ? 'flex' : 'none';
+  }
+}
+
 // Cargar bosquejos al iniciar la página
 document.addEventListener('DOMContentLoaded', () => {
   // Configurar event listeners una sola vez
@@ -43,10 +75,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Función para actualizar la tabla con los bosquejos de la página actual
 function actualizarTabla() {
+  // Usar los bosquejos filtrados si existen, de lo contrario usar todos
+  const bosquejosAMostrar = allBosquejosFiltrados.length > 0 ? allBosquejosFiltrados : allBosquejos;
+  totalBosquejos = bosquejosAMostrar.length;
+  
   // Calcular índices de los elementos a mostrar
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const bosquejosPaginados = allBosquejos.slice(startIndex, endIndex);
+  const bosquejosPaginados = bosquejosAMostrar.slice(startIndex, endIndex);
   
   // Limpiar tablas existentes
   if (tablaBosquejos) {
@@ -253,44 +289,28 @@ function actualizarControlesPaginacion() {
 
 // Función para cambiar de página
 function cambiarPagina(direccion) {
-  const totalPages = Math.ceil(totalBosquejos / itemsPerPage);
-  
-  if (direccion === 'prev' && currentPage > 1) {
-    currentPage--;
-  } else if (direccion === 'next' && currentPage < totalPages) {
-    currentPage++;
-  } else if (typeof direccion === 'number' && direccion > 0 && direccion <= totalPages) {
-    currentPage = direccion;
-  }
-  
-  actualizarTabla();
-}
-
-async function cargarBosquejos() {
   try {
-    const { data: bosquejos, error } = await db.obtenerTodos('bosquejos');
+    const totalPages = Math.ceil(totalBosquejos / itemsPerPage);
     
-    if (error) throw error;
-    
-    // Guardar y ordenar los bosquejos
-    allBosquejos = Array.isArray(bosquejos) ? bosquejos : [];
-    allBosquejos.sort((a, b) => (a.numero || 0) - (b.numero || 0));
-    totalBosquejos = allBosquejos.length;
-    
-    // Actualizar la tabla con la primera página
-    currentPage = 1;
-    actualizarTabla();
-    
+    if (direccion === 'prev' && currentPage > 1) {
+      currentPage--;
+      actualizarTabla();
+    } else if (direccion === 'next' && currentPage < totalPages) {
+      currentPage++;
+      actualizarTabla();
+    }
   } catch (error) {
-    console.error('Error al cargar los bosquejos:', error);
+    console.error('Error al cambiar de página:', error);
     // Mostrar mensaje de error
-    const fila = document.createElement('tr');
-    fila.innerHTML = `
-      <td colspan="3" class="text-center text-danger">
-        Error al cargar los bosquejos. Por favor, intente de nuevo más tarde.
-      </td>
-    `;
-    tablaBosquejos.appendChild(fila);
+    if (tablaBosquejos) {
+      const fila = document.createElement('tr');
+      fila.innerHTML = `
+        <td colspan="3" class="text-center text-danger">
+          Error al cargar los bosquejos. Por favor, intente de nuevo más tarde.
+        </td>
+      `;
+      tablaBosquejos.appendChild(fila);
+    }
   }
   
   // Asegurarse de que los botones de acción tengan sus event listeners
@@ -839,101 +859,76 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// Función para filtrar la tabla
-function filtrarTabla(terminoBusqueda) {
-  const filas = document.querySelectorAll('.data-table tbody tr:not(#mensajeSinResultados)');
-  let resultadosEncontrados = 0;
-  const tbody = document.querySelector('.data-table tbody');
+// Función para buscar en todos los registros
+function buscarEnTodosLosRegistros(termino) {
+  if (!termino || termino.trim() === '') {
+    // Si no hay término de búsqueda, mostrar todos los registros
+    allBosquejosFiltrados = [...allBosquejos];
+    currentPage = 1;
+    actualizarTabla();
+    return;
+  }
+
+  const terminoLower = termino.toLowerCase();
   
-  // Mostrar todas las filas primero (excepto el mensaje)
-  filas.forEach(fila => {
-    fila.style.display = '';
+  // Filtrar todos los registros
+  allBosquejosFiltrados = allBosquejos.filter(bosquejo => {
+    const textoCompleto = `${bosquejo.numero} ${bosquejo.titulo || ''}`.toLowerCase();
+    return textoCompleto.includes(terminoLower);
   });
   
-  // Si hay término de búsqueda, aplicar el filtro
-  if (terminoBusqueda) {
-    filas.forEach(fila => {
-      // Obtener el texto de las celdas de número y título
-      const celdaNumero = fila.cells[0]?.textContent?.trim() || '';
-      const celdaTitulo = fila.cells[1]?.textContent?.trim() || '';
-      const textoCompleto = `${celdaNumero} ${celdaTitulo}`.toLowerCase();
-      
-      if (textoCompleto.includes(terminoBusqueda.toLowerCase())) {
-        resultadosEncontrados++;
-      } else {
-        fila.style.display = 'none';
-      }
-    });
-  } else {
-    // Si no hay término de búsqueda, mostrar todo
-    resultadosEncontrados = filas.length;
-  }
-  
-  // Manejar el mensaje de "sin resultados"
-  const mensajeSinResultados = document.getElementById('mensajeSinResultados');
-  
-  // Eliminar mensaje anterior si existe
-  if (mensajeSinResultados) {
-    mensajeSinResultados.remove();
-  }
-  
-  // Mostrar mensaje si no hay resultados y hay término de búsqueda
-  if (resultadosEncontrados === 0 && terminoBusqueda) {
-    const filaMensaje = document.createElement('tr');
-    filaMensaje.id = 'mensajeSinResultados';
-    filaMensaje.innerHTML = `
-      <td colspan="3" class="text-center py-4">
-        <i class="fas fa-search mb-2" style="font-size: 1.5rem; opacity: 0.5;"></i>
-        <p class="mb-0">No se encontraron resultados para "${terminoBusqueda}"</p>
-      </td>
-    `;
-    tbody.appendChild(filaMensaje);
-  }
+  currentPage = 1; // Volver a la primera página con los resultados
+  actualizarTabla();
 }
 
-// Evento para la búsqueda con debounce
-let timeoutBusqueda = null;
-inputBusqueda.addEventListener('input', (e) => {
-  const termino = e.target.value.trim();
+// Inicializar la lista filtrada con todos los bosquejos
+let allBosquejosFiltrados = [];
+
+// Asegurarse de que el contenedor de búsqueda tenga la clase correcta
+const searchContainer = inputBusqueda.closest('.search-input');
+if (searchContainer) {
+  searchContainer.classList.add('search-container');
   
-  // Limpiar el timeout anterior
-  clearTimeout(timeoutBusqueda);
-  
-  // Establecer un nuevo timeout
-  timeoutBusqueda = setTimeout(() => {
-    filtrarTabla(termino);
-  }, 300); // 300ms de retraso
-});
-
-// Limpiar la búsqueda al hacer clic en la X
-const btnLimpiarBusqueda = document.createElement('button');
-btnLimpiarBusqueda.type = 'button';
-btnLimpiarBusqueda.className = 'btn-clear-search';
-btnLimpiarBusqueda.innerHTML = '<i class="fas fa-times"></i>';
-btnLimpiarBusqueda.title = 'Limpiar búsqueda';
-btnLimpiarBusqueda.style.display = 'none';
-
-// Insertar el botón después del input de búsqueda
-inputBusqueda.parentNode.insertBefore(btnLimpiarBusqueda, inputBusqueda.nextSibling);
-
-// Mostrar/ocultar el botón de limpiar según si hay texto
-inputBusqueda.addEventListener('input', (e) => {
-  if (e.target.value.trim() !== '') {
-    btnLimpiarBusqueda.style.display = 'flex';
-  } else {
-    btnLimpiarBusqueda.style.display = 'none';
-    // Si se limpia el input, mostrar todos los resultados
-    filtrarTabla('');
-  }
-});
-
-// Limpiar la búsqueda al hacer clic en el botón
-btnLimpiarBusqueda.addEventListener('click', () => {
-  inputBusqueda.value = '';
+  // Crear y configurar el botón de limpiar
+  const btnLimpiarBusqueda = document.createElement('button');
+  btnLimpiarBusqueda.type = 'button';
+  btnLimpiarBusqueda.className = 'btn-clear-search';
+  btnLimpiarBusqueda.innerHTML = '<i class="fas fa-times"></i>';
+  btnLimpiarBusqueda.title = 'Limpiar búsqueda';
   btnLimpiarBusqueda.style.display = 'none';
-  filtrarTabla('');
-  inputBusqueda.focus();
-});
+  
+  // Insertar el botón dentro del contenedor de búsqueda
+  searchContainer.appendChild(btnLimpiarBusqueda);
+  
+  // Evento para la búsqueda con debounce
+  let timeoutBusqueda = null;
+  inputBusqueda.addEventListener('input', (e) => {
+    const termino = e.target.value.trim();
+    
+    // Mostrar/ocultar botón de limpiar
+    if (termino !== '') {
+      btnLimpiarBusqueda.style.display = 'flex';
+    } else {
+      btnLimpiarBusqueda.style.display = 'none';
+    }
+    
+    // Limpiar timeout anterior
+    clearTimeout(timeoutBusqueda);
+    
+    // Establecer un nuevo timeout para la búsqueda
+    timeoutBusqueda = setTimeout(() => {
+      buscarEnTodosLosRegistros(termino);
+    }, 300);
+  });
+  
+  // Limpiar la búsqueda al hacer clic en el botón
+  btnLimpiarBusqueda.addEventListener('click', () => {
+    inputBusqueda.value = '';
+    btnLimpiarBusqueda.style.display = 'none';
+    buscarEnTodosLosRegistros('');
+    inputBusqueda.focus();
+  });
+}
 
 // Función para exportar a Excel
 async function exportToExcel() {
