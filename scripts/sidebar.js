@@ -38,6 +38,7 @@ export function initializeSidebar() {
   const pageToNavMap = {
     "index.html": "nav-home",
     "congregaciones.html": "nav-congregaciones",
+    "publicadores.html": "nav-publicadores",
     "oradores.html": "nav-oradores",
     "bosquejos.html": "nav-bosquejos",
     "arreglos.html": "nav-arreglos",
