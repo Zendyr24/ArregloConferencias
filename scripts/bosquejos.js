@@ -667,18 +667,28 @@ function handleWindowResize() {
 
 // Función para alternar el panel de importación/exportación
 function toggleImportExportPanel() {
+  const toggleBtn = document.getElementById('toggleImportExport');
   const panel = document.getElementById('importExportPanel');
-  const toggleButton = document.getElementById('toggleImportExport');
   
-  if (panel && toggleButton) {
-    panel.classList.toggle('visible');
-    toggleButton.classList.toggle('collapsed');
-    
-    // Cambiar el ícono
-    const icon = toggleButton.querySelector('i');
-    if (icon) {
-      icon.className = panel.classList.contains('visible') ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
-    }
+  if (!panel || !toggleBtn) return;
+  
+  // Alternar visibilidad
+  const isVisible = panel.style.display !== 'none';
+  
+  if (isVisible) {
+    panel.style.display = 'none';
+    panel.classList.remove('visible');
+    toggleBtn.setAttribute('aria-expanded', 'false');
+  } else {
+    panel.style.display = 'block';
+    panel.classList.add('visible');
+    toggleBtn.setAttribute('aria-expanded', 'true');
+  }
+  
+  // Actualizar ícono
+  const icon = toggleBtn.querySelector('i');
+  if (icon) {
+    icon.className = isVisible ? 'fas fa-chevron-down ms-2' : 'fas fa-chevron-up ms-2';
   }
 }
 
@@ -693,10 +703,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // Toggle del panel de importación/exportación
   const toggleButton = document.getElementById('toggleImportExport');
   if (toggleButton) {
-    toggleButton.addEventListener('click', toggleImportExportPanel);
+    toggleButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleImportExportPanel();
+    });
+    
     // Inicializar como colapsado
-    toggleButton.classList.add('collapsed');
-    // Asegurarse de que el panel esté oculto al cargar
     const panel = document.getElementById('importExportPanel');
     if (panel) {
       panel.style.display = 'none';
@@ -842,7 +855,27 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   
-  // Event listeners for the import button are already set up above
+  // Cerrar el panel al hacer clic fuera de él
+  document.addEventListener('click', (e) => {
+    const panel = document.getElementById('importExportPanel');
+    const toggleBtn = document.getElementById('toggleImportExport');
+    
+    if (!panel || !toggleBtn) return;
+    
+    // Verificar si el clic fue fuera del panel y del botón de toggle
+    if (!panel.contains(e.target) && e.target !== toggleBtn && !toggleBtn.contains(e.target)) {
+      // Usar el mismo método para ocultar que en la función toggle
+      if (panel.style.display !== 'none') {
+        panel.style.display = 'none';
+        panel.classList.remove('visible');
+        toggleBtn.setAttribute('aria-expanded', 'false');
+        const icon = toggleBtn.querySelector('i');
+        if (icon) {
+          icon.className = 'fas fa-chevron-down ms-2';
+        }
+      }
+    }
+  });
 });
 
 // Cerrar modal al hacer clic fuera del contenido

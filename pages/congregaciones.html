@@ -3,10 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Congregaciones - Gestor de Arreglos en Conferencias</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Congregaciones - Gestor de Arreglos</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <!-- Estilos principales -->
     <link rel="stylesheet" href="../style.css" />
+    <!-- Estilos específicos para la página de congregaciones -->
+    <link rel="stylesheet" href="../assets/css/congregaciones.css" />
   </head>
   <body>
     <div class="dashboard">
@@ -41,108 +50,156 @@
       <aside class="sidebar" id="sidebar">
         <nav class="sidebar-nav">
           <ul>
-
-<li class="nav-item">
-  <a href="../index.html" class="nav-link" id="nav-home">
-    <i class="fas fa-home"></i>
-    <span>Inicio</span>
-  </a>
-</li>
-<li class="nav-item">
-  <a href="congregaciones.html" class="nav-link" id="nav-congregaciones">
-    <i class="fas fa-users"></i>
-    <span>Congregaciones</span>
-  </a>
-</li>
-<li class="nav-item">
-  <a href="oradores.html" class="nav-link" id="nav-oradores">
-    <i class="fas fa-user-tie"></i>
-    <span>Oradores</span>
-  </a>
-</li>
-<li class="nav-item">
-  <a href="bosquejos.html" class="nav-link" id="nav-bosquejos">
-    <i class="fas fa-book"></i>
-    <span>Bosquejos</span>
-  </a>
-</li>
-<li class="nav-item">
-  <a href="arreglos.html" class="nav-link" id="nav-arreglos">
-    <i class="fas fa-calendar-alt"></i>
-    <span>Arreglos</span>
-  </a>
-</li>
-<li class="nav-item">
-  <a href="asignaciones.html" class="nav-link" id="nav-asignaciones">
-    <i class="fas fa-tasks"></i>
-    <span>Asignaciones</span>
-  </a>
-</li>
-<li class="nav-item">
-  <a href="informes.html" class="nav-link" id="nav-informes">
-    <i class="fas fa-chart-bar"></i>
-    <span>Informes</span>
-  </a>
-</li>
-<li class="nav-item">
-  <a href="ajustes.html" class="nav-link" id="nav-ajustes">
-    <i class="fas fa-cog"></i>
-    <span>Ajustes</span>
-  </a>
-</li>
+            <li class="nav-item">
+              <a href="../index.html" class="nav-link" id="nav-home">
+                <i class="fas fa-home"></i>
+                <span>Inicio</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                href="congregaciones.html"
+                class="nav-link"
+                id="nav-congregaciones"
+              >
+                <i class="fas fa-users"></i>
+                <span>Congregaciones</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="oradores.html" class="nav-link" id="nav-oradores">
+                <i class="fas fa-user-tie"></i>
+                <span>Oradores</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="bosquejos.html" class="nav-link" id="nav-bosquejos">
+                <i class="fas fa-book"></i>
+                <span>Bosquejos</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="arreglos.html" class="nav-link" id="nav-arreglos">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Arreglos</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                href="asignaciones.html"
+                class="nav-link"
+                id="nav-asignaciones"
+              >
+                <i class="fas fa-tasks"></i>
+                <span>Asignaciones</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="informes.html" class="nav-link" id="nav-informes">
+                <i class="fas fa-chart-bar"></i>
+                <span>Informes</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="ajustes.html" class="nav-link" id="nav-ajustes">
+                <i class="fas fa-cog"></i>
+                <span>Ajustes</span>
+              </a>
+            </li>
           </ul>
         </nav>
       </aside>
 
       <!-- Main Content -->
       <main class="main-content" id="mainContent">
-        <div class="page-header">
-          <h2>Congregaciones</h2>
-          <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-              <li class="breadcrumb-item"><a href="../index.html">Inicio</a></li>
-              <li class="breadcrumb-item active">Página</li>
-            </ol>
-          </nav>
-        </div>
-
         <div class="content-section">
           <div class="section-header">
-            <h3>Lista de Congregaciones</h3>
-            <button class="btn btn-primary">
-              <i class="fas fa-plus"></i> Agregar Congregación
-            </button>
+            <div class="section-header-row">
+              <h3>Lista de Congregaciones</h3>
+              <div class="btn-group">
+                <button
+                  class="btn btn-primary"
+                  onclick="mostrarModalNuevaCongregacion()"
+                >
+                  <i class="fas fa-plus"></i> Nueva Congregación
+                </button>
+                <button class="btn btn-outline" id="toggleImportExport">
+                  Importar/Exportar
+                  <i class="fas fa-chevron-down ms-2"></i>
+                </button>
+              </div>
+            </div>
+
+            <div
+              class="import-export-panel"
+              id="importExportPanel"
+              style="display: none"
+            >
+              <div class="import-export-buttons">
+                <div class="btn-group">
+                  <button class="btn btn-outline" id="btnImportar">
+                    <i class="fas fa-file-import"></i> Importar Excel
+                  </button>
+                  <button class="btn btn-outline" id="btnExportar">
+                    <i class="fas fa-file-export"></i> Exportar Excel
+                  </button>
+                  <button class="btn btn-outline" id="btnExportarPDF">
+                    <i class="fas fa-file-pdf"></i> Exportar PDF
+                  </button>
+                </div>
+                <div class="import-export-hint">
+                  <i class="fas fa-info-circle"></i> Gestiona la importación y
+                  exportación de datos
+                </div>
+              </div>
+            </div>
           </div>
-          
+
+          <div class="search-bar">
+            <div class="search-input">
+              <i class="fas fa-search"></i>
+              <input
+                type="text"
+                id="buscarCongregacion"
+                placeholder="Buscar congregaciones por nombre o circuito..."
+              />
+            </div>
+          </div>
+
           <div class="table-responsive">
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Nombre de la Congregación</th>
-                  <th>Dirección</th>
-                  <th>Capacidad</th>
-                  <th>Contacto</th>
-                  <th>Acciones</th>
+                  <th class="col-nombre">Nombre</th>
+                  <th class="col-circuito">Circuito</th>
+                  <th class="col-direccion">Dirección</th>
+                  <th class="col-horario">Horario</th>
+                  <th class="col-acciones text-center">Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>Congregación Central</td>
-                  <td>Av. Principal #123, Col. Centro</td>
-                  <td>120 personas</td>
-                  <td>contacto@congregacion.com</td>
-                  <td>
-                    <button class="btn-icon" title="Editar">
-                      <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn-icon" title="Eliminar">
-                      <i class="fas fa-trash"></i>
-                    </button>
-                  </td>
-                </tr>
-                <!-- Más filas de ejemplo -->
+                <!-- Las filas se llenarán dinámicamente -->
               </tbody>
             </table>
+          </div>
+
+          <!-- Contenedor para la tabla móvil -->
+          <div class="mobile-table"></div>
+
+          <!-- Paginación -->
+          <!-- Controles de paginación -->
+          <div class="pagination-container">
+            <button class="page-nav" id="pagination-prev" disabled>
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <div class="pagination-info">
+              <span id="pagination-start">0</span> -
+              <span id="pagination-end">0</span> de
+              <span id="pagination-total">0</span>
+            </div>
+            <button class="page-nav" id="pagination-next" disabled>
+              <i class="fas fa-chevron-right"></i>
+            </button>
           </div>
         </div>
       </main>
@@ -156,7 +213,79 @@
       </footer>
     </div>
 
+    <!-- Modal para nueva/editar congregación -->
+    <div class="modal fade" id="modalCongregacion" tabindex="-1" role="dialog" aria-labelledby="modalCongregacionTitle" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 class="modal-title h5" id="modalCongregacionTitle">Nueva Congregación</h2>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Cerrar modal"
+            >
+              <span class="sr-only">Cerrar</span>
+              <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="formCongregacion" class="needs-validation" novalidate>
+              <input type="hidden" id="congregacionId" />
+              <div class="mb-3">
+                <label for="nombre" class="form-label">Nombre de la Congregación</label>
+                <input type="text" class="form-control" id="nombre" required />
+              </div>
+              <div class="mb-3">
+                <label for="circuito" class="form-label">Circuito</label>
+                <input type="text" class="form-control" id="circuito" />
+              </div>
+              <div class="mb-3">
+                <label for="direccion" class="form-label">Dirección</label>
+                <textarea class="form-control" id="direccion" rows="2"></textarea>
+              </div>
+              <div class="mb-3">
+                <label for="horario" class="form-label">Horario de Reuniones</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="horario"
+                  placeholder="Ej: Domingos 10:00 am - 12:00 pm"
+                />
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                  Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary">Guardar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loader -->
+    <div id="loader" class="loader-overlay" style="display: none">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+    </div>
+
+    <!-- XLSX Library -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script type="module" src="../scripts/app.js"></script>
-      <script type="module" src="../scripts/theme.js"></script>
+    <script type="module" src="../scripts/theme.js"></script>
+    <script type="module" src="../scripts/congregaciones.js"></script>
+    <script>
+      // Make XLSX globally available
+      window.XLSX = XLSX;
+    </script>
+    <script>
+      // Hacer jsPDF disponible globalmente
+      window.jsPDF = window.jspdf.jsPDF;
+    </script>
   </body>
 </html>

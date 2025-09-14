@@ -1,85 +1,3 @@
-/* Estilos específicos para la página de Bosquejos */
-
-/* Estilos específicos para la tabla de bosquejos */
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 1rem 0;
-  background: var(--color-surface);
-  border-radius: var(--border-radius);
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-}
-
-.data-table thead {
-  background-color: var(--color-primary);
-  color: white;
-}
-
-.data-table th {
-  padding: 1rem;
-  text-align: left;
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 0.8rem;
-  letter-spacing: 0.5px;
-}
-
-.data-table td {
-  padding: 1rem;
-  border-bottom: 1px solid var(--color-border);
-  vertical-align: middle;
-}
-
-.data-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.data-table tbody tr:hover {
-  background-color: var(--color-bg-secondary);
-}
-
-/* Columnas específicas */
-.col-numero {
-  width: 15%;
-  font-weight: 600;
-  color: var(--color-primary);
-}
-
-.col-titulo {
-  width: 70%;
-}
-
-.col-acciones {
-  width: 15%;
-  text-align: center !important;
-}
-
-/* Estilos para las acciones */
-.acciones-botones {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-}
-
-.btn-accion {
-  padding: 0.4rem 0.75rem;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.btn-accion i {
-  font-size: 0.9em;
-}
-
-/* Estilos para la tabla móvil */
-.mobile-table {
-  display: none;
-}
-
 /* Estilos para el panel de importar/exportar */
 .import-export-panel {
   position: relative;
@@ -166,6 +84,189 @@
   transform: rotate(180deg);
 }
 
+/* Estilos específicos para la página de Congregaciones */
+
+/* Estilos específicos para la tabla de congregaciones */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  background: var(--color-surface);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.data-table thead {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.data-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+}
+
+.data-table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table tbody tr:hover {
+  background-color: var(--color-bg-secondary);
+}
+
+/* Estilos base para la tabla */
+.data-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+/* Estilos base para celdas */
+.data-table th,
+.data-table td {
+  padding: 1rem;
+  vertical-align: middle;
+}
+
+/* Columnas específicas - Celdas de datos */
+.data-table td.col-nombre {
+  width: 25%;
+  text-align: left;
+  padding-left: 1rem;
+}
+
+.data-table td.col-circuito {
+  width: 15%;
+  text-align: left;
+  padding-left: 1rem;
+}
+
+.data-table td.col-direccion {
+  width: 30%;
+  text-align: left;
+  padding-left: 1rem;
+}
+
+.data-table td.col-horario {
+  width: 15%;
+  text-align: left;
+  padding-left: 1rem;
+}
+
+/* Encabezados */
+.data-table th.col-nombre {
+  width: 25%;
+  text-align: left;
+  padding-left: 1rem;
+}
+
+.data-table th.col-circuito {
+  width: 15%;
+  text-align: left;
+  padding-left: 1rem;
+}
+
+.data-table th.col-direccion {
+  width: 30%;
+  text-align: left;
+  padding-left: 1rem;
+}
+
+.data-table th.col-horario {
+  width: 15%;
+  text-align: left;
+  padding-left: 1rem;
+}
+
+/* Columna de acciones */
+.data-table th.col-acciones,
+.data-table td.col-acciones {
+  width: 15%;
+  min-width: 100px;
+  text-align: center;
+  padding: 1rem;
+}
+
+/* Asegurar que el contenido de las acciones esté centrado */
+.acciones-botones {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* Estilos para las acciones */
+.acciones-botones {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.btn-accion {
+  padding: 0.4rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-accion i {
+  font-size: 0.9em;
+}
+
+/* Estilos para el modal de congregaciones */
+#modalCongregacion .modal-dialog {
+  max-width: 600px;
+  margin: 1.75rem auto;
+}
+
+#modalCongregacion .modal-content {
+  border: none;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+#modalCongregacion .modal-header {
+  border-bottom: 1px solid #dee2e6;
+  padding: 1.25rem 1.5rem;
+}
+
+#modalCongregacion .modal-body {
+  padding: 1.5rem;
+}
+
+#modalCongregacion .modal-footer {
+  border-top: 1px solid #dee2e6;
+  padding: 1rem 1.5rem;
+}
+
+/* Asegurar que el modal esté centrado verticalmente */
+.modal-dialog-centered {
+  display: flex;
+  align-items: center;
+  min-height: calc(100% - 1rem);
+}
+
+@media (min-width: 576px) {
+  .modal-dialog-centered {
+    min-height: calc(100% - 3.5rem);
+  }
+}
+
+/* Estilos para la tabla móvil */
+.mobile-table {
+  display: none;
+}
 
 /* Contenedor principal de la tabla móvil */
 .mobile-table {
@@ -174,7 +275,7 @@
   margin-bottom: 1.5rem;
 }
 
-/* Fila de la tabla móvil */
+/* Fila de la tabla mÃ³vil */
 .mobile-table-row {
   background: var(--color-surface);
   border-radius: var(--border-radius);
@@ -190,7 +291,7 @@
   box-shadow: var(--shadow-xs);
 }
 
-/* Celdas de la tabla móvil */
+/* Celdas de la tabla mÃ³vil */
 .mobile-table-cell {
   display: flex;
   justify-content: space-between;
@@ -205,14 +306,14 @@
   padding-bottom: 0;
 }
 
-/* Etiquetas de la tabla móvil */
+/* Etiquetas de la tabla mÃ³vil */
 .mobile-table-cell .label {
   font-weight: 500;
   color: var(--color-text-secondary);
   margin-right: 1rem;
 }
 
-/* Estilos para el botón de limpiar búsqueda */
+/* Estilos para el botÃ³n de limpiar bÃºsqueda */
 .btn-clear-search {
   position: absolute;
   right: 10px;
@@ -257,7 +358,22 @@
   box-sizing: border-box;
 }
 
-/* Contenedor de acciones móviles */
+.search-container input[type="search"]:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 0.2rem rgba(var(--color-primary-rgb), 0.15);
+  outline: none;
+}
+
+.search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-secondary);
+  pointer-events: none;
+}
+
+/* Contenedor de acciones mÃ³viles */
 .mobile-table-actions {
   display: flex;
   justify-content: flex-end;
@@ -267,7 +383,7 @@
   border-top: 1px solid var(--color-border);
 }
 
-/* Botones de acción móviles */
+/* Botones de acciÃ³n mÃ³viles */
 .btn-action {
   display: inline-flex;
   align-items: center;
@@ -298,7 +414,7 @@
   font-size: 1rem;
 }
 
-/* Estilo para el botón de eliminar */
+/* Estilo para el botÃ³n de eliminar */
 .btn-action.text-danger {
   color: var(--color-danger);
   border-color: var(--color-danger-light);
@@ -310,7 +426,7 @@
   color: white;
 }
 
-/* Media queries para mostrar/ocultar tablas según el tamaño de pantalla */
+/* Media queries para mostrar/ocultar tablas segÃºn el tamaÃ±o de pantalla */
 @media (max-width: 767.98px) {
   .mobile-table {
     display: block;
@@ -321,7 +437,7 @@
   }
 }
 
-/* Estilos para pantallas muy pequeñas */
+/* Estilos para pantallas muy pequeÃ±as */
 @media (max-width: 480px) {
   .btn-action span {
     display: none;
@@ -340,7 +456,7 @@
   }
 }
 
-/* Ajustes para los botones de acción en la tabla de escritorio */
+/* Ajustes para los botones de acciÃ³n en la tabla de escritorio */
 .data-table .btn-icon {
   background: none;
   border: none;
@@ -365,13 +481,13 @@
   color: var(--color-danger);
 }
 
-/* Asegurar que los botones de acción tengan un tamaño consistente */
+/* Asegurar que los botones de acciÃ³n tengan un tamaÃ±o consistente */
 .col-acciones {
   white-space: nowrap;
   width: 1%;
 }
 
-/* Estilos para la paginación móvil */
+/* Estilos para la paginaciÃ³n mÃ³vil */
 .pagination-container {
   display: flex;
   justify-content: center;
@@ -390,7 +506,7 @@
   color: var(--color-text-secondary);
 }
 
-/* Ajustes para los botones de navegación */
+/* Ajustes para los botones de navegaciÃ³n */
 .page-nav {
   min-width: 36px;
   height: 36px;
