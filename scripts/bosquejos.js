@@ -232,13 +232,12 @@ function actualizarTabla() {
         }
         break;
       case 'delete':
-        console.log('Eliminar bosquejo:', id);
-        if (confirm('¿Estás seguro de que deseas eliminar este bosquejo?')) {
-          if (typeof eliminarBosquejo === 'function') {
-            eliminarBosquejo(id);
-          } else {
-            console.error('La función eliminarBosquejo no está definida');
-          }
+        console.log('Iniciando eliminación de bosquejo:', id);
+        if (typeof eliminarBosquejo === 'function') {
+          eliminarBosquejo(id);
+        } else {
+          console.error('La función eliminarBosquejo no está definida');
+          mostrarAlerta('Error: No se pudo completar la acción', 'error');
         }
         break;
       default:
@@ -258,7 +257,6 @@ function actualizarTabla() {
     window.editarBosquejo = editarBosquejo;
     
     window._bosquejosEventListenersInitialized = true;
-    console.log('Manejadores de eventos inicializados');
   }
   
   // No necesitamos llamar a handleActionButtons aquí ya que usamos un solo manejador global
@@ -385,24 +383,42 @@ function editarBosquejo(id) {
 
 // Función para eliminar un bosquejo
 async function eliminarBosquejo(id) {
-  if (!confirm('¿Estás seguro de que deseas eliminar este bosquejo?')) {
-    return;
-  }
-  
   try {
-    console.log('Eliminando bosquejo:', id);
-    // Aquí iría la lógica para eliminar el bosquejo
-    const response = await db.borrarBosquejo(id);
-    if (response.success) {
-      mostrarAlerta('Bosquejo eliminado correctamente', 'success');
-      // Recargar la lista de bosquejos
-      cargarBosquejos();
-    } else {
-      throw new Error(response.error || 'Error al eliminar el bosquejo');
+    // Verificar si el ID es válido
+    if (!id) {
+      throw new Error('ID de bosquejo no proporcionado');
     }
+
+    // Mostrar confirmación simple
+    if (!confirm('¿Estás seguro de que deseas eliminar este bosquejo?')) {
+      return;
+    }
+
+    // Mostrar indicador de carga
+    mostrarCarga(true);
+    
+    // Convertir ID a número
+    const idNumero = parseInt(id, 10);
+    if (isNaN(idNumero)) {
+      throw new Error('ID de bosquejo no válido');
+    }
+    
+    // Llamar a la función de eliminación
+    const result = await db.eliminar('bosquejos', idNumero);
+    
+    if (result && result.error) {
+      throw new Error(result.error.message || 'Error al eliminar el bosquejo');
+    }
+    
+    // Mostrar mensaje de éxito y recargar
+    mostrarAlerta('Bosquejo eliminado correctamente', 'éxito');
+    await cargarBosquejos();
+    
   } catch (error) {
     console.error('Error al eliminar bosquejo:', error);
-    mostrarAlerta('Error al eliminar el bosquejo: ' + error.message, 'error');
+    mostrarAlerta('Error al eliminar el bosquejo: ' + (error.message || 'Error desconocido'), 'error');
+  } finally {
+    mostrarCarga(false);
   }
 }
 
