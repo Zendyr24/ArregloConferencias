@@ -1,5 +1,23 @@
 import { db } from "./db.js";
 
+// Función para mostrar notificaciones
+function showNotification(message, type = 'info') {
+  const notification = document.createElement('div');
+  notification.className = `notification ${type}`;
+  notification.textContent = message;
+  
+  document.body.appendChild(notification);
+  
+  // Mostrar notificación
+  setTimeout(() => notification.classList.add('show'), 10);
+  
+  // Ocultar después de 5 segundos
+  setTimeout(() => {
+    notification.classList.remove('show');
+    setTimeout(() => notification.remove(), 300);
+  }, 5000);
+}
+
 // --- Selectores del DOM ---
 const registerForm = document.getElementById("register-form");
 const loginForm = document.getElementById("login-form");
@@ -9,44 +27,46 @@ const userDataElement = document.getElementById("user-data");
 const registerContainer = document.getElementById("register-container");
 const loginContainer = document.getElementById("login-container");
 
+
 // --- Lógica de Registro ---
-if (registerForm) {
-  registerForm.addEventListener("submit", async (event) => {
+async function handleRegister(event) {
   event.preventDefault();
-
-  const email = document.getElementById("register-email").value;
-  const password = document.getElementById("register-password").value;
-  const orgCode = document.getElementById("register-org-code").value;
-  const congId = parseInt(document.getElementById("register-cong-id").value);
-
-  // 1. Buscar la organización usando su código único
-  const { data: organizacion, error: orgError } = await db.obtenerOrganizacionPorCodigo(orgCode);
-
-  if (orgError || !organizacion) {
-    alert("El código de la organización no es válido.");
-    console.error("Error buscando organización:", orgError);
-    return;
-  }
-
-  const organizacion_id = organizacion.id;
-
-  // (Opcional) Validar que la congregacion_id pertenece a la organizacion_id.
-  // Esto requeriría una consulta adicional. Por ahora, confiamos en la entrada.
-
-  // 2. Hashear la contraseña
-  let hashedPassword;
+  
+  const registerButton = event.target.querySelector('button[type="submit"]');
+  const originalButtonText = registerButton.innerHTML;
+  
   try {
-    // Usar los métodos síncronos de bcrypt
-    const salt = window.bcrypt.genSaltSync(10);
-    hashedPassword = window.bcrypt.hashSync(password, salt);
-  } catch (error) {
-    console.error('Error hashing password:', error);
-    alert('Error al procesar la contraseña. Por favor, inténtalo de nuevo.');
-    return;
-  }
+    // Mostrar indicador de carga
+    registerButton.disabled = true;
+    registerButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registrando...';
+    
+    const email = document.getElementById("register-email").value;
+    const password = document.getElementById("register-password").value;
+    const orgCode = document.getElementById("register-org-code").value;
+    const congId = parseInt(document.getElementById("register-cong-id").value);
 
-  // 3. Insertar el nuevo usuario con las claves foráneas
-  const { data: newUser, error: insertError } = await db.insertar("users", [
+    // Validar contraseña
+    if (password.length < 8) {
+      throw new Error('La contraseña debe tener al menos 8 caracteres');
+    }
+
+    // Buscar la organización usando su código único
+    const { data: organizacion, error: orgError } = await db.obtenerOrganizacionPorCodigo(orgCode);
+
+    if (orgError || !organizacion) {
+      throw new Error("El código de la organización no es válido.");
+    }
+
+    const organizacion_id = organizacion.id;
+
+    // (Opcional) Validar que la congregacion_id pertenece a la organizacion_id.
+    // Esto requeriría una consulta adicional. Por ahora, confiamos en la entrada.
+
+    // 2. Hashear la contraseña
+    const hashedPassword = await window.bcrypt.hash(password, 10);
+
+    // 3. Insertar el nuevo usuario en la base de datos
+    const { data: newUser, error: insertError } = await db.insertar("users", [
       {
         email: email,
         password: hashedPassword,
@@ -55,21 +75,82 @@ if (registerForm) {
       },
     ]);
 
-  if (insertError) {
-    console.error("Error en el registro:", insertError);
-    alert("Error al registrar el usuario. Es posible que el correo ya exista.");
-  } else {
-    console.log("Usuario registrado:", newUser);
-    alert("¡Registro exitoso! Ahora puedes iniciar sesión.");
-    registerForm.reset();
+    if (insertError) {
+      throw new Error(insertError.message || 'Error al registrar el usuario');
+    }
+
+    // Mostrar mensaje de éxito
+    showNotification('¡Registro exitoso! Por favor inicia sesión.', 'success');
+    
+    // Cambiar al formulario de inicio de sesión
+    document.querySelector('.form-wrapper.active').classList.remove('active');
+    setTimeout(() => {
+      document.getElementById('register-container').style.display = 'none';
+      const loginContainer = document.getElementById('login-container');
+      loginContainer.style.display = 'block';
+      setTimeout(() => loginContainer.classList.add('active'), 10);
+      
+      // Rellenar el email en el formulario de login
+      document.getElementById('login-email').value = email;
+      document.getElementById('register-form').reset();
+    }, 500);
+    
+  } catch (error) {
+    console.error("Error en el registro:", error);
+    showNotification(error.message || 'Error al registrar el usuario. Inténtalo de nuevo.', 'error');
+  } finally {
+    // Restaurar el botón
+    registerButton.disabled = false;
+    registerButton.innerHTML = originalButtonText;
   }
-  });
 }
 
-// --- Lógica de Inicio de Sesión ---
-if (loginForm) {
-  loginForm.addEventListener("submit", handleLoginAndRedirect);
-}
+
+// --- Toggle between Login and Register Forms ---
+document.addEventListener('DOMContentLoaded', () => {
+  const loginForm = document.getElementById('login-form');
+  const registerForm = document.getElementById('register-form');
+  const showRegisterLink = document.getElementById('show-register');
+  const showLoginLink = document.getElementById('show-login');
+  const loginContainer = document.getElementById('login-container');
+  const registerContainer = document.getElementById('register-container');
+
+  // Show register form
+  if (showRegisterLink) {
+    showRegisterLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      loginContainer.classList.remove('active');
+      setTimeout(() => {
+        loginContainer.style.display = 'none';
+        registerContainer.style.display = 'block';
+        setTimeout(() => registerContainer.classList.add('active'), 10);
+      }, 300);
+    });
+  }
+
+  // Show login form
+  if (showLoginLink) {
+    showLoginLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      registerContainer.classList.remove('active');
+      setTimeout(() => {
+        registerContainer.style.display = 'none';
+        loginContainer.style.display = 'block';
+        setTimeout(() => loginContainer.classList.add('active'), 10);
+      }, 300);
+    });
+  }
+
+  // Handle login form submission
+  if (loginForm) {
+    loginForm.addEventListener('submit', handleLoginAndRedirect);
+  }
+
+  // Handle register form submission
+  if (registerForm) {
+    registerForm.addEventListener('submit', handleRegister);
+  }
+});
 
 // Función para manejar el inicio de sesión
 export async function handleLogin(event) {
@@ -80,10 +161,10 @@ export async function handleLogin(event) {
 
   try {
     // 1. Buscar el usuario por email
-    const { data: user, error: userError } = await db.buscarUsuarioPorEmail(email);
+    const { data: user, error: userError } = await db.obtenerUsuarioPorEmail(email);
 
     if (userError || !user) {
-      alert("Credenciales incorrectas.");
+      showNotification("Credenciales incorrectas.", 'error');
       console.error("Error buscando usuario:", userError);
       return false;
     }

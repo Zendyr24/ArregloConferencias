@@ -3,82 +3,108 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login y Registro</title>
+    <title>Iniciar Sesión - Arreglo de Conferencias</title>
     <link rel="stylesheet" href="../assets/css/login.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   </head>
   <body>
     <div class="container">
-      <!-- Formulario de Registro -->
-      <div id="register-container">
-        <h2>Registro</h2>
-        <form id="register-form">
-          <input
-            type="email"
-            id="register-email"
-            placeholder="Correo electrónico"
-            required
-          />
-          <input
-            type="password"
-            id="register-password"
-            placeholder="Contraseña"
-            required
-          />
-          <!-- Nuevos campos basados en tu schema -->
-          <input
-            type="text"
-            id="register-org-code"
-            placeholder="Código de Organización"
-            required
-          />
-          <input
-            type="number"
-            id="register-cong-id"
-            placeholder="ID de Congregación"
-            required
-          />
-          <button type="submit">Registrarse</button>
-        </form>
-      </div>
+      <div class="form-container">
+        <div class="logo">
+          <i class="fas fa-users"></i>
+          <h1>Arreglo de Conferencias</h1>
+        </div>
+        
+        <!-- Formulario de Inicio de Sesión -->
+        <div id="login-container" class="form-wrapper active">
+          <h2>Iniciar Sesión</h2>
+          <form id="login-form">
+            <div class="form-group">
+              <i class="fas fa-envelope"></i>
+              <input
+                type="email"
+                id="login-email"
+                placeholder="Correo electrónico"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <i class="fas fa-lock"></i>
+              <input
+                type="password"
+                id="login-password"
+                placeholder="Contraseña"
+                required
+              />
+            </div>
+            <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+            <p class="toggle-form">
+              ¿No tienes una cuenta? 
+              <a href="#" id="show-register">Regístrate aquí</a>
+            </p>
+          </form>
+        </div>
 
-      <!-- Formulario de Inicio de Sesión -->
-      <div id="login-container">
-        <h2>Iniciar Sesión</h2>
-        <form id="login-form">
-          <input
-            type="email"
-            id="login-email"
-            placeholder="Correo electrónico"
-            required
-          />
-          <input
-            type="password"
-            id="login-password"
-            placeholder="Contraseña"
-            required
-          />
-          <button type="submit">Iniciar Sesión</button>
-        </form>
+        <!-- Formulario de Registro -->
+        <div id="register-container" class="form-wrapper">
+          <h2>Crear Cuenta</h2>
+          <form id="register-form">
+            <div class="form-group">
+              <i class="fas fa-envelope"></i>
+              <input
+                type="email"
+                id="register-email"
+                placeholder="Correo electrónico"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <i class="fas fa-lock"></i>
+              <input
+                type="password"
+                id="register-password"
+                placeholder="Contraseña"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <i class="fas fa-building"></i>
+              <input
+                type="text"
+                id="register-org-code"
+                placeholder="Código de Organización"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <i class="fas fa-building"></i>
+              <input
+                type="number"
+                id="register-cong-id"
+                placeholder="ID de Congregación"
+                required
+              />
+            </div>
+            <button type="submit" class="btn btn-primary">Registrarse</button>
+            <p class="toggle-form">
+              ¿Ya tienes una cuenta? 
+              <a href="#" id="show-login">Inicia sesión aquí</a>
+            </p>
+          </form>
+        </div>
       </div>
-
-      <!-- Contenido Protegido -->
-      <div id="protected-content" style="display: none;">
-        <h2>Bienvenido</h2>
-        <pre id="user-data"></pre> <!-- Para mostrar datos del usuario -->
-        <button id="logout-button">Cerrar Sesión</button>
     </div>
-</div>
 
-<!-- Cargar bcryptjs desde un CDN confiable -->
-<script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
-<script>
-  // Asegurarse de que bcrypt esté disponible globalmente
-  window.bcrypt = dcodeIO.bcrypt;
-</script>
+    <!-- Cargar bcryptjs desde un CDN confiable -->
+    <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+    <script>
+      // Asegurarse de que bcrypt esté disponible globalmente
+      window.bcrypt = dcodeIO.bcrypt;
+    </script>
 
-<!-- Cargar los scripts de la aplicación como módulos -->
-<script type="module" src="/scripts/supabase.js"></script>
-<script type="module" src="/scripts/db.js"></script>
-<script type="module" src="/scripts/login.js"></script>
-</body>
+    <!-- Cargar los scripts de la aplicación como módulos -->
+    <script type="module" src="/scripts/supabase.js"></script>
+    <script type="module" src="/scripts/db.js"></script>
+    <script type="module" src="/scripts/login.js"></script>
+  </body>
 </html>
