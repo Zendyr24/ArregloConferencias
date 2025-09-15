@@ -260,7 +260,7 @@
       
       // If not authenticated and not on login page, redirect to login
       if (!isAuthenticated && !window.location.pathname.endsWith('login.html')) {
-        window.location.href = window.location.pathname.includes('pages/') ? '../login.html' : 'pages/login.html';
+        window.location.href = '/login.html';
       }
       
       if (isAuthenticated) {

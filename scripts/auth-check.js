@@ -24,19 +24,15 @@ export function getCurrentUser() {
 // Función para cerrar sesión
 export function logout() {
   localStorage.removeItem('user');
-  const currentPath = window.location.pathname;
-  const basePath = currentPath.includes('pages/') ? '..' : '.';
-  window.location.href = `${basePath}/login.html`;
+  window.location.href = '/login.html';
 }
 
 // Función para redirigir al login con la URL de retorno
 export function redirectToLogin() {
   // Obtener la ruta actual sin el dominio
   const currentPath = window.location.pathname;
-  // Determinar la ruta base dependiendo de la ubicación actual
-  const basePath = currentPath.includes('pages/') ? '..' : '.';
   // Codificar la URL de retorno
   const returnUrl = encodeURIComponent(currentPath);
-  // Redirigir al login con la URL de retorno
-  window.location.href = `${basePath}/login.html?redirect=${returnUrl}`;
+  // Redirigir al login con la URL de retorno (siempre en raíz)
+  window.location.href = `/login.html?redirect=${returnUrl}`;
 }

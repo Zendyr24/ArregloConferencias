@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
             logoutButton.addEventListener('click', (e) => {
                 e.preventDefault();
                 localStorage.removeItem('user');
-                redirectToLogin();
+                window.location.href = '/login.html';
             });
         }
     }
