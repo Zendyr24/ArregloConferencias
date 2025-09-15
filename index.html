@@ -252,7 +252,7 @@
       
       // If not authenticated and not on login page, redirect to login
       if (!isAuthenticated && !window.location.pathname.endsWith('login.html')) {
-        window.location.href = '/login.html';
+        window.location.href = './login.html';
       }
       
       if (isAuthenticated) {
@@ -304,7 +304,7 @@
           localStorage.removeItem('user');
           // Redirect to login page with a small delay to ensure the click is processed
           setTimeout(() => {
-            window.location.href = '/login.html';
+            window.location.href = './login.html';
           }, 100);
         });
       }
