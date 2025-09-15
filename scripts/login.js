@@ -201,7 +201,18 @@ async function handleLoginAndRedirect(event) {
   if (success) {
     // Obtener la URL de redirección de los parámetros de la URL o usar la página por defecto
     const urlParams = new URLSearchParams(window.location.search);
-    const redirectTo = urlParams.get('redirect') || '../index.html';
+    let redirectTo = urlParams.get('redirect') || 'index.html';
+    
+    // Asegurarse de que la ruta sea relativa a la raíz del sitio
+    if (redirectTo.startsWith('/')) {
+      redirectTo = redirectTo.substring(1);
+    }
+    
+    // Si estamos en una subcarpeta pages, ajustar la ruta
+    if (window.location.pathname.includes('pages/') && !redirectTo.startsWith('../')) {
+      redirectTo = `../${redirectTo}`;
+    }
+    
     window.location.href = redirectTo;
   }
 }
