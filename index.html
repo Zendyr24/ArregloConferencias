@@ -9,7 +9,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <!-- Font Awesome for icons -->
+    <link rel="icon" href="data:;base64,=">
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -213,15 +213,115 @@
       </footer>
     </div>
 
+    <!-- Login Container (hidden by default) -->
+    <div id="login-container" style="display: none; max-width: 400px; margin: 2rem auto; padding: 2rem; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+      <h2 style="text-align: center; margin-bottom: 1.5rem;">Iniciar Sesión</h2>
+      <form id="login-form">
+        <div style="margin-bottom: 1rem;">
+          <label for="login-email" style="display: block; margin-bottom: 0.5rem;">Correo electrónico</label>
+          <input type="email" id="login-email" required style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+        </div>
+        <div style="margin-bottom: 1.5rem;">
+          <label for="login-password" style="display: block; margin-bottom: 0.5rem;">Contraseña</label>
+          <input type="password" id="login-password" required style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+        </div>
+        <button type="submit" style="width: 100%; padding: 0.75rem; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+          Iniciar Sesión
+        </button>
+      </form>
+    </div>
+
+    <!-- Main Content (hidden by default) -->
     <!-- Scripts -->
+    <!-- Load non-module scripts first -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script type="module" src="scripts/theme.js"></script>
-    <script type="module" src="scripts/sidebar.js"></script>
-    <script type="module" src="scripts/app.js"></script>
-    <!-- En el head de tu HTML -->
+    <script src="https://unpkg.com/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+    
+    <!-- Initialize bcrypt globally -->
+    <script>
+      if (!window.bcrypt) {
+        window.bcrypt = dcodeIO.bcrypt;
+      }
+    </script>
+
+    <!-- Load Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script type="module" src="scripts/supabase.js"></script>
-    <script type="module" src="scripts/auth.js"></script>
-    <script type="module" src="scripts/db.js"></script>
+    
+    <!-- Main app script with module imports -->
+    <script type="module">
+      import { checkAuth, getCurrentUser } from './scripts/auth-check.js';
+      import { db } from './scripts/db.js';
+      import { supabase } from './scripts/supabase.js';
+
+      // Check authentication status
+      const isAuthenticated = checkAuth();
+      const loginContainer = document.getElementById('login-container');
+      const appContent = document.getElementById('app-content');
+      
+      // If not authenticated and not on login page, redirect to login
+      if (!isAuthenticated && !window.location.pathname.endsWith('login.html')) {
+        window.location.href = 'login.html';
+      }
+      
+      if (isAuthenticated) {
+        // User is logged in, show main app
+        if (loginContainer) loginContainer.style.display = 'none';
+        if (appContent) appContent.style.display = 'block';
+        
+        // Get current user data
+        const user = getCurrentUser();
+        
+        // Update the existing header-right with user info
+        const headerRight = document.querySelector('.header-right');
+        if (headerRight) {
+          headerRight.innerHTML = `
+            <div class="user-info">
+              <span class="user-name">${user?.email || 'Usuario'}</span>
+              <span class="user-role">${user?.rol || 'Administrador'}</span>
+            </div>
+            <div class="header-actions">
+              <button class="btn-icon" title="Notificaciones">
+                <i class="fas fa-bell"></i>
+              </button>
+              <button id="app-theme-toggle" class="btn-icon" title="Cambiar tema">
+                <i class="fas fa-moon"></i>
+              </button>
+              <button id="app-logout-button" class="btn-icon" title="Cerrar sesión">
+                <i class="fas fa-sign-out-alt"></i>
+              </button>
+            </div>
+          `;
+          
+          // The sidebar will be initialized by the module import above
+        }
+        
+        // Initialize sidebar and theme
+        Promise.all([
+          import('./scripts/sidebar.js'),
+          import('./scripts/theme.js')
+        ]).then(([sidebarModule, themeModule]) => {
+          if (sidebarModule.initializeSidebar) sidebarModule.initializeSidebar();
+          if (themeModule.initTheme) themeModule.initTheme();
+        }).catch(err => console.error('Error loading modules:', err));
+          
+      } else {
+        // User is not logged in, show login form
+        if (loginContainer) loginContainer.style.display = 'block';
+        if (appContent) appContent.style.display = 'none';
+      }
+      
+      // Handle logout button
+      const logoutButton = document.getElementById('app-logout-button');
+      if (logoutButton) {
+        logoutButton.addEventListener('click', (e) => {
+          e.preventDefault();
+          localStorage.removeItem('user');
+          // Redirect to login page with a small delay to ensure the click is processed
+          setTimeout(() => {
+            window.location.href = '/pages/login.html';
+          }, 100);
+        });
+      }
+    </script>
   </body>
 </html>

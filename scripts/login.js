@@ -10,7 +10,8 @@ const registerContainer = document.getElementById("register-container");
 const loginContainer = document.getElementById("login-container");
 
 // --- Lógica de Registro ---
-registerForm.addEventListener("submit", async (event) => {
+if (registerForm) {
+  registerForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const email = document.getElementById("register-email").value;
@@ -62,53 +63,81 @@ registerForm.addEventListener("submit", async (event) => {
     alert("¡Registro exitoso! Ahora puedes iniciar sesión.");
     registerForm.reset();
   }
-});
+  });
+}
 
 // --- Lógica de Inicio de Sesión ---
-loginForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
+if (loginForm) {
+  loginForm.addEventListener("submit", handleLoginAndRedirect);
+}
+
+// Función para manejar el inicio de sesión
+export async function handleLogin(event) {
+  if (event) event.preventDefault();
 
   const email = document.getElementById("login-email").value;
   const password = document.getElementById("login-password").value;
 
-  // Buscar al usuario por email
-  const { data: user, error } = await db.obtenerUsuarioPorEmail(email);
-
-  if (error || !user) {
-    alert("Credenciales incorrectas.");
-    return;
-  }
-
-  // Comparar la contraseña ingresada con el hash almacenado
-  let passwordMatch = false;
   try {
-    passwordMatch = window.bcrypt.compareSync(password, user.password);
-  } catch (error) {
-    console.error('Error al comparar contraseñas:', error);
-    alert('Error al verificar la contraseña. Por favor, inténtalo de nuevo.');
-    return;
-  }
+    // 1. Buscar el usuario por email
+    const { data: user, error: userError } = await db.buscarUsuarioPorEmail(email);
 
-  if (passwordMatch) {
-    // Almacenar los datos relevantes del usuario en localStorage
-    const sessionData = {
+    if (userError || !user) {
+      alert("Credenciales incorrectas.");
+      console.error("Error buscando usuario:", userError);
+      return false;
+    }
+
+    // 2. Verificar la contraseña (asumiendo que está hasheada con bcrypt)
+    const isPasswordValid = await window.bcrypt.compare(password, user.password);
+    
+    if (!isPasswordValid) {
+      alert("Credenciales incorrectas.");
+      return false;
+    }
+
+    // 3. Almacenar información del usuario en localStorage
+    const userData = {
       id: user.id,
       email: user.email,
+      rol: user.rol,
       organizacion_id: user.organizacion_id,
-      congregacion_id: user.congregacion_id,
+      timestamp: new Date().getTime()
     };
-    localStorage.setItem("user", JSON.stringify(sessionData));
-    showProtectedContent();
-  } else {
-    alert("Credenciales incorrectas.");
+    
+    localStorage.setItem("user", JSON.stringify(userData));
+    return true;
+  } catch (error) {
+    console.error("Error en el inicio de sesión:", error);
+    alert("Ocurrió un error al iniciar sesión. Por favor, inténtalo de nuevo.");
+    return false;
   }
-});
+}
+
+// Función para manejar la autenticación y redirección
+async function handleLoginAndRedirect(event) {
+  const success = await handleLogin(event);
+  if (success) {
+    // Obtener la URL de redirección de los parámetros de la URL o usar la página por defecto
+    const urlParams = new URLSearchParams(window.location.search);
+    const redirectTo = urlParams.get('redirect') || '../index.html';
+    window.location.href = redirectTo;
+  }
+}
+
+// Manejar el formulario de login en la página principal
+const mainLoginForm = document.querySelector("form#login-form");
+if (mainLoginForm) {
+  mainLoginForm.addEventListener("submit", handleLoginAndRedirect);
+}
 
 // --- Lógica de Cierre de Sesión ---
-logoutButton.addEventListener("click", () => {
-  localStorage.removeItem("user");
-  showLogin();
-});
+if (logoutButton) {
+  logoutButton.addEventListener("click", () => {
+    localStorage.removeItem("user");
+    window.location.href = "/";
+  });
+}
 
 // --- Funciones para manejar la UI ---
 function showProtectedContent() {
