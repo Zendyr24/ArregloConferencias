@@ -1,5 +1,5 @@
 // scripts/db.js
-import { supabase } from "./supabase.js";
+import { supabase } from './supabase.js';
 
 export const db = {
   // Obtener todos los registros de una tabla
@@ -36,6 +36,30 @@ export const db = {
       .from(tabla)
       .select('*')
       .eq('id', id)
+      .single();
+    
+    if (error) return { data: null, error };
+    return { data, error: null };
+  },
+
+  // Obtener una organización por su código
+  async obtenerOrganizacionPorCodigo(codigo) {
+    const { data, error } = await supabase
+      .from('organizaciones')
+      .select('*')
+      .eq('codigo', codigo)
+      .single();
+    
+    if (error) return { data: null, error };
+    return { data, error: null };
+  },
+
+  // Obtener un usuario por su email
+  async obtenerUsuarioPorEmail(email) {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
       .single();
     
     if (error) return { data: null, error };

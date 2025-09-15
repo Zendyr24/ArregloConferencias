@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login y Registro</title>
+    <link rel="stylesheet" href="../assets/css/login.css" />
+  </head>
+  <body>
+    <div class="container">
+      <!-- Formulario de Registro -->
+      <div id="register-container">
+        <h2>Registro</h2>
+        <form id="register-form">
+          <input
+            type="email"
+            id="register-email"
+            placeholder="Correo electrónico"
+            required
+          />
+          <input
+            type="password"
+            id="register-password"
+            placeholder="Contraseña"
+            required
+          />
+          <!-- Nuevos campos basados en tu schema -->
+          <input
+            type="text"
+            id="register-org-code"
+            placeholder="Código de Organización"
+            required
+          />
+          <input
+            type="number"
+            id="register-cong-id"
+            placeholder="ID de Congregación"
+            required
+          />
+          <button type="submit">Registrarse</button>
+        </form>
+      </div>
+
+      <!-- Formulario de Inicio de Sesión -->
+      <div id="login-container">
+        <h2>Iniciar Sesión</h2>
+        <form id="login-form">
+          <input
+            type="email"
+            id="login-email"
+            placeholder="Correo electrónico"
+            required
+          />
+          <input
+            type="password"
+            id="login-password"
+            placeholder="Contraseña"
+            required
+          />
+          <button type="submit">Iniciar Sesión</button>
+        </form>
+      </div>
+
+      <!-- Contenido Protegido -->
+      <div id="protected-content" style="display: none;">
+        <h2>Bienvenido</h2>
+        <pre id="user-data"></pre> <!-- Para mostrar datos del usuario -->
+        <button id="logout-button">Cerrar Sesión</button>
+    </div>
+</div>
+
+<!-- Cargar bcryptjs desde un CDN confiable -->
+<script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+<script>
+  // Asegurarse de que bcrypt esté disponible globalmente
+  window.bcrypt = dcodeIO.bcrypt;
+</script>
+
+<!-- Cargar los scripts de la aplicación como módulos -->
+<script type="module" src="/scripts/supabase.js"></script>
+<script type="module" src="/scripts/db.js"></script>
+<script type="module" src="/scripts/login.js"></script>
+</body>
+</html>

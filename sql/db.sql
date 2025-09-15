@@ -1,10 +1,11 @@
--- Tabla: public
+-- Tabla: public.organizaciones
 CREATE TABLE public.organizaciones (
   id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  nombre VARCHAR(255)
+  nombre VARCHAR(255),
+  codigo VARCHAR(15) UNIQUE CHECK (codigo ~ '^[a-zA-Z0-9]{1,15}$')
 );
 
--- Tabla: public
+-- Tabla: public.congregacion
 CREATE TABLE public.congregacion (
   id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   nombre VARCHAR(255),
@@ -13,36 +14,19 @@ CREATE TABLE public.congregacion (
   horario VARCHAR(255)
 );
 
--- Tabla: public
-CREATE TABLE public.bosquejos (
-  id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  numero INT,
-  titulo VARCHAR(255)
-);
-
--- Tabla: public
+-- Tabla: public.users
 CREATE TABLE public.users (
-  id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  nombre VARCHAR(255),
-  email VARCHAR(255) UNIQUE,
-  rol VARCHAR(255),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT UNIQUE,
+  password TEXT NOT NULL,
   congregacion_id INT,
-  organizacion_id INT, -- Columna para la relación con organizaciones
+  organizacion_id INT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  FOREIGN KEY (congregacion_id) REFERENCES public.congregacion(id),
-  FOREIGN KEY (organizacion_id) REFERENCES public.organizaciones(id)
+  CONSTRAINT fk_congregacion FOREIGN KEY (congregacion_id) REFERENCES public.congregacion(id),
+  CONSTRAINT fk_organizacion FOREIGN KEY (organizacion_id) REFERENCES public.organizaciones(id)
 );
 
--- Tabla: public
-CREATE TABLE public.autenticacion (
-  id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  user_id INT UNIQUE, -- Clave foránea al usuario, con restricción UNIQUE
-  hashed_password VARCHAR(255) NOT NULL,
-  salt VARCHAR(255) NOT NULL,
-  FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE
-);
-
--- Tabla: public
+-- Tabla: public.publicadores
 CREATE TABLE public.publicadores (
   id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   nombre VARCHAR(255),
@@ -56,7 +40,14 @@ CREATE TABLE public.publicadores (
   FOREIGN KEY (organizacion_id) REFERENCES public.organizaciones(id)
 );
 
--- Tabla: public
+-- Tabla: public.bosquejos
+CREATE TABLE public.bosquejos (
+  id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  numero INT,
+  titulo VARCHAR(255)
+);
+
+-- Tabla: public.oradores
 CREATE TABLE public.oradores (
   id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   publicador_id INT,
@@ -66,7 +57,7 @@ CREATE TABLE public.oradores (
   FOREIGN KEY (organizacion_id) REFERENCES public.organizaciones(id)
 );
 
--- Tabla: public
+-- Tabla: public.arreglo
 CREATE TABLE public.arreglo (
   id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   fecha TIMESTAMP WITH TIME ZONE,
@@ -78,7 +69,7 @@ CREATE TABLE public.arreglo (
   FOREIGN KEY (organizacion_id) REFERENCES public.organizaciones(id)
 );
 
--- Tabla: public
+-- Tabla: public.coordinadores
 CREATE TABLE public.coordinadores (
   id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   publicador_id INT,
@@ -88,7 +79,7 @@ CREATE TABLE public.coordinadores (
   FOREIGN KEY (organizacion_id) REFERENCES public.organizaciones(id)
 );
 
--- Tabla: public
+-- Tabla: public.eventos
 CREATE TABLE public.eventos (
   id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   nombre VARCHAR(255),
@@ -100,7 +91,7 @@ CREATE TABLE public.eventos (
   FOREIGN KEY (organizacion_id) REFERENCES public.organizaciones(id)
 );
 
--- Tabla: public
+-- Tabla: public.configuraciones
 CREATE TABLE public.configuraciones (
   id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   congregacion_id INT,
