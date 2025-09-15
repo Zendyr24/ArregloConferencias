@@ -28,5 +28,5 @@ export function updateUserInfo() {
 }
 
 export function redirectToLogin() {
-    window.location.href = '/../login.html';
+    window.location.href = './../login.html';
 }
