@@ -11,8 +11,8 @@ export function initializeLogoutButton() {
     logoutButton.addEventListener('click', (e) => {
         e.preventDefault();
         localStorage.removeItem('user');
-        // Redirigir a la página de inicio de sesión
-        window.location.href = '../../login.html';
+        // Redirigir a la página de inicio de sesión usando una ruta absoluta
+        window.location.href = './login.html';
     });
     
     // Buscar el contenedor de acciones del encabezado
