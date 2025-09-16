@@ -1,31 +1,28 @@
 /* Estilos específicos para la página de Publicadores */
 
+/* Estilos para el section-header */
+.section-header {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
 /* Estilos para el panel de importar/exportar */
 .import-export-panel {
   position: relative;
   width: 100%;
   background: var(--color-surface);
-  border: 1px solid transparent;
+  border: 1px solid var(--color-border);
   border-radius: var(--border-radius);
-  padding: 0;
-  margin: 0;
-  box-shadow: none;
-  z-index: 1;
-  overflow: hidden;
-  max-height: 0;
-  opacity: 0;
-  transition: all 0.3s ease-in-out;
-  visibility: hidden;
+  padding: 1rem;
+  margin-top: 0.5rem;
+  box-shadow: var(--shadow-md);
+  z-index: 1000;
+  display: none;
+  animation: fadeIn 0.2s ease-in-out;
 }
 
 .import-export-panel.visible {
-  max-height: 200px; /* Ajusta según el contenido */
-  opacity: 1;
-  padding: 1rem;
-  margin: 0.5rem 0;
-  border-color: var(--color-border);
-  box-shadow: var(--shadow-md);
-  visibility: visible;
+  display: block;
 }
 
 .import-export-buttons {
@@ -34,14 +31,22 @@
   gap: 0.75rem;
 }
 
-.import-export-buttons .btn-group {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+.import-export-buttons .btn {
+  justify-content: flex-start;
+  padding: 0.5rem 1rem;
+  text-align: left;
+}
+
+.import-export-buttons .btn i {
+  margin-right: 0.5rem;
+  width: 20px;
+  text-align: center;
 }
 
 .import-export-hint {
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border);
   font-size: 0.85rem;
   color: var(--color-text-secondary);
   display: flex;
@@ -148,33 +153,40 @@
 }
 
 /* Asegurar que el contenedor de búsqueda tenga posición relativa */
-.search-container {
+.search-bar {
   position: relative;
   display: inline-block;
   width: 100%;
   max-width: 300px;
+  margin-bottom: 1rem;
 }
 
-/* Ajustar el input de búsqueda para dejar espacio al botón */
-.search-container input[type="search"] {
-  padding-right: 40px;
+.search-input {
+  position: relative;
   width: 100%;
-  box-sizing: border-box;
 }
 
-.search-container input[type="search"]:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 0.2rem rgba(var(--color-primary-rgb), 0.15);
-  outline: none;
-}
-
-.search-icon {
+.search-input i {
   position: absolute;
-  left: 1rem;
+  left: 10px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--color-text-secondary);
-  pointer-events: none;
+}
+
+.search-input input[type="text"] {
+  width: 100%;
+  padding: 8px 10px 8px 35px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  font-size: 0.9rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-input input[type="text"]:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 0.2rem rgba(var(--color-primary-rgb), 0.15);
+  outline: none;
 }
 
 /* Estilos específicos para la tabla de publicadores */
@@ -186,6 +198,7 @@
   border-radius: var(--border-radius);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
+  table-layout: fixed;
 }
 
 .data-table thead {
@@ -200,12 +213,58 @@
   text-transform: uppercase;
   font-size: 0.8rem;
   letter-spacing: 0.5px;
+  vertical-align: middle;
+}
+
+/* Establecer anchos fijos para cada columna */
+.data-table th.col-nombre,
+.data-table td.col-nombre {
+  width: 25%;
+  text-align: left;
+  padding-left: 1rem;
+}
+
+.data-table th.col-congregacion,
+.data-table td.col-congregacion {
+  width: 20%;
+  text-align: left;
+  padding-left: 1rem;
+}
+
+.data-table th.col-edad,
+.data-table td.col-edad {
+  width: 10%;
+  text-align: center;
+  padding: 1rem;
+}
+
+.data-table th.col-bautizado,
+.data-table td.col-bautizado {
+  width: 15%;
+  text-align: center;
+  padding: 1rem;
+}
+
+.data-table th.col-privilegio,
+.data-table td.col-privilegio {
+  width: 20%;
+  text-align: left;
+  padding-left: 1rem;
+}
+
+.data-table th.col-acciones,
+.data-table td.col-acciones {
+  width: 10%;
+  min-width: 100px;
+  text-align: center;
+  padding: 1rem;
 }
 
 .data-table td {
   padding: 1rem;
   border-bottom: 1px solid var(--color-border);
   vertical-align: middle;
+  word-wrap: break-word;
 }
 
 .data-table tbody tr:last-child td {
@@ -216,57 +275,301 @@
   background-color: var(--color-bg-secondary);
 }
 
-/* Estilos para el encabezado de sección */
-.section-header {
-  position: relative;
+/* Columnas específicas - Celdas de datos */
+.data-table td.col-nombre {
+  width: 25%;
+  text-align: left;
+  padding-left: 1rem;
+}
+
+.data-table td.col-congregacion {
+  width: 20%;
+  text-align: left;
+  padding-left: 1rem;
+}
+
+.data-table td.col-telefono {
+  width: 15%;
+  text-align: left;
+  padding-left: 1rem;
+}
+
+.data-table td.col-email {
+  width: 25%;
+  text-align: left;
+  padding-left: 1rem;
+}
+
+/* Encabezados */
+.data-table th.col-nombre {
+  width: 25%;
+  text-align: left;
+  padding-left: 1rem;
+}
+
+.data-table th.col-congregacion {
+  width: 20%;
+  text-align: left;
+  padding-left: 1rem;
+}
+
+.data-table th.col-telefono {
+  width: 15%;
+  text-align: left;
+  padding-left: 1rem;
+}
+
+.data-table th.col-email {
+  width: 25%;
+  text-align: left;
+  padding-left: 1rem;
+}
+
+/* Columna de acciones */
+.data-table th.col-acciones,
+.data-table td.col-acciones {
+  width: 15%;
+  min-width: 100px;
+  text-align: center;
+  padding: 1rem;
+}
+
+/* Estilos para los botones de acción */
+.acciones-botones {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+}
+
+/* Estilos específicos para botones de acción en publicadores */
+.btn-action {
+  gap: 0.5rem;
+}
+
+.btn-action i {
+  margin-right: 0.5rem;
+  font-size: 1rem;
+}
+
+/* Estilo para el botón de eliminar */
+.btn-action.text-danger {
+  color: var(--color-danger);
+  border-color: var(--color-danger-light);
+  background-color: var(--color-danger-bg);
+}
+
+.btn-action.text-danger:hover {
+  background-color: var(--color-danger-light);
+  color: white;
+}
+
+/* Estilos para la tabla móvil */
+.mobile-table {
+  display: none;
+}
+
+/* Contenedor principal de la tabla móvil */
+.mobile-table {
+  display: none; /* Oculto por defecto, se muestra con media queries */
+  width: 100%;
   margin-bottom: 1.5rem;
 }
 
+/* Fila de la tabla móvil */
+.mobile-table-row {
+  background: var(--color-surface);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid var(--color-border);
+}
+
+.mobile-table-row:active {
+  transform: translateY(1px);
+  box-shadow: var(--shadow-xs);
+}
+
+/* Celdas de la tabla móvil */
+.mobile-table-cell {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.mobile-table-cell:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+/* Etiquetas de la tabla móvil */
+.mobile-table-cell .label {
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  margin-right: 1rem;
+  flex-shrink: 0;
+}
+
+.mobile-table-value {
+  flex: 1;
+  text-align: right;
+  color: var(--color-text);
+  word-break: break-word;
+  padding-left: 0.5rem;
+}
+
+/* Estado de carga móvil */
+.mobile-loading {
+  text-align: center;
+  padding: 2rem;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+/* Estado vacío móvil */
+.mobile-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--color-text-secondary);
+}
+
+.mobile-empty i {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+}
+
+.mobile-empty p {
+  margin: 0.5rem 0 0;
+  font-size: 0.95rem;
+}
+
+/* Estilos para la paginación */
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: var(--color-surface);
+  border-radius: var(--border-radius);
+  margin-top: 1.5rem;
+}
+
+.pagination-info {
+  margin: 0 1rem;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.page-nav {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.page-nav:hover:not(:disabled) {
+  background-color: var(--color-bg-secondary);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.page-nav:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-nav.active {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+
+/* Media queries para mostrar/ocultar tablas según el tamaño de pantalla */
+@media (max-width: 767.98px) {
+  .mobile-table {
+    display: block;
+  }
+  
+  .data-table {
+    display: none;
+  }
+}
+
+/* Estilos para pantallas muy pequeñas */
+@media (max-width: 480px) {
+  .btn-action span {
+    display: none;
+  }
+  
+  .btn-action i {
+    margin-right: 0;
+    font-size: 1.1rem;
+  }
+  
+  .btn-action {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 50%;
+  }
+}
+
+/* Ajustes para los botones de acción en la tabla de escritorio */
+.data-table .btn-icon {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.data-table .btn-icon:hover {
+  background: var(--color-bg-secondary);
+  color: var(--color-primary);
+}
+
+.data-table .btn-icon.text-danger:hover {
+  color: var(--color-danger);
+}
+
+/* Asegurar que los botones de acción tengan un tamaño consistente */
+.col-acciones {
+  white-space: nowrap;
+  width: 1%;
+}
+
+/* Estilos para el encabezado de sección */
 .section-header-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
-}
-
-.section-header h3 {
   margin: 0;
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.section-actions {
-  display: flex;
-  gap: 0.75rem;
-}
-
-/* Estilos para botones */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: var(--border-radius);
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: 1px solid transparent;
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-}
-
-.btn-primary {
-  background-color: var(--color-primary);
-  color: white;
-  border-color: var(--color-primary);
-}
-
-.btn-primary:hover {
-  background-color: var(--color-primary-dark);
-  border-color: var(--color-primary-dark);
+  padding: 0;
 }
 
 /* Estilos para la tabla móvil */

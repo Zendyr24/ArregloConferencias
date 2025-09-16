@@ -144,16 +144,17 @@
               </div>
             </div>
 
-            <!-- Barra de búsqueda -->
-            <div class="search-bar">
-              <div class="search-input">
-                <i class="fas fa-search"></i>
-                <input
-                  type="text"
-                  id="buscarPublicador"
-                  placeholder="Buscar publicadores por nombre..."
-                />
-              </div>
+          </div>
+
+          <!-- Barra de búsqueda -->
+          <div class="search-bar">
+            <div class="search-input">
+              <i class="fas fa-search"></i>
+              <input
+                type="text"
+                id="buscarPublicador"
+                placeholder="Buscar publicadores por nombre..."
+              />
             </div>
           </div>
 
@@ -161,12 +162,12 @@
             <table class="data-table" id="tablaPublicadores">
               <thead>
                 <tr>
-                  <th>Nombre</th>
-                  <th>Congregación</th>
-                  <th class="text-center">Edad</th>
-                  <th class="text-center">Bautizado</th>
-                  <th>Privilegio</th>
-                  <th class="text-center">Acciones</th>
+                  <th class="col-nombre">Nombre</th>
+                  <th class="col-congregacion">Congregación</th>
+                  <th class="col-edad">Edad</th>
+                  <th class="col-bautizado">Bautizado</th>
+                  <th class="col-privilegio">Privilegio</th>
+                  <th class="col-acciones">Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -184,18 +185,19 @@
             
             <!-- Controles de paginación -->
             <div class="pagination-container">
+              <button class="page-nav" id="pagination-prev" disabled>
+                <i class="fas fa-chevron-left"></i>
+              </button>
+
               <div class="pagination-info">
-                Mostrando <span id="startItem">0</span> a <span id="endItem">0</span> de <span id="totalItems">0</span> publicadores
+                <span id="pagination-start">0</span> -
+                <span id="pagination-end">0</span> de
+                <span id="pagination-total">0</span>
               </div>
-              <div class="pagination-controls">
-                <button id="prevPage" class="btn btn-outline" disabled>
-                  <i class="fas fa-chevron-left"></i>
-                </button>
-                <span id="currentPage">1</span>
-                <button id="nextPage" class="btn btn-outline" disabled>
-                  <i class="fas fa-chevron-right"></i>
-                </button>
-              </div>
+
+              <button class="page-nav" id="pagination-next" disabled>
+                <i class="fas fa-chevron-right"></i>
+              </button>
             </div>
           </div>
         </div>
@@ -209,6 +211,9 @@
       </footer>
     </div>
 
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
     <!-- Scripts principales -->
     <script type="module" src="../scripts/app.js"></script>
     <script type="module" src="../scripts/theme.js"></script>

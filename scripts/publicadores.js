@@ -83,31 +83,31 @@ export async function cargarPublicadores() {
     }
 
     // Actualizar información de paginación
-    document.getElementById('totalItems').textContent = publicadores.length;
-    document.getElementById('startItem').textContent = 1;
-    document.getElementById('endItem').textContent = Math.min(publicadores.length, 10);
-    document.getElementById('currentPage').textContent = 1;
+    document.getElementById('pagination-total').textContent = publicadores.length;
+    document.getElementById('pagination-start').textContent = 1;
+    document.getElementById('pagination-end').textContent = Math.min(publicadores.length, 10);
 
     // Llenar la tabla con los datos
     publicadores.forEach(publicador => {
       // Versión de escritorio
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td>${publicador.nombre || ''}</td>
-        <td>${publicador.congregacion?.nombre || 'Sin asignar'}</td>
-        <td class="text-center">${publicador.edad || ''}</td>
-        <td class="text-center">
-          <span class="badge ${publicador.bautizado ? 'bg-success' : 'bg-secondary'}">
-            ${publicador.bautizado ? 'Sí' : 'No'}
-          </span>
+        <td class="col-nombre">${publicador.nombre || ''}</td>
+        <td class="col-congregacion">${publicador.congregacion?.nombre || 'Sin asignar'}</td>
+        <td class="col-edad text-center">${publicador.edad || ''}</td>
+        <td class="col-bautizado text-center">
+          ${publicador.bautizado ? 'Sí' : 'No'}
         </td>
         <td>${publicador.privilegio_servicio || ''}</td>
-        <td class="text-center">
+        <td class="col-acciones text-center">
           <div class="acciones-botones">
-            <button class="btn-accion btn-editar" data-id="${publicador.id}" title="Editar">
+            <button class="btn-icon text-primary" data-action="view" data-id="${publicador.id}" title="Ver">
+              <i class="fas fa-eye"></i>
+            </button>
+            <button class="btn-icon" data-action="edit" data-id="${publicador.id}" title="Editar">
               <i class="fas fa-edit"></i>
             </button>
-            <button class="btn-accion btn-eliminar" data-id="${publicador.id}" title="Eliminar">
+            <button class="btn-icon text-danger" data-action="delete" data-id="${publicador.id}" title="Eliminar">
               <i class="fas fa-trash"></i>
             </button>
           </div>
@@ -116,50 +116,68 @@ export async function cargarPublicadores() {
       tbody.appendChild(tr);
 
       // Versión móvil
-      const mobileItem = document.createElement('div');
-      mobileItem.className = 'mobile-item';
-      mobileItem.innerHTML = `
-        <div class="mobile-item-header">
-          <h4>${publicador.nombre || 'Sin nombre'}</h4>
-          <div class="mobile-item-actions">
-            <button class="btn-accion btn-editar" data-id="${publicador.id}" title="Editar">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button class="btn-accion btn-eliminar" data-id="${publicador.id}" title="Eliminar">
-              <i class="fas fa-trash"></i>
-            </button>
-          </div>
+      const mobileCard = document.createElement('div');
+      mobileCard.className = 'mobile-table-row';
+      mobileCard.innerHTML = `
+        <div class="mobile-table-cell">
+          <span class="label">Nombre:</span>
+          <span class="value">${publicador.nombre || 'Sin nombre'}</span>
         </div>
-        <div class="mobile-item-details">
-          <p><strong>Congregación:</strong> ${publicador.congregacion?.nombre || 'Sin asignar'}</p>
-          <p><strong>Edad:</strong> ${publicador.edad || 'No especificada'}</p>
-          <p><strong>Bautizado:</strong> 
+        <div class="mobile-table-cell">
+          <span class="label">Congregación:</span>
+          <span class="value">${publicador.congregacion?.nombre || 'Sin asignar'}</span>
+        </div>
+        <div class="mobile-table-cell">
+          <span class="label">Edad:</span>
+          <span class="value">${publicador.edad || 'No especificada'}</span>
+        </div>
+        <div class="mobile-table-cell">
+          <span class="label">Bautizado:</span>
+          <span class="value">
             <span class="badge ${publicador.bautizado ? 'bg-success' : 'bg-secondary'}">
               ${publicador.bautizado ? 'Sí' : 'No'}
             </span>
-          </p>
-          <p><strong>Privilegio:</strong> ${publicador.privilegio_servicio || 'Ninguno'}</p>
+          </span>
+        </div>
+        <div class="mobile-table-cell">
+          <span class="label">Privilegio:</span>
+          <span class="value">${publicador.privilegio_servicio || 'Ninguno'}</span>
+        </div>
+        <div class="mobile-table-actions">
+          <button class="btn-action" data-action="view" data-id="${publicador.id}" title="Ver">
+            <i class="fas fa-eye"></i>
+            <span>Ver</span>
+          </button>
+          <button class="btn-action" data-action="edit" data-id="${publicador.id}" title="Editar">
+            <i class="fas fa-edit"></i>
+            <span>Editar</span>
+          </button>
+          <button class="btn-action text-danger" data-action="delete" data-id="${publicador.id}" title="Eliminar">
+            <i class="fas fa-trash"></i>
+            <span>Eliminar</span>
+          </button>
         </div>
       `;
-      mobileTable.appendChild(mobileItem);
+      mobileTable.appendChild(mobileCard);
     });
 
     // Configurar la paginación
     configurarPaginacion(publicadores);
     
-    // Agregar event listeners a los botones
-    document.querySelectorAll('.btn-editar').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const id = e.currentTarget.dataset.id;
+    // Agregar event listeners a los botones usando delegación de eventos
+    document.addEventListener('click', (e) => {
+      // Manejar clic en botones de editar/eliminar
+      const button = e.target.closest('[data-action]');
+      if (!button) return;
+      
+      const action = button.dataset.action;
+      const id = button.dataset.id;
+      
+      if (action === 'edit') {
         editarPublicador(id);
-      });
-    });
-
-    document.querySelectorAll('.btn-eliminar').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const id = e.currentTarget.dataset.id;
+      } else if (action === 'delete') {
         eliminarPublicador(id);
-      });
+      }
     });
 
   } catch (error) {
@@ -211,6 +229,27 @@ function toggleImportExportPanel() {
 
 // Función para configurar los event listeners
 function configurarEventListeners() {
+  // Delegación de eventos para los botones de la tabla
+  document.addEventListener('click', (e) => {
+    const button = e.target.closest('button[data-action]');
+    if (!button) return;
+    
+    const action = button.getAttribute('data-action');
+    const id = button.getAttribute('data-id');
+    
+    switch (action) {
+      case 'view':
+        verPublicador(id);
+        break;
+      case 'edit':
+        editarPublicador(id);
+        break;
+      case 'delete':
+        eliminarPublicador(id);
+        break;
+    }
+  });
+
   // Botón de agregar publicador
   const btnAgregar = document.querySelector('#btnAgregarPublicador');
   if (btnAgregar) {
@@ -524,13 +563,18 @@ function configurarPaginacion(publicadores) {
     const startItem = (currentPage - 1) * itemsPerPage + 1;
     const endItem = Math.min(currentPage * itemsPerPage, publicadores.length);
     
-    document.getElementById('startItem').textContent = startItem;
-    document.getElementById('endItem').textContent = endItem;
-    document.getElementById('currentPage').textContent = currentPage;
+    // Actualizar información de paginación
+    document.getElementById('pagination-start').textContent = startItem;
+    document.getElementById('pagination-end').textContent = endItem;
+    document.getElementById('pagination-total').textContent = publicadores.length;
     
     // Habilitar/deshabilitar botones de navegación
-    document.getElementById('prevPage').disabled = currentPage === 1;
-    document.getElementById('nextPage').disabled = currentPage === totalPages;
+    document.getElementById('pagination-prev').disabled = currentPage === 1;
+    document.getElementById('pagination-next').disabled = currentPage === totalPages;
+    
+    // Actualizar clases de los botones
+    document.getElementById('pagination-prev').classList.toggle('disabled', currentPage === 1);
+    document.getElementById('pagination-next').classList.toggle('disabled', currentPage === totalPages);
     
     // Mostrar/ocultar filas según la página actual
     document.querySelectorAll('#tablaPublicadores tbody tr').forEach((row, index) => {
@@ -555,14 +599,14 @@ function configurarPaginacion(publicadores) {
   };
   
   // Event listeners para los botones de paginación
-  document.getElementById('prevPage')?.addEventListener('click', () => {
+  document.getElementById('pagination-prev')?.addEventListener('click', () => {
     if (currentPage > 1) {
       currentPage--;
       updatePagination();
     }
   });
   
-  document.getElementById('nextPage')?.addEventListener('click', () => {
+  document.getElementById('pagination-next')?.addEventListener('click', () => {
     if (currentPage < totalPages) {
       currentPage++;
       updatePagination();
@@ -595,6 +639,54 @@ async function eliminarPublicador(id) {
   } catch (error) {
     console.error('Error al eliminar el publicador:', error);
     alert('Error al eliminar el publicador. Por favor, intente nuevamente.');
+  }
+}
+
+// Función para ver los detalles de un publicador
+async function verPublicador(id) {
+  try {
+    // Obtener los datos del publicador
+    const { data: publicador, error } = await supabase
+      .from('publicadores')
+      .select(`
+        *,
+        congregacion:congregacion_id (nombre)
+      `)
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+    if (!publicador) {
+      alert('No se encontró el publicador');
+      return;
+    }
+
+    // Crear el mensaje con solo la información adicional que no está en la tabla
+    let mensaje = `Información adicional de ${publicador.nombre || 'este publicador'}:\n\n`;
+    
+    // Mostrar solo responsabilidad y notas si existen
+    let tieneInfoAdicional = false;
+    
+    if (publicador.responsabilidad) {
+      mensaje += `• Responsabilidad: ${publicador.responsabilidad}\n`;
+      tieneInfoAdicional = true;
+    }
+    
+    if (publicador.notas) {
+      mensaje += `\nNotas:\n${publicador.notas}\n`;
+      tieneInfoAdicional = true;
+    }
+    
+    if (!tieneInfoAdicional) {
+      mensaje = 'No hay información adicional disponible para este publicador.';
+    }
+    
+    // Mostrar la información en un alert
+    alert(mensaje);
+    
+  } catch (error) {
+    console.error('Error al cargar los datos del publicador:', error);
+    alert('Error al cargar los datos del publicador');
   }
 }
 
