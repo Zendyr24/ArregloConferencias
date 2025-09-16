@@ -1,29 +1,15 @@
 import { supabase } from './supabase.js';
-
-// Función para redirigir al inicio de sesión
-function redirigirALogin() {
-  window.location.href = '/index.html';
-}
+import { getCurrentUser } from './auth/auth-utils.js';
 
 export async function cargarPublicadores() {
   try {
     console.log('Iniciando carga de publicadores...');
     
-    // Verificar si hay una sesión activa
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    // Obtener el usuario actual del localStorage
+    const user = getCurrentUser();
     
-    if (sessionError || !session) {
-      console.error('No hay sesión activa:', sessionError);
-      redirigirALogin();
-      return;
-    }
-    
-    // Obtener el usuario actual
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError || !user) {
-      console.error('Error al obtener el usuario:', userError);
-      redirigirALogin();
+    if (!user) {
+      console.error('No se pudo obtener la información del usuario');
       return;
     }
     
@@ -77,9 +63,12 @@ export async function cargarPublicadores() {
 
     // Actualizar la tabla con los datos
     const tbody = document.querySelector('#tablaPublicadores tbody');
-    if (!tbody) return;
+    const mobileTable = document.querySelector('.mobile-table');
+    
+    if (!tbody || !mobileTable) return;
 
     tbody.innerHTML = ''; // Limpiar la tabla
+    mobileTable.innerHTML = ''; // Limpiar la vista móvil
 
     if (!publicadores || publicadores.length === 0) {
       tbody.innerHTML = `
@@ -87,16 +76,26 @@ export async function cargarPublicadores() {
           <td colspan="6" class="text-center">No hay publicadores registrados</td>
         </tr>
       `;
+      mobileTable.innerHTML = `
+        <div class="mobile-empty">No hay publicadores registrados</div>
+      `;
       return;
     }
 
+    // Actualizar información de paginación
+    document.getElementById('totalItems').textContent = publicadores.length;
+    document.getElementById('startItem').textContent = 1;
+    document.getElementById('endItem').textContent = Math.min(publicadores.length, 10);
+    document.getElementById('currentPage').textContent = 1;
+
     // Llenar la tabla con los datos
     publicadores.forEach(publicador => {
+      // Versión de escritorio
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${publicador.nombre || ''}</td>
         <td>${publicador.congregacion?.nombre || 'Sin asignar'}</td>
-        <td>${publicador.edad || ''}</td>
+        <td class="text-center">${publicador.edad || ''}</td>
         <td class="text-center">
           <span class="badge ${publicador.bautizado ? 'bg-success' : 'bg-secondary'}">
             ${publicador.bautizado ? 'Sí' : 'No'}
@@ -104,17 +103,50 @@ export async function cargarPublicadores() {
         </td>
         <td>${publicador.privilegio_servicio || ''}</td>
         <td class="text-center">
-          <button class="btn btn-sm btn-outline-primary btn-editar" data-id="${publicador.id}">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="btn btn-sm btn-outline-danger btn-eliminar ms-2" data-id="${publicador.id}">
-            <i class="fas fa-trash"></i>
-          </button>
+          <div class="acciones-botones">
+            <button class="btn-accion btn-editar" data-id="${publicador.id}" title="Editar">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn-accion btn-eliminar" data-id="${publicador.id}" title="Eliminar">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
         </td>
       `;
       tbody.appendChild(tr);
+
+      // Versión móvil
+      const mobileItem = document.createElement('div');
+      mobileItem.className = 'mobile-item';
+      mobileItem.innerHTML = `
+        <div class="mobile-item-header">
+          <h4>${publicador.nombre || 'Sin nombre'}</h4>
+          <div class="mobile-item-actions">
+            <button class="btn-accion btn-editar" data-id="${publicador.id}" title="Editar">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn-accion btn-eliminar" data-id="${publicador.id}" title="Eliminar">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+        <div class="mobile-item-details">
+          <p><strong>Congregación:</strong> ${publicador.congregacion?.nombre || 'Sin asignar'}</p>
+          <p><strong>Edad:</strong> ${publicador.edad || 'No especificada'}</p>
+          <p><strong>Bautizado:</strong> 
+            <span class="badge ${publicador.bautizado ? 'bg-success' : 'bg-secondary'}">
+              ${publicador.bautizado ? 'Sí' : 'No'}
+            </span>
+          </p>
+          <p><strong>Privilegio:</strong> ${publicador.privilegio_servicio || 'Ninguno'}</p>
+        </div>
+      `;
+      mobileTable.appendChild(mobileItem);
     });
 
+    // Configurar la paginación
+    configurarPaginacion(publicadores);
+    
     // Agregar event listeners a los botones
     document.querySelectorAll('.btn-editar').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -148,16 +180,430 @@ export async function cargarPublicadores() {
 // Función para inicializar la página de publicadores
 export function inicializarPaginaPublicadores() {
   // Cargar los publicadores al iniciar la página
-  document.addEventListener('DOMContentLoaded', cargarPublicadores);
+  document.addEventListener('DOMContentLoaded', () => {
+    cargarPublicadores();
+    inicializarBusqueda();
+    configurarEventListeners();
+  });
+}
+
+// Función para alternar el panel de importación/exportación
+function toggleImportExportPanel() {
+  const panel = document.getElementById('importExportPanel');
+  const toggleBtn = document.getElementById('toggleImportExport');
   
-  // Configurar el botón de agregar
+  if (!panel || !toggleBtn) return;
+  
+  const icon = toggleBtn.querySelector('i');
+  
+  // Alternar la clase visible
+  panel.classList.toggle('visible');
+  
+  // Alternar los iconos
+  if (panel.classList.contains('visible')) {
+    icon.classList.remove('fa-chevron-down');
+    icon.classList.add('fa-chevron-up');
+  } else {
+    icon.classList.remove('fa-chevron-up');
+    icon.classList.add('fa-chevron-down');
+  }
+}
+
+// Función para configurar los event listeners
+function configurarEventListeners() {
+  // Botón de agregar publicador
   const btnAgregar = document.querySelector('#btnAgregarPublicador');
   if (btnAgregar) {
     btnAgregar.addEventListener('click', () => {
-      // Aquí irá la lógica para mostrar el formulario de agregar
+      // Lógica para mostrar el formulario de agregar
       console.log('Mostrar formulario para agregar publicador');
     });
   }
+
+  // Configurar el botón de importar/exportar
+  const toggleImportExport = document.getElementById('toggleImportExport');
+  if (toggleImportExport) {
+    toggleImportExport.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleImportExportPanel();
+    });
+    
+    // Cerrar el panel al hacer clic fuera de él
+    document.addEventListener('click', (e) => {
+      const panel = document.getElementById('importExportPanel');
+      if (panel && panel.classList.contains('visible') && 
+          !panel.contains(e.target) && 
+          !toggleImportExport.contains(e.target)) {
+        toggleImportExportPanel();
+      }
+    });
+    
+    // Cerrar con la tecla Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const panel = document.getElementById('importExportPanel');
+        if (panel && panel.classList.contains('visible')) {
+          toggleImportExportPanel();
+        }
+      }
+    });
+  }
+
+  // Botones de importar/exportar
+  document.getElementById('btnImportar')?.addEventListener('click', importarDatos);
+  document.getElementById('btnExportar')?.addEventListener('click', exportarAExcel);
+  document.getElementById('btnExportarPDF')?.addEventListener('click', exportarAPDF);
+}
+
+// Función para inicializar la búsqueda
+function inicializarBusqueda() {
+  const buscarInput = document.getElementById('buscarPublicador');
+  const btnLimpiar = document.createElement('button');
+  btnLimpiar.className = 'btn-clear-search';
+  btnLimpiar.innerHTML = '<i class="fas fa-times"></i>';
+  btnLimpiar.style.display = 'none';
+  btnLimpiar.type = 'button';
+  
+  if (buscarInput) {
+    // Insertar el botón de limpiar después del input
+    buscarInput.parentNode.insertBefore(btnLimpiar, buscarInput.nextSibling);
+    
+    // Mostrar/ocultar el botón de limpiar
+    buscarInput.addEventListener('input', () => {
+      btnLimpiar.style.display = buscarInput.value ? 'flex' : 'none';
+      buscarPublicadores(buscarInput.value);
+    });
+    
+    // Limpiar la búsqueda
+    btnLimpiar.addEventListener('click', () => {
+      buscarInput.value = '';
+      btnLimpiar.style.display = 'none';
+      buscarPublicadores('');
+    });
+    
+    // Buscar al presionar Enter
+    buscarInput.addEventListener('keyup', (e) => {
+      if (e.key === 'Enter') {
+        buscarPublicadores(buscarInput.value);
+      }
+    });
+  }
+}
+
+// Función para buscar publicadores
+function buscarPublicadores(termino) {
+  const filas = document.querySelectorAll('#tablaPublicadores tbody tr');
+  const itemsMoviles = document.querySelectorAll('.mobile-item');
+  
+  if (!termino || termino === '') {
+    // Mostrar todos los elementos si no hay término de búsqueda
+    filas.forEach(fila => fila.style.display = '');
+    itemsMoviles.forEach(item => item.style.display = '');
+    return;
+  }
+  
+  const terminoMinuscula = termino.toLowerCase();
+  
+  // Buscar en la versión de escritorio
+  filas.forEach(fila => {
+    const textoFila = fila.textContent.toLowerCase();
+    fila.style.display = textoFila.includes(terminoMinuscula) ? '' : 'none';
+  });
+  
+  // Buscar en la versión móvil
+  itemsMoviles.forEach(item => {
+    const textoItem = item.textContent.toLowerCase();
+    item.style.display = textoItem.includes(terminoMinuscula) ? '' : 'none';
+  });
+}
+
+// Función para exportar a Excel
+async function exportarAExcel() {
+  try {
+    // Obtener el usuario actual del localStorage
+    const user = getCurrentUser();
+    if (!user) {
+      console.error('No se pudo obtener la información del usuario');
+      return;
+    }
+
+    // Obtener la información del usuario actual incluyendo la organización
+    const { data: usuario, error: userInfoError } = await supabase
+      .from('users')
+      .select('organizacion_id')
+      .eq('id', user.id)
+      .single();
+
+    if (userInfoError || !usuario) {
+      console.error('Error al obtener información del usuario:', userInfoError);
+      alert('Error al obtener información del usuario');
+      return;
+    }
+
+    // Obtener los publicadores de la organización
+    const { data: publicadores, error } = await supabase
+      .from('publicadores')
+      .select(`
+        id,
+        nombre,
+        edad,
+        bautizado,
+        privilegio_servicio,
+        responsabilidad,
+        congregacion:congregacion_id (nombre)
+      `)
+      .eq('organizacion_id', usuario.organizacion_id);
+
+    if (error) throw error;
+
+    // Formatear los datos para Excel
+    const datosFormateados = publicadores.map(publicador => ({
+      'ID': publicador.id,
+      'Nombre': publicador.nombre || '',
+      'Edad': publicador.edad || '',
+      'Bautizado': publicador.bautizado ? 'Sí' : 'No',
+      'Privilegio de Servicio': publicador.privilegio_servicio || '',
+      'Responsabilidad': publicador.responsabilidad || '',
+      'Congregación': publicador.congregacion?.nombre || 'Sin asignar'
+    }));
+
+    // Crear un libro de trabajo de Excel
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(datosFormateados);
+    
+    // Añadir la hoja al libro
+    XLSX.utils.book_append_sheet(wb, ws, 'Publicadores');
+    
+    // Generar el archivo Excel
+    XLSX.writeFile(wb, `publicadores_${new Date().toISOString().split('T')[0]}.xlsx`);
+    
+  } catch (error) {
+    console.error('Error al exportar a Excel:', error);
+    alert('Error al exportar los datos a Excel');
+  }
+}
+
+// Función para importar desde Excel
+async function importarDatos() {
+  try {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.xlsx, .xls, .csv';
+    
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      // Leer el archivo
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data);
+      
+      // Obtener la primera hoja
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      
+      if (jsonData.length === 0) {
+        alert('El archivo está vacío');
+        return;
+      }
+      
+      // Obtener el usuario actual
+      const user = getCurrentUser();
+      if (!user) {
+        alert('No se pudo obtener la información del usuario');
+        return;
+      }
+      
+      // Mostrar confirmación
+      if (!confirm(`¿Desea importar ${jsonData.length} registros?`)) {
+        return;
+      }
+      
+      // Procesar los datos
+      const publicadores = jsonData.map(item => ({
+        nombre: item['Nombre'] || '',
+        edad: item['Edad'] ? parseInt(item['Edad']) : null,
+        bautizado: item['Bautizado'] === 'Sí',
+        privilegio_servicio: item['Privilegio de Servicio'] || '',
+        responsabilidad: item['Responsabilidad'] || '',
+        organizacion_id: user.organizacion_id,
+        // Aquí deberías mapear el ID de la congregación si es necesario
+      }));
+      
+      // Insertar los datos en la base de datos
+      const { data: result, error } = await supabase
+        .from('publicadores')
+        .insert(publicadores);
+      
+      if (error) throw error;
+      
+      alert(`Se importaron ${publicadores.length} publicadores correctamente`);
+      
+      // Recargar la lista de publicadores
+      cargarPublicadores();
+    };
+    
+    // Disparar el input de archivo
+    input.click();
+    
+  } catch (error) {
+    console.error('Error al importar desde Excel:', error);
+    alert('Error al importar los datos desde Excel');
+  }
+}
+
+// Función para exportar a PDF
+function exportarAPDF() {
+  // Crear un nuevo documento PDF
+  const doc = new jspdf.jsPDF();
+  
+  // Título del documento
+  doc.setFontSize(20);
+  doc.text('Lista de Publicadores', 14, 22);
+  
+  // Obtener la fecha actual
+  const fecha = new Date().toLocaleDateString();
+  doc.setFontSize(10);
+  doc.text(`Generado el: ${fecha}`, 14, 30);
+  
+  // Obtener los datos de la tabla
+  const headers = [
+    'Nombre', 
+    'Congregación', 
+    'Edad', 
+    'Bautizado', 
+    'Privilegio'
+  ];
+  
+  const filas = Array.from(document.querySelectorAll('#tablaPublicadores tbody tr'));
+  const datos = filas.map(fila => {
+    const celdas = fila.querySelectorAll('td');
+    return [
+      celdas[0]?.textContent || '',
+      celdas[1]?.textContent || '',
+      celdas[2]?.textContent || '',
+      celdas[3]?.querySelector('.badge')?.textContent || 'No',
+      celdas[4]?.textContent || ''
+    ];
+  });
+  
+  // Agregar la tabla al PDF
+  doc.autoTable({
+    head: [headers],
+    body: datos,
+    startY: 40,
+    styles: { 
+      fontSize: 8,
+      cellPadding: 2,
+      valign: 'middle'
+    },
+    headStyles: {
+      fillColor: [41, 128, 185],
+      textColor: 255,
+      fontStyle: 'bold'
+    },
+    alternateRowStyles: {
+      fillColor: [245, 245, 245]
+    },
+    margin: { top: 40 }
+  });
+  
+  // Guardar el PDF
+  doc.save(`publicadores_${new Date().toISOString().split('T')[0]}.pdf`);
+}
+
+// Función para configurar la paginación
+function configurarPaginacion(publicadores) {
+  const itemsPerPage = 10;
+  let currentPage = 1;
+  const totalPages = Math.ceil(publicadores.length / itemsPerPage);
+  
+  // Actualizar controles de paginación
+  const updatePagination = () => {
+    const startItem = (currentPage - 1) * itemsPerPage + 1;
+    const endItem = Math.min(currentPage * itemsPerPage, publicadores.length);
+    
+    document.getElementById('startItem').textContent = startItem;
+    document.getElementById('endItem').textContent = endItem;
+    document.getElementById('currentPage').textContent = currentPage;
+    
+    // Habilitar/deshabilitar botones de navegación
+    document.getElementById('prevPage').disabled = currentPage === 1;
+    document.getElementById('nextPage').disabled = currentPage === totalPages;
+    
+    // Mostrar/ocultar filas según la página actual
+    document.querySelectorAll('#tablaPublicadores tbody tr').forEach((row, index) => {
+      const rowIndex = index + 1;
+      if (rowIndex >= startItem && rowIndex <= endItem) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+    
+    // Mostrar/ocultar elementos móviles según la página actual
+    const mobileItems = document.querySelectorAll('.mobile-item');
+    mobileItems.forEach((item, index) => {
+      const itemIndex = index + 1;
+      if (itemIndex >= startItem && itemIndex <= endItem) {
+        item.style.display = '';
+      } else {
+        item.style.display = 'none';
+      }
+    });
+  };
+  
+  // Event listeners para los botones de paginación
+  document.getElementById('prevPage')?.addEventListener('click', () => {
+    if (currentPage > 1) {
+      currentPage--;
+      updatePagination();
+    }
+  });
+  
+  document.getElementById('nextPage')?.addEventListener('click', () => {
+    if (currentPage < totalPages) {
+      currentPage++;
+      updatePagination();
+    }
+  });
+  
+  // Inicializar la paginación
+  updatePagination();
+}
+
+// Función para manejar la eliminación de un publicador
+async function eliminarPublicador(id) {
+  if (!confirm('¿Está seguro de que desea eliminar este publicador?')) {
+    return;
+  }
+  
+  try {
+    const { error } = await supabase
+      .from('publicadores')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+    
+    // Recargar la lista de publicadores
+    cargarPublicadores();
+    
+    // Mostrar notificación de éxito
+    alert('Publicador eliminado correctamente');
+  } catch (error) {
+    console.error('Error al eliminar el publicador:', error);
+    alert('Error al eliminar el publicador. Por favor, intente nuevamente.');
+  }
+}
+
+// Función para editar un publicador
+function editarPublicador(id) {
+  // Aquí irá la lógica para editar un publicador
+  console.log('Editar publicador con ID:', id);
+  // Por ahora, solo mostramos un mensaje
+  alert(`Función de edición para el publicador con ID: ${id} (por implementar)`);
 }
 
 // Inicializar la página si estamos en la sección de publicadores

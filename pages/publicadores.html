@@ -112,15 +112,54 @@
       <main class="main-content" id="mainContent">
         <div class="content-section">
           <div class="section-header">
-            <h3>Lista de Publicadores</h3>
-            <button id="btnAgregarPublicador" class="btn btn-primary">
-              <i class="fas fa-plus"></i> Agregar Publicador
-            </button>
+            <div class="section-header-row">
+              <h3>Lista de Publicadores</h3>
+              <div class="btn-group">
+                <button id="btnAgregarPublicador" class="btn btn-primary">
+                  <i class="fas fa-plus"></i> Agregar Publicador
+                </button>
+                <button class="btn btn-outline" id="toggleImportExport">
+                  Importar/Exportar
+                  <i class="fas fa-chevron-down ms-2"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="import-export-panel" id="importExportPanel">
+              <div class="import-export-buttons">
+                <div class="btn-group">
+                  <button class="btn btn-outline" id="btnImportar">
+                    <i class="fas fa-file-import"></i> Importar Excel
+                  </button>
+                  <button class="btn btn-outline" id="btnExportar">
+                    <i class="fas fa-file-export"></i> Exportar Excel
+                  </button>
+                  <button class="btn btn-outline" id="btnExportarPDF">
+                    <i class="fas fa-file-pdf"></i> Exportar PDF
+                  </button>
+                </div>
+                <div class="import-export-hint">
+                  <i class="fas fa-info-circle"></i> Gestiona la importación y exportación de datos
+                </div>
+              </div>
+            </div>
+
+            <!-- Barra de búsqueda -->
+            <div class="search-bar">
+              <div class="search-input">
+                <i class="fas fa-search"></i>
+                <input
+                  type="text"
+                  id="buscarPublicador"
+                  placeholder="Buscar publicadores por nombre..."
+                />
+              </div>
+            </div>
           </div>
 
-          <div class="table-responsive">
-            <table class="table table-striped table-hover" id="tablaPublicadores">
-              <thead class="table-light">
+          <div class="table-container">
+            <table class="data-table" id="tablaPublicadores">
+              <thead>
                 <tr>
                   <th>Nombre</th>
                   <th>Congregación</th>
@@ -136,6 +175,28 @@
                 </tr>
               </tbody>
             </table>
+            
+            <!-- Versión móvil (se mostrará solo en pantallas pequeñas) -->
+            <div class="mobile-table">
+              <!-- Los elementos móviles se generarán dinámicamente con JavaScript -->
+              <div class="mobile-loading">Cargando publicadores...</div>
+            </div>
+            
+            <!-- Controles de paginación -->
+            <div class="pagination-container">
+              <div class="pagination-info">
+                Mostrando <span id="startItem">0</span> a <span id="endItem">0</span> de <span id="totalItems">0</span> publicadores
+              </div>
+              <div class="pagination-controls">
+                <button id="prevPage" class="btn btn-outline" disabled>
+                  <i class="fas fa-chevron-left"></i>
+                </button>
+                <span id="currentPage">1</span>
+                <button id="nextPage" class="btn btn-outline" disabled>
+                  <i class="fas fa-chevron-right"></i>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </main>
@@ -170,6 +231,8 @@
         }
       });
     </script>
-      <script type="module" src="../scripts/auth/logout-handler.js"></script>
+    
+    <!-- Script para manejo de autenticación -->
+    <script type="module" src="../scripts/auth/publicadores-auth.js"></script>
 </body>
 </html>

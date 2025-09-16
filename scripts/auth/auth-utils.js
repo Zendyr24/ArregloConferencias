@@ -31,5 +31,5 @@ export function redirectToLogin() {
     // para producción
     //window.location.href = './../login.html';
     // para desarrollo
-    window.location.href = './login.html';
+    window.location.href = '/login.html';
 }
