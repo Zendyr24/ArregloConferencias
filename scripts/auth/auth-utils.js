@@ -28,5 +28,8 @@ export function updateUserInfo() {
 }
 
 export function redirectToLogin() {
-    window.location.href = './../login.html';
+    // para producción
+    //window.location.href = './../login.html';
+    // para desarrollo
+    window.location.href = './login.html';
 }
