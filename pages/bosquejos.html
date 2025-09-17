@@ -204,14 +204,14 @@
 
     <!-- Modal para nuevo bosquejo -->
     <div
-      class="modal"
+      class="modal fade"
       id="modalBosquejo"
       tabindex="-1"
       role="dialog"
       aria-labelledby="modalBosquejoTitle"
-      aria-modal="false"
+      aria-hidden="true"
     >
-      <div class="modal-dialog" role="document">
+      <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
           <div class="modal-header">
             <h2 class="modal-title h5" id="modalBosquejoTitle">
@@ -244,17 +244,15 @@
                 <label for="titulo" class="form-label">Título</label>
                 <input type="text" class="form-control" id="titulo" required />
               </div>
-              <div class="modal-footer">
-                <button
-                  type="button"
-                  class="btn btn-secondary"
-                  data-bs-dismiss="modal"
-                >
-                  Cancelar
-                </button>
-                <button type="submit" class="btn btn-primary">Guardar</button>
-              </div>
             </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              Cancelar
+            </button>
+            <button type="submit" form="formBosquejo" class="btn btn-primary">
+              Guardar
+            </button>
           </div>
         </div>
       </div>

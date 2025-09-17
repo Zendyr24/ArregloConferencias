@@ -226,38 +226,59 @@
 #modalCongregacion .modal-dialog {
   max-width: 600px;
   margin: 1.75rem auto;
+  max-height: 90vh;
+  display: flex;
+  align-items: center;
+  min-height: calc(100% - 3.5rem);
+  pointer-events: none;
 }
 
 #modalCongregacion .modal-content {
-  border: none;
-  border-radius: 0.5rem;
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  pointer-events: auto;
+  background-color: var(--color-bg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
+  outline: 0;
 }
 
 #modalCongregacion .modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
   border-bottom: 1px solid #dee2e6;
-  padding: 1.25rem 1.5rem;
+  background-color: var(--color-bg);
 }
 
 #modalCongregacion .modal-body {
   padding: 1.5rem;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1 1 auto;
 }
 
 #modalCongregacion .modal-footer {
-  border-top: 1px solid #dee2e6;
-  padding: 1rem 1.5rem;
-}
-
-/* Asegurar que el modal esté centrado verticalmente */
-.modal-dialog-centered {
   display: flex;
-  align-items: center;
-  min-height: calc(100% - 1rem);
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid #dee2e6;
+  background-color: var(--color-bg-alt);
 }
 
-@media (min-width: 576px) {
-  .modal-dialog-centered {
-    min-height: calc(100% - 3.5rem);
+/* Ajustes responsivos */
+@media (max-width: 575.98px) {
+  #modalCongregacion .modal-dialog {
+    margin: 0.5rem auto;
+    min-height: calc(100% - 1rem);
+  }
+  
+  #modalCongregacion .modal-content {
+    max-height: 90vh;
   }
 }
 

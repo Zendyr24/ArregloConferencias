@@ -80,6 +80,49 @@
   display: none;
 }
 
+/* Estilos para el modal de bosquejos */
+#modalBosquejo .modal-content {
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+#modalBosquejo .modal-header {
+  border-bottom: 1px solid #dee2e6;
+  padding: 1rem 1.5rem;
+}
+
+#modalBosquejo .modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1 1 auto;
+}
+
+#modalBosquejo .modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid #dee2e6;
+  background-color: var(--color-bg-alt);
+}
+
+/* Ajustes responsivos */
+@media (max-width: 575.98px) {
+  #modalBosquejo .modal-dialog {
+    margin: 1.75rem auto;
+    min-height: calc(100% - 3.5rem);
+    display: flex;
+    align-items: center;
+  }
+  
+  #modalBosquejo .modal-content {
+    max-height: 90vh;
+  }
+}
+
 /* Estilos para el panel de importar/exportar */
 .import-export-panel {
   position: relative;

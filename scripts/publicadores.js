@@ -1006,15 +1006,13 @@ async function editarPublicador(id) {
       throw new Error('ID de publicador no proporcionado');
     }
     
-    // Mostrar el modal de carga
-    const modalElement = document.getElementById('publicadorModal');
-    if (!modalElement) {
-      throw new Error('No se encontró el elemento del modal');
+    // Verificar que el modal global exista
+    if (!publicadorModal) {
+      console.warn('El modal global no está inicializado, inicializando...');
+      inicializarModal();
     }
     
-    const modal = new bootstrap.Modal(modalElement);
-    
-    // Actualizar el título del modal de manera segura
+    // Actualizar el título del modal
     const modalTitle = document.getElementById('publicadorModalTitle');
     if (modalTitle) {
       modalTitle.textContent = 'Editar Publicador';
@@ -1055,6 +1053,10 @@ async function editarPublicador(id) {
     const privilegioInput = document.getElementById('privilegio_servicio');
     const responsabilidadInput = document.getElementById('responsabilidad');
     
+    // Resetear el formulario primero para limpiar cualquier estado previo
+    form.reset();
+    
+    // Llenar los campos con los datos del publicador
     if (nombreInput) nombreInput.value = publicador.nombre || '';
     if (edadInput) edadInput.value = publicador.edad || '';
     if (bautizadoInput) bautizadoInput.checked = Boolean(publicador.bautizado);
@@ -1070,8 +1072,12 @@ async function editarPublicador(id) {
     await cargarCongregaciones(publicador.congregacion_id);
     
     console.log('Mostrando modal...');
-    // Mostrar el modal
-    modal.show();
+    // Asegurarse de que el modal no tenga estilos inline antes de mostrarlo
+    const modalElement = document.getElementById('publicadorModal');
+    modalElement.style.display = '';
+    modalElement.removeAttribute('style');
+    // Mostrar el modal usando la instancia global
+    publicadorModal.show();
     
   } catch (error) {
     console.error('Error al cargar el publicador:', {
@@ -1080,7 +1086,14 @@ async function editarPublicador(id) {
       name: error.name,
       id: id
     });
-    alert('Error al cargar los datos del publicador: ' + error.message);
+    
+    // Usar SweetAlert2 para mostrar el error de manera más amigable
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'Error al cargar los datos del publicador: ' + error.message,
+      confirmButtonText: 'Aceptar'
+    });
   }
 }
 
@@ -1291,8 +1304,13 @@ function inicializarModal() {
   // Crear una nueva instancia del modal
   publicadorModal = new bootstrap.Modal(modalElement, {
     backdrop: 'static',
-    keyboard: false
+    keyboard: false,
+    focus: true
   });
+  
+  // Asegurarse de que el modal no tenga estilos inline de display
+  modalElement.style.display = '';
+  modalElement.removeAttribute('style');
   
   // Limpiar eventos previos
   const newBtnAgregar = btnAgregar.cloneNode(true);
@@ -1308,6 +1326,10 @@ function inicializarModal() {
     resetearFormularioPublicador();
     // Actualizar el título del modal
     document.getElementById('publicadorModalTitle').textContent = 'Nuevo Publicador';
+    // Asegurarse de que el modal no tenga estilos inline antes de mostrarlo
+    const modalElement = document.getElementById('publicadorModal');
+    modalElement.style.display = '';
+    modalElement.removeAttribute('style');
     // Mostrar el modal
     publicadorModal.show();
   });
