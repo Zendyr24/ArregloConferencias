@@ -1,0 +1,98 @@
+/* =========================
+   ESTILOS ESPECÍFICOS PARA LA PÁGINA DE ORADORES
+   ========================= */
+
+/* Ajustes específicos para la tabla de oradores */
+.data-table th.col-nombre {
+  width: 25%;
+}
+
+.data-table th.col-congregacion {
+  width: 20%;
+}
+
+.data-table th.col-telefono {
+  width: 15%;
+}
+
+.data-table th.col-email {
+  width: 20%;
+}
+
+.data-table th.col-disponibilidad {
+  width: 10%;
+}
+
+.data-table th.col-acciones {
+  width: 10%;
+  text-align: center;
+}
+
+/* Estilos para los badges de disponibilidad */
+.badge-disponible {
+  background-color: var(--color-success);
+  color: white;
+}
+
+.badge-ocupado {
+  background-color: var(--color-warning);
+  color: var(--color-text);
+}
+
+.badge-no-disponible {
+  background-color: var(--color-danger);
+  color: white;
+}
+
+/* Ajustes para la vista móvil */
+@media (max-width: 768px) {
+  .mobile-cards .card {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .mobile-cards .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .mobile-cards .card-header h4 {
+    margin: 0;
+    font-size: var(--font-size-md);
+    color: var(--color-text);
+  }
+
+  .mobile-cards .card-body p {
+    margin: 0 0 var(--spacing-xs);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+  }
+
+  .mobile-cards .card-body i {
+    width: 1rem;
+    text-align: center;
+    color: var(--color-primary);
+  }
+
+  .mobile-cards .card-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-sm);
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid var(--color-border);
+  }
+}
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+  color: var(--color-text-secondary);
+}
