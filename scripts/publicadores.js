@@ -1159,34 +1159,38 @@ async function manejarEnvioFormulario(event) {
   
   const form = event.target;
   const formData = new FormData(form);
+  const submitButton = form.querySelector('button[type="submit"]');
   
-  // Obtener el ID del publicador del formulario
-  const publicadorId = form.dataset.id; // Será undefined para nuevos publicadores
-  
-  // Validar campos requeridos
-  if (!formData.get('nombre') || !formData.get('congregacion')) {
-    alert('Por favor complete los campos requeridos');
-    return;
-  }
-  
-  // Obtener el valor seleccionado del select de congregación
-  const congregacionSelect = document.getElementById('congregacion');
-  const congregacionId = congregacionSelect ? congregacionSelect.value : null;
-  
-  const publicador = {
-    nombre: formData.get('nombre'),
-    edad: parseInt(formData.get('edad')) || null,
-    bautizado: formData.get('bautizado') === 'true',
-    privilegio_servicio: formData.get('privilegio_servicio') || null,
-    responsabilidad: formData.get('responsabilidad') || null,
-    congregacion_id: congregacionId
-  };
+  // Deshabilitar el botón de envío para evitar múltiples envíos
+  const originalButtonText = submitButton.innerHTML;
+  submitButton.disabled = true;
+  submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...';
   
   try {
+    // Obtener el ID del publicador del formulario
+    const publicadorId = form.dataset.id; // Será undefined para nuevos publicadores
+    
+    // Validar campos requeridos
+    if (!formData.get('nombre') || !formData.get('congregacion')) {
+      throw new Error('Por favor complete los campos requeridos');
+    }
+    
+    // Obtener el valor seleccionado del select de congregación
+    const congregacionSelect = document.getElementById('congregacion');
+    const congregacionId = congregacionSelect ? congregacionSelect.value : null;
+    
+    const publicador = {
+      nombre: formData.get('nombre').trim(),
+      edad: formData.get('edad') ? parseInt(formData.get('edad')) : null,
+      bautizado: formData.get('bautizado') === 'true',
+      privilegio_servicio: formData.get('privilegio_servicio') || null,
+      responsabilidad: formData.get('responsabilidad') ? formData.get('responsabilidad').trim() : null,
+      congregacion_id: congregacionId
+    };
+    
     let result;
     
     if (publicadorId) {
-      // Actualizando publicador existente
       // Actualizar publicador existente
       const { data, error } = await supabase
         .from('publicadores')
@@ -1196,11 +1200,7 @@ async function manejarEnvioFormulario(event) {
         
       if (error) throw error;
       result = data[0];
-      
-      // Mostrar mensaje de éxito
-      console.log('Publicador actualizado:', result);
     } else {
-      // Creando nuevo publicador
       // Crear nuevo publicador
       const user = getCurrentUser();
       if (!user) throw new Error('No se pudo obtener la información del usuario');
@@ -1227,12 +1227,23 @@ async function manejarEnvioFormulario(event) {
       result = data[0];
     }
     
-    // Cerrar el modal y limpiar
+    // Mostrar mensaje de éxito
+    await Swal.fire({
+      icon: 'success',
+      title: publicadorId ? '¡Actualizado!' : '¡Creado!',
+      text: `El publicador ha sido ${publicadorId ? 'actualizado' : 'creado'} correctamente`,
+      timer: 2000,
+      showConfirmButton: false,
+      timerProgressBar: true
+    });
+    
+    // Cerrar el modal
     const modalElement = document.getElementById('publicadorModal');
     if (modalElement) {
-      const modal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
-      modal.hide();
-      resetearFormularioPublicador();
+      const modal = bootstrap.Modal.getInstance(modalElement);
+      if (modal) {
+        modal.hide();
+      }
     }
     
     // Recargar la lista de publicadores
@@ -1242,36 +1253,83 @@ async function manejarEnvioFormulario(event) {
     
   } catch (error) {
     console.error('Error al guardar el publicador:', error);
-    alert('Error al guardar el publicador. Por favor, intente nuevamente.');
+    
+    // Mostrar mensaje de error
+    await Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: error.message || 'Ocurrió un error al guardar el publicador. Por favor, intente nuevamente.',
+      confirmButtonText: 'Entendido',
+      confirmButtonColor: '#3085d6'
+    });
+    
+    // Re-lanzar el error para manejarlo en el llamador si es necesario
     throw error;
+  } finally {
+    // Restaurar el estado del botón de envío
+    if (submitButton) {
+      submitButton.disabled = false;
+      submitButton.innerHTML = originalButtonText;
+    }
   }
 }
+
+// Variable global para mantener la instancia del modal
+let publicadorModal = null;
 
 // Función para inicializar el modal
 function inicializarModal() {
   const btnAgregar = document.getElementById('btnAgregarPublicador');
-  const publicadorModal = new bootstrap.Modal(
-    document.getElementById('publicadorModal')
-  );
+  const modalElement = document.getElementById('publicadorModal');
   const publicadorForm = document.getElementById('publicadorForm');
+  
+  // Si ya existe una instancia del modal, eliminarla primero
+  if (publicadorModal) {
+    publicadorModal.dispose();
+  }
+  
+  // Crear una nueva instancia del modal
+  publicadorModal = new bootstrap.Modal(modalElement, {
+    backdrop: 'static',
+    keyboard: false
+  });
+  
+  // Limpiar eventos previos
+  const newBtnAgregar = btnAgregar.cloneNode(true);
+  btnAgregar.parentNode.replaceChild(newBtnAgregar, btnAgregar);
+  
+  const newForm = publicadorForm.cloneNode(true);
+  publicadorForm.parentNode.replaceChild(newForm, publicadorForm);
 
   // Mostrar el modal al hacer clic en el botón de agregar
-  if (btnAgregar) {
-    btnAgregar.addEventListener('click', () => {
-      // Limpiar el formulario
-      publicadorForm.reset();
-      resetearFormularioPublicador();
-      // Actualizar el título del modal
-      document.getElementById('publicadorModalTitle').textContent = 'Nuevo Publicador';
-      // Mostrar el modal
-      publicadorModal.show();
-    });
-  }
+  newBtnAgregar.addEventListener('click', function handleAgregarClick() {
+    // Limpiar el formulario
+    newForm.reset();
+    resetearFormularioPublicador();
+    // Actualizar el título del modal
+    document.getElementById('publicadorModalTitle').textContent = 'Nuevo Publicador';
+    // Mostrar el modal
+    publicadorModal.show();
+  });
 
   // Manejar el envío del formulario
-  if (publicadorForm) {
-    publicadorForm.addEventListener('submit', manejarEnvioFormulario);
-  }
+  newForm.addEventListener('submit', function handleSubmit(e) {
+    e.preventDefault();
+    manejarEnvioFormulario(e).then(() => {
+      // Cerrar el modal después de guardar exitosamente
+      publicadorModal.hide();
+    }).catch(error => {
+      console.error('Error al procesar el formulario:', error);
+    });
+  });
+  
+  // Limpiar recursos cuando el modal se cierre
+  modalElement.addEventListener('hidden.bs.modal', function() {
+    // Forzar el foco al botón que abrió el modal
+    if (document.activeElement === modalElement) {
+      newBtnAgregar.focus();
+    }
+  });
 }
 
 // Inicializar la página si estamos en la sección de publicadores

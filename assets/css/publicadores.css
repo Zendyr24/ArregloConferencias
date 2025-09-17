@@ -3,22 +3,50 @@
 /* Estilos específicos para el modal de publicadores */
 #publicadorModal .modal-dialog {
   max-width: 600px;
-  margin: 1.75rem auto;
-}
-
-#publicadorModal .modal-header {
-  border-bottom: 1px solid #dee2e6;
-  padding: 1.25rem 1.5rem;
+  margin: 3rem auto 1rem;
+  max-height: 90vh;
+  display: flex;
+  align-items: flex-start;
 }
 
 #publicadorModal .modal-content {
   border: none;
   border-radius: 0.5rem;
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+#publicadorModal .modal-header {
+  border-bottom: 1px solid #dee2e6;
+  padding: 1rem 1.5rem;
+  flex-shrink: 0;
 }
 
 #publicadorModal .modal-body {
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1 1 auto;
+}
+
+#publicadorModal .modal-footer {
+  flex-shrink: 0;
+  border-top: 1px solid #dee2e6;
+  padding: 1rem 1.5rem;
+}
+
+@media (max-width: 575.98px) {
+  #publicadorModal .modal-dialog {
+    margin: 1rem auto;
+    max-height: 90vh;
+  }
+  
+  #publicadorModal .modal-content {
+    max-height: 90vh;
+  }
 }
 
 #publicadorModal .modal-footer {
