@@ -331,6 +331,196 @@ function configurarEventListeners() {
   document.getElementById('btnExportarPDF')?.addEventListener('click', exportarAPDF);
 }
 
+// Función para importar datos desde un archivo Excel
+async function importarDatos() {
+  try {
+    // Obtener el usuario actual
+    const user = getCurrentUser();
+    if (!user) {
+      throw new Error('No se pudo obtener la información del usuario');
+    }
+
+    // Obtener la información de la organización del usuario
+    const { data: usuario, error: userError } = await supabase
+      .from('users')
+      .select('organizacion_id, congregacion_id')
+      .eq('id', user.id)
+      .single();
+
+    if (userError || !usuario) {
+      throw new Error('No se pudo obtener la información de la organización');
+    }
+
+    // Crear input de archivo
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.xlsx, .xls';
+    
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      try {
+        // Leer el archivo Excel
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(data);
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+        if (jsonData.length === 0) {
+          alert('El archivo está vacío');
+          return;
+        }
+
+        // Validar estructura del archivo
+        const requiredFields = ['Nombre', 'Congregación'];
+        const fileHeaders = Object.keys(jsonData[0] || {});
+        
+        const missingFields = requiredFields.filter(
+          field => !fileHeaders.includes(field)
+        );
+
+        if (missingFields.length > 0) {
+          throw new Error(`Faltan campos requeridos: ${missingFields.join(', ')}`);
+        }
+
+        // Obtener lista de congregaciones para validación
+        const { data: congregaciones, error: congError } = await supabase
+          .from('congregacion')
+          .select('id, nombre');
+
+        if (congError) throw congError;
+
+        const congregacionMap = new Map(
+          congregaciones.map(c => [c.nombre.toLowerCase(), c.id])
+        );
+
+        // Procesar los datos
+        const publicadores = [];
+        const errores = [];
+        const nombresProcesados = new Set();
+
+        for (const [index, row] of jsonData.entries()) {
+          try {
+            const nombre = (row['Nombre'] || '').trim();
+            const nombreCongregacion = (row['Congregación'] || '').trim();
+
+            // Validaciones
+            if (!nombre) {
+              errores.push(`Fila ${index + 2}: El campo 'Nombre' es requerido`);
+              continue;
+            }
+
+            // Verificar duplicados en el archivo
+            const claveUnica = `${nombre.toLowerCase()}-${nombreCongregacion.toLowerCase()}`;
+            if (nombresProcesados.has(claveUnica)) {
+              errores.push(`Fila ${index + 2}: El publicador '${nombre}' ya está duplicado en el archivo`);
+              continue;
+            }
+            nombresProcesados.add(claveUnica);
+
+            // Validar congregación
+            let congregacionId = usuario.congregacion_id;
+            if (nombreCongregacion) {
+              const idCongregacion = congregacionMap.get(nombreCongregacion.toLowerCase());
+              if (!idCongregacion) {
+                errores.push(`Fila ${index + 2}: No se encontró la congregación '${nombreCongregacion}'`);
+                continue;
+              }
+              congregacionId = idCongregacion;
+            }
+
+            // Verificar si ya existe un publicador con el mismo nombre en la misma congregación
+            const { data: existe, error: existeError } = await supabase
+              .from('publicadores')
+              .select('id')
+              .ilike('nombre', nombre)
+              .eq('congregacion_id', congregacionId)
+              .maybeSingle();
+
+            if (existeError) throw existeError;
+            if (existe) {
+              console.log(`Saltando publicador existente: ${nombre} (ID: ${existe.id})`);
+              continue; // Saltar publicadores que ya existen
+            }
+
+            // Agregar publicador a la lista de importación
+            publicadores.push({
+              nombre,
+              edad: parseInt(row['Edad']) || null,
+              bautizado: ['sí', 'si', '1', 'true'].includes(
+                (row['Bautizado'] || '').toString().toLowerCase()
+              ),
+              privilegio_servicio: (row['Privilegio de Servicio'] || row['Privilegio'] || '').trim(),
+              responsabilidad: (row['Responsabilidad'] || '').trim(),
+              congregacion_id: congregacionId,
+              organizacion_id: usuario.organizacion_id
+            });
+
+          } catch (error) {
+            console.error(`Error procesando fila ${index + 2}:`, error);
+            errores.push(`Fila ${index + 2}: ${error.message || 'Error al procesar la fila'}`);
+          }
+        }
+
+        // Mostrar resumen de validaciones
+        if (errores.length > 0) {
+          const mensajeError = `Se encontraron ${errores.length} errores de validación:\n\n` +
+            errores.slice(0, 10).join('\n') + 
+            (errores.length > 10 ? `\n\n...y ${errores.length - 10} errores más` : '');
+          
+          if (!confirm(`${mensajeError}\n\n¿Desea continuar con la importación de los ${publicadores.length} publicadores válidos?`)) {
+            return;
+          }
+        }
+
+        // Insertar los publicadores en lotes
+        const BATCH_SIZE = 25;
+        let exitosos = 0;
+
+        for (let i = 0; i < publicadores.length; i += BATCH_SIZE) {
+          const batch = publicadores.slice(i, i + BATCH_SIZE);
+          const { error: insertError } = await supabase
+            .from('publicadores')
+            .insert(batch);
+
+          if (insertError) {
+            console.error('Error insertando lote:', insertError);
+            errores.push(`Error al insertar lote ${Math.floor(i/BATCH_SIZE) + 1}: ${insertError.message}`);
+          } else {
+            exitosos += batch.length;
+          }
+        }
+
+        // Mostrar resumen
+        let mensaje = `Se importaron ${exitosos} de ${publicadores.length} publicadores correctamente.`;
+        if (errores.length > 0) {
+          mensaje += `\n\nSe encontraron ${errores.length} errores durante la importación.`;
+          console.error('Errores de importación:', errores);
+        }
+
+        alert(mensaje);
+        
+        // Recargar la lista de publicadores
+        if (exitosos > 0) {
+          await cargarPublicadores();
+        }
+
+      } catch (error) {
+        console.error('Error en el proceso de importación:', error);
+        alert(`Error al importar los datos: ${error.message}`);
+      }
+    };
+
+    // Disparar el input de archivo
+    input.click();
+
+  } catch (error) {
+    console.error('Error en la importación:', error);
+    alert(`Error: ${error.message}`);
+  }
+}
+
 // Función para inicializar la búsqueda
 function inicializarBusqueda() {
   const buscarInput = document.getElementById('buscarPublicador');
@@ -396,135 +586,84 @@ function buscarPublicadores(termino) {
 // Función para exportar a Excel
 async function exportarAExcel() {
   try {
-    // Obtener el usuario actual del localStorage
+    // Obtener el usuario actual
     const user = getCurrentUser();
     if (!user) {
-      console.error('No se pudo obtener la información del usuario');
-      return;
+      throw new Error('No se pudo obtener la información del usuario');
     }
-
-    // Obtener la información del usuario actual incluyendo la organización
-    const { data: usuario, error: userInfoError } = await supabase
-      .from('users')
-      .select('organizacion_id')
-      .eq('id', user.id)
-      .single();
-
-    if (userInfoError || !usuario) {
-      console.error('Error al obtener información del usuario:', userInfoError);
-      alert('Error al obtener información del usuario');
-      return;
-    }
-
-    // Obtener los publicadores de la organización
+    
+    // Obtener los datos de la base de datos
     const { data: publicadores, error } = await supabase
       .from('publicadores')
       .select(`
-        id,
         nombre,
         edad,
         bautizado,
         privilegio_servicio,
         responsabilidad,
-        congregacion:congregacion_id (nombre)
+        congregacion:congregacion_id(nombre)
       `)
-      .eq('organizacion_id', usuario.organizacion_id);
+      .order('nombre', { ascending: true });
 
     if (error) throw error;
+    
+    if (!publicadores || publicadores.length === 0) {
+      alert('No hay publicadores para exportar');
+      return;
+    }
 
+    // Definir encabezados
+    const headers = [
+      'Nombre', 
+      'Congregación', 
+      'Edad', 
+      'Bautizado', 
+      'Privilegio de Servicio',
+      'Responsabilidad'
+    ];
+    
     // Formatear los datos para Excel
-    const datosFormateados = publicadores.map(publicador => ({
-      'ID': publicador.id,
-      'Nombre': publicador.nombre || '',
-      'Edad': publicador.edad || '',
-      'Bautizado': publicador.bautizado ? 'Sí' : 'No',
-      'Privilegio de Servicio': publicador.privilegio_servicio || '',
-      'Responsabilidad': publicador.responsabilidad || '',
-      'Congregación': publicador.congregacion?.nombre || 'Sin asignar'
-    }));
-
-    // Crear un libro de trabajo de Excel
+    const data = [headers];
+    
+    // Mapear los datos para el Excel
+    publicadores.forEach(publicador => {
+      data.push([
+        publicador.nombre || '',
+        publicador.congregacion?.nombre || 'Sin congregación',
+        publicador.edad || '',
+        publicador.bautizado ? 'Sí' : 'No',
+        publicador.privilegio_servicio || '',
+        publicador.responsabilidad || ''
+      ]);
+    });
+    
+    // Crear un nuevo libro de Excel
     const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(datosFormateados);
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    
+    // Ajustar el ancho de las columnas
+    const columnWidths = [
+      { wch: 30 }, // Nombre
+      { wch: 25 }, // Congregación
+      { wch: 8 },  // Edad
+      { wch: 12 }, // Bautizado
+      { wch: 25 }, // Privilegio de Servicio
+      { wch: 25 }  // Responsabilidad
+    ];
+    ws['!cols'] = columnWidths;
     
     // Añadir la hoja al libro
     XLSX.utils.book_append_sheet(wb, ws, 'Publicadores');
     
     // Generar el archivo Excel
-    XLSX.writeFile(wb, `publicadores_${new Date().toISOString().split('T')[0]}.xlsx`);
+    const fecha = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(wb, `publicadores_${fecha}.xlsx`);
+    
+    alert('Exportación completada con éxito');
     
   } catch (error) {
     console.error('Error al exportar a Excel:', error);
-    alert('Error al exportar los datos a Excel');
-  }
-}
-
-// Función para importar desde Excel
-async function importarDatos() {
-  try {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.xlsx, .xls, .csv';
-    
-    input.onchange = async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      
-      // Leer el archivo
-      const data = await file.arrayBuffer();
-      const workbook = XLSX.read(data);
-      
-      // Obtener la primera hoja
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet);
-      
-      if (jsonData.length === 0) {
-        alert('El archivo está vacío');
-        return;
-      }
-      
-      // Obtener el usuario actual
-      const user = getCurrentUser();
-      if (!user) {
-        alert('No se pudo obtener la información del usuario');
-        return;
-      }
-      
-      // Mostrar confirmación
-      if (!confirm(`¿Desea importar ${jsonData.length} registros?`)) {
-        return;
-      }
-      
-      // Procesar los datos
-      const publicadores = jsonData.map(item => ({
-        nombre: item['Nombre'] || '',
-        edad: item['Edad'] ? parseInt(item['Edad']) : null,
-        bautizado: item['Bautizado'] === 'Sí',
-        privilegio_servicio: item['Privilegio de Servicio'] || '',
-        responsabilidad: item['Responsabilidad'] || '',
-        organizacion_id: user.organizacion_id,
-        // Aquí deberías mapear el ID de la congregación si es necesario
-      }));
-      
-      // Insertar los datos en la base de datos
-      const { data: result, error } = await supabase
-        .from('publicadores')
-        .insert(publicadores);
-      
-      if (error) throw error;
-      
-      alert(`Se importaron ${publicadores.length} publicadores correctamente`);
-      
-      // Recargar la lista de publicadores
-      cargarPublicadores();
-    };
-    
-    // Disparar el input de archivo
-    input.click();
-    
-  } catch (error) {
-    console.error('Error al importar desde Excel:', error);
-    alert('Error al importar los datos desde Excel');
+    alert('Error al exportar a Excel: ' + (error.message || 'Error desconocido'));
   }
 }
 
@@ -548,7 +687,8 @@ function exportarAPDF() {
     'Congregación', 
     'Edad', 
     'Bautizado', 
-    'Privilegio'
+    'Privilegio de Servicio',
+    'Responsabilidad'
   ];
   
   const filas = Array.from(document.querySelectorAll('#tablaPublicadores tbody tr'));
@@ -559,7 +699,8 @@ function exportarAPDF() {
       celdas[1]?.textContent || '',
       celdas[2]?.textContent || '',
       celdas[3]?.querySelector('.badge')?.textContent || 'No',
-      celdas[4]?.textContent || ''
+      celdas[4]?.textContent || '',
+      celdas[5]?.textContent || ''
     ];
   });
   
