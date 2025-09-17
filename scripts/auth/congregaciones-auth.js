@@ -14,9 +14,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 e.preventDefault();
                 localStorage.removeItem('user');
                 // para producción
-                //window.location.href = './../login.html';
+                window.location.href = './../login.html';
                 // para desarrollo
-                window.location.href = '/login.html';
+                //window.location.href = '/login.html';
             });
         }
     }

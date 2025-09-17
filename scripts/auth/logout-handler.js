@@ -13,9 +13,9 @@ export function initializeLogoutButton() {
         localStorage.removeItem('user');
         // Redirigir a la página de inicio de sesión usando una ruta absoluta
         // para producción
-        //window.location.href = './../login.html';
+        window.location.href = './../login.html';
         // para desarrollo
-        window.location.href = '/login.html';
+        //window.location.href = '/login.html';
     });
     
     // Buscar el contenedor de acciones del encabezado
