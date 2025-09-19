@@ -2,11 +2,13 @@
 let oradores = [];
 let currentPage = 1;
 const itemsPerPage = 10;
+let oradoresFiltrados = [];
 
 // Elementos del DOM
 const tbody = document.querySelector('.data-table tbody');
 const mobileTable = document.querySelector('.mobile-table');
 const searchInput = document.getElementById('buscarOrador');
+const limpiarBusqueda = document.getElementById('limpiarBusqueda');
 const paginationPrev = document.getElementById('pagination-prev');
 const paginationNext = document.getElementById('pagination-next');
 const paginationStart = document.getElementById('pagination-start');
@@ -22,43 +24,48 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Configurar eventos
     setupEventListeners();
+    
+    // Inicializar búsqueda
+    inicializarBusqueda();
 });
 
 // Configurar event listeners
 function setupEventListeners() {
-    // Búsqueda
-    searchInput.addEventListener('input', () => {
-        currentPage = 1;
-        renderOradores();
-    });
+    // La búsqueda ahora se maneja en inicializarBusqueda()
     
     // Paginación
-    paginationPrev.addEventListener('click', () => {
-        if (currentPage > 1) {
-            currentPage--;
-            renderOradores();
-        }
-    });
+    if (paginationPrev) {
+        paginationPrev.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderOradores();
+            }
+        });
+    }
     
-    paginationNext.addEventListener('click', () => {
-        const totalPages = Math.ceil(getFiltredOradores().length / itemsPerPage);
-        if (currentPage < totalPages) {
-            currentPage++;
-            renderOradores();
-        }
-    });
+    if (paginationNext) {
+        paginationNext.addEventListener('click', () => {
+            const totalPages = Math.ceil(getFiltredOradores().length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderOradores();
+            }
+        });
+    }
     
     // Importar/Exportar
-    toggleImportExport.addEventListener('click', () => {
-        importExportPanel.style.display = importExportPanel.style.display === 'none' ? 'block' : 'none';
-    });
-    
-    // Cerrar el panel de importar/exportar al hacer clic fuera
-    document.addEventListener('click', (e) => {
-        if (!importExportPanel.contains(e.target) && e.target !== toggleImportExport) {
-            importExportPanel.style.display = 'none';
-        }
-    });
+    if (toggleImportExport && importExportPanel) {
+        toggleImportExport.addEventListener('click', () => {
+            importExportPanel.style.display = importExportPanel.style.display === 'none' ? 'block' : 'none';
+        });
+        
+        // Cerrar el panel de importar/exportar al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            if (!importExportPanel.contains(e.target) && e.target !== toggleImportExport) {
+                importExportPanel.style.display = 'none';
+            }
+        });
+    }
 }
 
 // Cargar oradores desde la base de datos
@@ -83,12 +90,58 @@ async function cargarOradores() {
 
 // Filtrar oradores según la búsqueda
 function getFiltredOradores() {
-    const searchTerm = searchInput.value.toLowerCase();
-    return oradores.filter(orador => 
+    const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+    
+    if (!searchTerm) {
+        oradoresFiltrados = [...oradores];
+        return oradoresFiltrados;
+    }
+    
+    oradoresFiltrados = oradores.filter(orador => 
         orador.nombre.toLowerCase().includes(searchTerm) ||
-        orador.congregacion.toLowerCase().includes(searchTerm) ||
-        orador.email.toLowerCase().includes(searchTerm)
+        (orador.congregacion && orador.congregacion.nombre && orador.congregacion.nombre.toLowerCase().includes(searchTerm)) ||
+        (orador.congregacion && typeof orador.congregacion === 'string' && orador.congregacion.toLowerCase().includes(searchTerm))
     );
+    
+    return oradoresFiltrados;
+}
+
+// Inicializar la búsqueda
+function inicializarBusqueda() {
+    const buscarInput = document.getElementById('buscarOrador');
+    const btnLimpiar = document.createElement('button');
+    btnLimpiar.className = 'btn-clear-search';
+    btnLimpiar.innerHTML = '<i class="fas fa-times"></i>';
+    btnLimpiar.style.display = 'none';
+    btnLimpiar.type = 'button';
+    
+    if (buscarInput) {
+        // Insertar el botón de limpiar después del input
+        buscarInput.parentNode.insertBefore(btnLimpiar, buscarInput.nextSibling);
+        
+        // Mostrar/ocultar el botón de limpiar
+        buscarInput.addEventListener('input', () => {
+            btnLimpiar.style.display = buscarInput.value ? 'flex' : 'none';
+            currentPage = 1;
+            renderOradores();
+        });
+        
+        // Limpiar la búsqueda
+        btnLimpiar.addEventListener('click', () => {
+            buscarInput.value = '';
+            btnLimpiar.style.display = 'none';
+            currentPage = 1;
+            renderOradores();
+        });
+        
+        // Buscar al presionar Enter
+        buscarInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                currentPage = 1;
+                renderOradores();
+            }
+        });
+    }
 }
 
 // Renderizar la tabla de oradores
