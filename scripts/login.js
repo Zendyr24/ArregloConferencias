@@ -21,11 +21,11 @@ function showNotification(message, type = 'info') {
 // --- Selectores del DOM ---
 const registerForm = document.getElementById("register-form");
 const loginForm = document.getElementById("login-form");
-const protectedContent = document.getElementById("protected-content");
-const logoutButton = document.getElementById("logout-button");
-const userDataElement = document.getElementById("user-data");
 const registerContainer = document.getElementById("register-container");
 const loginContainer = document.getElementById("login-container");
+const protectedContent = document.getElementById("protected-content");
+const userDataElement = document.getElementById("user-data");
+const logoutButton = document.getElementById("logout-button");
 
 
 // --- Lógica de Registro ---
@@ -108,45 +108,66 @@ async function handleRegister(event) {
 
 // --- Toggle between Login and Register Forms ---
 document.addEventListener('DOMContentLoaded', () => {
+  // Obtener referencias a los elementos del DOM
   const loginForm = document.getElementById('login-form');
-  const registerForm = document.getElementById('register-form');
-  const showRegisterLink = document.getElementById('show-register');
-  const showLoginLink = document.getElementById('show-login');
   const loginContainer = document.getElementById('login-container');
   const registerContainer = document.getElementById('register-container');
+  const showRegisterLink = document.getElementById('show-register');
+  const showLoginLink = document.getElementById('show-login');
+  const registerForm = document.getElementById('register-form');
 
-  // Show register form
-  if (showRegisterLink) {
-    showRegisterLink.addEventListener('click', (e) => {
-      e.preventDefault();
+  // Función para mostrar el formulario de registro
+  const showRegisterForm = (e) => {
+    if (e) e.preventDefault();
+    
+    // Ocultar formulario de login
+    if (loginContainer) {
       loginContainer.classList.remove('active');
+    }
+    
+    // Mostrar formulario de registro
+    if (registerContainer) {
+      // Pequeño retraso para la animación
       setTimeout(() => {
-        loginContainer.style.display = 'none';
-        registerContainer.style.display = 'block';
-        setTimeout(() => registerContainer.classList.add('active'), 10);
-      }, 300);
-    });
-  }
+        registerContainer.classList.add('active');
+      }, 10);
+    }
+  };
 
-  // Show login form
-  if (showLoginLink) {
-    showLoginLink.addEventListener('click', (e) => {
-      e.preventDefault();
+  // Función para mostrar el formulario de login
+  const showLoginForm = (e) => {
+    if (e) e.preventDefault();
+    
+    // Ocultar formulario de registro
+    if (registerContainer) {
       registerContainer.classList.remove('active');
+    }
+    
+    // Mostrar formulario de login
+    if (loginContainer) {
+      // Pequeño retraso para la animación
       setTimeout(() => {
-        registerContainer.style.display = 'none';
-        loginContainer.style.display = 'block';
-        setTimeout(() => loginContainer.classList.add('active'), 10);
-      }, 300);
-    });
+        loginContainer.classList.add('active');
+      }, 10);
+    }
+  };
+
+  // Mostrar formulario de registro
+  if (showRegisterLink) {
+    showRegisterLink.addEventListener('click', showRegisterForm);
   }
 
-  // Handle login form submission
+  // Mostrar formulario de login
+  if (showLoginLink) {
+    showLoginLink.addEventListener('click', showLoginForm);
+  }
+
+  // Manejar envío del formulario de login
   if (loginForm) {
     loginForm.addEventListener('submit', handleLoginAndRedirect);
   }
 
-  // Handle register form submission
+  // Manejar envío del formulario de registro
   if (registerForm) {
     registerForm.addEventListener('submit', handleRegister);
   }
@@ -235,23 +256,53 @@ if (logoutButton) {
 function showProtectedContent() {
   const user = JSON.parse(localStorage.getItem("user"));
   if (user) {
-    registerContainer.style.display = "none";
-    loginContainer.style.display = "none";
-    protectedContent.style.display = "block";
+    if (registerContainer) registerContainer.style.display = "none";
+    if (loginContainer) loginContainer.style.display = "none";
+    if (protectedContent) protectedContent.style.display = "block";
     // Mostrar los datos de la sesión del usuario
-    userDataElement.textContent = JSON.stringify(user, null, 2);
+    if (userDataElement) userDataElement.textContent = JSON.stringify(user, null, 2);
   }
 }
 
 function showLogin() {
-  registerContainer.style.display = "block";
-  loginContainer.style.display = "block";
-  protectedContent.style.display = "none";
-  userDataElement.textContent = "";
+  if (registerContainer) registerContainer.style.display = "block";
+  if (loginContainer) loginContainer.style.display = "block";
+  if (protectedContent) protectedContent.style.display = "none";
+  if (userDataElement) userDataElement.textContent = "";
+}
+
+// Función para manejar el toggle de mostrar/ocultar contraseña
+function setupPasswordToggle() {
+  document.querySelectorAll('.toggle-password').forEach(toggle => {
+    toggle.addEventListener('click', function() {
+      // Encontrar el input correspondiente
+      const targetId = this.getAttribute('data-target');
+      const input = document.getElementById(targetId);
+      
+      if (input) {
+        // Cambiar el tipo de input
+        const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+        input.setAttribute('type', type);
+        
+        // Cambiar el ícono
+        this.classList.toggle('fa-eye');
+        this.classList.toggle('fa-eye-slash');
+      }
+    });
+  });
 }
 
 // Comprobar si ya existe una sesión al cargar la página
 window.addEventListener("DOMContentLoaded", () => {
+  // Configurar los toggles de contraseña
+  setupPasswordToggle();
+  
+  // Asegurarse de que el formulario de login esté visible por defecto
+  const loginContainer = document.getElementById('login-container');
+  if (loginContainer) {
+    loginContainer.classList.add('active');
+  }
+
   if (localStorage.getItem("user")) {
     showProtectedContent();
   }
