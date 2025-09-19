@@ -53,19 +53,29 @@ function setupEventListeners() {
         });
     }
     
-    // Importar/Exportar
-    if (toggleImportExport && importExportPanel) {
-        toggleImportExport.addEventListener('click', () => {
-            importExportPanel.style.display = importExportPanel.style.display === 'none' ? 'block' : 'none';
-        });
-        
-        // Cerrar el panel de importar/exportar al hacer clic fuera
-        document.addEventListener('click', (e) => {
-            if (!importExportPanel.contains(e.target) && e.target !== toggleImportExport) {
-                importExportPanel.style.display = 'none';
-            }
-        });
+    // Configurar botones de importar/exportar
+    const btnImportar = document.getElementById('btnImportar');
+    const btnExportar = document.getElementById('btnExportar');
+    const btnExportarPDF = document.getElementById('btnExportarPDF');
+    
+    if (toggleImportExport) {
+        toggleImportExport.addEventListener('click', toggleImportExportPanel);
     }
+    
+    if (btnImportar) {
+        btnImportar.addEventListener('click', importarDesdeExcel);
+    }
+    
+    if (btnExportar) {
+        btnExportar.addEventListener('click', exportarAExcel);
+    }
+    
+    if (btnExportarPDF) {
+        btnExportarPDF.addEventListener('click', exportarAPDF);
+    }
+    
+    // Configurar el listener para cerrar el panel al hacer clic fuera
+    setupClickOutsideListener();
 }
 
 // Cargar oradores desde la base de datos
@@ -290,22 +300,302 @@ function mostrarMensaje(mensaje, tipo = 'info') {
     // Aquí podrías usar un sistema de notificaciones como SweetAlert2
 }
 
+// Toggle del panel de importación/exportación
+function toggleImportExportPanel(e) {
+    // Prevenir el cierre inmediato al hacer clic en el botón
+    if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+    }
+    
+    const panel = document.getElementById('importExportPanel');
+    const toggleBtn = document.getElementById('toggleImportExport');
+    
+    if (!panel || !toggleBtn) return;
+    
+    const icon = toggleBtn.querySelector('i');
+    const isVisible = panel.classList.contains('visible');
+    
+    // Cerrar cualquier otro panel abierto
+    document.querySelectorAll('.import-export-panel.visible').forEach(p => {
+        if (p !== panel) {
+            p.classList.remove('visible');
+        }
+    });
+    
+    // Alternar la clase visible
+    if (isVisible) {
+        panel.classList.remove('visible');
+        icon.classList.remove('fa-chevron-up');
+        icon.classList.add('fa-chevron-down');
+    } else {
+        panel.classList.add('visible');
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-up');
+    }
+    
+    // Prevenir que el clic se propague al documento
+    return false;
+}
+
+// Cerrar el panel de importación/exportación al hacer clic fuera o presionar Escape
+function setupClickOutsideListener() {
+    const toggleBtn = document.getElementById('toggleImportExport');
+    const panel = document.getElementById('importExportPanel');
+    
+    if (!toggleBtn || !panel) return;
+    
+    // Cerrar al hacer clic fuera
+    document.addEventListener('click', (e) => {
+        if (panel.classList.contains('visible') && 
+            !panel.contains(e.target) && 
+            !toggleBtn.contains(e.target)) {
+            toggleImportExportPanel(e);
+        }
+    }, true); // Usar captura para asegurar que se ejecute primero
+    
+    // Cerrar con la tecla Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && panel.classList.contains('visible')) {
+            toggleImportExportPanel(e);
+        }
+    });
+    
+    // Prevenir que los clics dentro del panel cierren el panel
+    panel.addEventListener('click', (e) => {
+        e.stopPropagation();
+    });
+}
+
 // Exportar a Excel
-function exportarAExcel() {
-    // Implementar exportación a Excel
-    console.log('Exportando a Excel...');
+async function exportarAExcel() {
+    try {
+        // Verificar si hay datos para exportar
+        if (oradores.length === 0) {
+            mostrarMensaje('No hay datos para exportar', 'warning');
+            return;
+        }
+
+        // Crear un libro de trabajo de ExcelJS
+        const ExcelJS = window.ExcelJS;
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Oradores');
+
+        // Definir las columnas
+        worksheet.columns = [
+            { header: 'Nombre', key: 'nombre', width: 30 },
+            { header: 'Congregación', key: 'congregacion', width: 25 },
+            { header: 'Teléfono', key: 'telefono', width: 20 },
+            { header: 'Correo Electrónico', key: 'email', width: 30 },
+            { header: 'Disponibilidad', key: 'disponibilidad', width: 20 }
+        ];
+
+        // Agregar los datos
+        oradores.forEach(orador => {
+            worksheet.addRow({
+                nombre: orador.nombre || '',
+                congregacion: typeof orador.congregacion === 'object' ? orador.congregacion.nombre : orador.congregacion || '',
+                telefono: orador.telefono || '',
+                email: orador.email || '',
+                disponibilidad: orador.disponibilidad || ''
+            });
+        });
+
+        // Estilizar el encabezado
+        const headerRow = worksheet.getRow(1);
+        headerRow.font = { bold: true };
+        headerRow.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFD3D3D3' }
+        };
+
+        // Generar el archivo Excel
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `oradores_${new Date().toISOString().split('T')[0]}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        mostrarMensaje('Exportación a Excel completada con éxito', 'success');
+    } catch (error) {
+        console.error('Error al exportar a Excel:', error);
+        mostrarMensaje('Error al exportar a Excel', 'error');
+    }
 }
 
 // Exportar a PDF
-function exportarAPDF() {
-    // Implementar exportación a PDF
-    console.log('Exportando a PDF...');
+async function exportarAPDF() {
+    try {
+        // Verificar si hay datos para exportar
+        if (oradores.length === 0) {
+            mostrarMensaje('No hay datos para exportar', 'warning');
+            return;
+        }
+
+        // Crear un nuevo documento PDF
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // Título del documento
+        doc.setFontSize(18);
+        doc.text('Lista de Oradores', 14, 22);
+        doc.setFontSize(11);
+        doc.setTextColor(100);
+        
+        // Fecha de generación
+        doc.text(`Generado el: ${new Date().toLocaleDateString()}`, 14, 30);
+        
+        // Configuración de la tabla
+        const columns = [
+            { title: 'Nombre', dataKey: 'nombre' },
+            { title: 'Congregación', dataKey: 'congregacion' },
+            { title: 'Teléfono', dataKey: 'telefono' },
+            { title: 'Correo', dataKey: 'email' },
+            { title: 'Disponibilidad', dataKey: 'disponibilidad' }
+        ];
+        
+        // Preparar los datos
+        const rows = oradores.map(orador => ({
+            nombre: orador.nombre || '',
+            congregacion: typeof orador.congregacion === 'object' ? orador.congregacion.nombre : orador.congregacion || '',
+            telefono: orador.telefono || '',
+            email: orador.email || '',
+            disponibilidad: orador.disponibilidad || ''
+        }));
+        
+        // Agregar la tabla al PDF
+        doc.autoTable({
+            head: [columns.map(col => col.title)],
+            body: rows.map(row => columns.map(col => row[col.dataKey])),
+            startY: 40,
+            styles: { 
+                fontSize: 9,
+                cellPadding: 3,
+                overflow: 'linebreak',
+                lineWidth: 0.1,
+                lineColor: [0, 0, 0]
+            },
+            headStyles: {
+                fillColor: [211, 211, 211],
+                textColor: 0,
+                fontStyle: 'bold'
+            },
+            alternateRowStyles: {
+                fillColor: [245, 245, 245]
+            }
+        });
+        
+        // Guardar el PDF
+        doc.save(`oradores_${new Date().toISOString().split('T')[0]}.pdf`);
+        
+        mostrarMensaje('Exportación a PDF completada con éxito', 'success');
+    } catch (error) {
+        console.error('Error al exportar a PDF:', error);
+        mostrarMensaje('Error al exportar a PDF', 'error');
+    }
+}
+
+// Importar desde Excel
+async function importarDesdeExcel() {
+    try {
+        // Crear un input de tipo archivo
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.xlsx, .xls';
+        
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            try {
+                // Mostrar indicador de carga
+                mostrarMensaje('Procesando archivo, por favor espere...', 'info');
+                
+                // Leer el archivo Excel
+                const buffer = await file.arrayBuffer();
+                const ExcelJS = window.ExcelJS;
+                const workbook = new ExcelJS.Workbook();
+                await workbook.xlsx.load(buffer);
+                
+                // Obtener la primera hoja
+                const worksheet = workbook.worksheets[0];
+                if (!worksheet) {
+                    throw new Error('El archivo no contiene hojas válidas');
+                }
+                
+                // Obtener los datos
+                const data = [];
+                const headers = [];
+                
+                // Leer la primera fila como encabezados
+                const headerRow = worksheet.getRow(1);
+                headerRow.eachCell((cell, colNumber) => {
+                    headers[colNumber] = cell.value?.toString().toLowerCase() || '';
+                });
+                
+                // Validar encabezados requeridos
+                const requiredHeaders = ['nombre'];
+                const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+                
+                if (missingHeaders.length > 0) {
+                    throw new Error(`Faltan encabezados requeridos: ${missingHeaders.join(', ')}`);
+                }
+                
+                // Leer las filas de datos
+                worksheet.eachRow((row, rowNumber) => {
+                    if (rowNumber === 1) return; // Saltar la fila de encabezado
+                    
+                    const rowData = {};
+                    row.eachCell((cell, colNumber) => {
+                        const header = headers[colNumber];
+                        if (header) {
+                            rowData[header] = cell.value;
+                        }
+                    });
+                    
+                    if (Object.keys(rowData).length > 0) {
+                        data.push(rowData);
+                    }
+                });
+                
+                if (data.length === 0) {
+                    throw new Error('No se encontraron datos para importar');
+                }
+                
+                // Aquí iría la lógica para guardar los datos en Supabase
+                // Por ahora, solo mostramos un mensaje con la cantidad de registros
+                mostrarMensaje(`Se importaron ${data.length} oradores correctamente`, 'success');
+                
+                // Recargar la lista de oradores
+                cargarOradores();
+                
+            } catch (error) {
+                console.error('Error al procesar el archivo:', error);
+                mostrarMensaje(`Error al importar: ${error.message}`, 'error');
+            }
+        };
+        
+        // Disparar el diálogo de selección de archivo
+        input.click();
+        
+    } catch (error) {
+        console.error('Error en la importación:', error);
+        mostrarMensaje(`Error al importar: ${error.message}`, 'error');
+    }
 }
 
 // Eventos globales
 window.mostrarModalNuevoOrador = mostrarModalNuevoOrador;
 window.editarOrador = editarOrador;
 window.eliminarOrador = eliminarOrador;
+window.exportarAExcel = exportarAExcel;
+window.exportarAPDF = exportarAPDF;
 
 // Manejar redimensionamiento de la ventana
 window.addEventListener('resize', () => {

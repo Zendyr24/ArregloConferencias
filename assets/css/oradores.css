@@ -7,7 +7,6 @@
   position: relative;
   margin-bottom: 1.5rem;
 }
-
 /* Estilos para el panel de importar/exportar */
 .import-export-panel {
   position: relative;
@@ -160,18 +159,17 @@
   line-height: 1;
 }
 
-/* Asegurar que el contenedor de búsqueda tenga posición relativa */
+/* Estilos para la barra de búsqueda */
+/* Estilos para la barra de búsqueda */
 .search-bar {
   position: relative;
   display: inline-block;
   width: 100%;
   max-width: 300px;
-  margin-bottom: 1rem;
 }
 
 .search-input {
   position: relative;
-  width: 100%;
 }
 
 .search-input i {
@@ -198,6 +196,32 @@
 }
 
 /* Ajustes específicos para la tabla de oradores */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  background: var(--color-surface);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  table-layout: fixed;
+}
+
+.data-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.data-table td {
+  padding: 1rem;
+  text-align: left;
+}
+
+.data-table tr:hover {
+  background-color: var(--color-hover);
+}
 
 .data-table th.col-nombre {
   width: 25%;
