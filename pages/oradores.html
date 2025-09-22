@@ -108,18 +108,14 @@
         </nav>
       </aside>
 
-      <!-- Main Content -->
       <main class="main-content" id="mainContent">
         <div class="content-section">
           <div class="section-header">
             <div class="section-header-row">
               <h3>Lista de Oradores</h3>
               <div class="btn-group">
-                <button
-                  class="btn btn-primary"
-                  onclick="mostrarModalNuevoOrador()"
-                >
-                  <i class="fas fa-plus"></i> Nuevo Orador
+                <button id="btnAgregarOrador" class="btn btn-primary">
+                  <i class="fas fa-plus"></i> Agregar Orador
                 </button>
                 <button class="btn btn-outline" id="toggleImportExport">
                   Importar/Exportar
@@ -148,6 +144,8 @@
               </div>
             </div>
           </div>
+
+          <!-- Barra de búsqueda -->
           <div class="search-bar">
             <div class="search-input">
               <i class="fas fa-search"></i>
@@ -159,60 +157,270 @@
             </div>
           </div>
 
-          <div class="table-responsive">
-            <table class="data-table">
+          <div class="table-container">
+            <table class="data-table" id="tablaOradores">
               <thead>
                 <tr>
                   <th class="col-nombre">Nombre</th>
                   <th class="col-congregacion">Congregación</th>
-                  <th class="col-telefono">Teléfono</th>
-                  <th class="col-email">Correo</th>
-                  <th class="col-disponibilidad">Disponibilidad</th>
-                  <th class="col-acciones text-center">Acciones</th>
+                  <th class="col-privilegio">Privilegio</th>
+                  <th class="col-saliente">Saliente</th>
+                  <th class="col-acciones">Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                <!-- Las filas se llenarán dinámicamente -->
+                <tr>
+                  <td colspan="5" class="text-center">Cargando oradores...</td>
+                </tr>
               </tbody>
             </table>
-          </div>
 
-          <!-- Contenedor para la tabla móvil -->
-          <div class="mobile-table"></div>
-
-          <!-- Paginación -->
-          <div class="pagination-container">
-            <button class="page-nav" id="pagination-prev" disabled>
-              <i class="fas fa-chevron-left"></i>
-            </button>
-            <div class="pagination-info">
-              <span id="pagination-start">0</span> -
-              <span id="pagination-end">0</span> de
-              <span id="pagination-total">0</span>
+            <!-- Versión móvil -->
+            <div class="mobile-table">
+              <div class="mobile-loading">Cargando oradores...</div>
             </div>
-            <button class="page-nav" id="pagination-next" disabled>
-              <i class="fas fa-chevron-right"></i>
-            </button>
+
+            <!-- Controles de paginación -->
+            <div class="pagination-container">
+              <button class="page-nav" id="pagination-prev" disabled>
+                <i class="fas fa-chevron-left"></i>
+              </button>
+
+              <div class="pagination-info">
+                <span id="pagination-start">0</span> -
+                <span id="pagination-end">0</span> de
+                <span id="pagination-total">0</span>
+              </div>
+
+              <button class="page-nav" id="pagination-next" disabled>
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
           </div>
         </div>
       </main>
 
       <footer class="footer">
         <div class="footer-content">
-          <p>2025 – Gestor de Arreglos en Conferencias</p>
+          <p>© 2025 – Gestor de Arreglos en Conferencias</p>
           <p>Versión 1.0.0</p>
         </div>
       </footer>
     </div>
 
-    <!-- Scripts principales -->
-    <script type="module" src="../scripts/app.js"></script>
-    <script type="module" src="../scripts/theme.js"></script>
-    <script type="module" src="../scripts/sidebar.js"></script>
-    <script src="../scripts/oradores.js"></script>
+    <!-- SweetAlert2 para notificaciones -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.min.css"
+    />
 
-    <!-- Authentication -->
-    <script type="module" src="../scripts/auth/oradores-auth.js"></script>
-    <script type="module" src="../scripts/auth/logout-handler.js"></script>
+    <!-- Bootstrap Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+    />
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.all.min.js"></script>
+
+    <!-- SheetJS para importación/exportación de Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+
+    <!-- jsPDF y jsPDF AutoTable para exportación a PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+    <!-- Módulos principales -->
+    <!-- Modal para agregar/editar orador -->
+    <div
+      class="modal fade"
+      id="oradorModal"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="oradorModalTitle"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 class="modal-title h5" id="oradorModalTitle">Nuevo Orador</h2>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Cerrar"
+            >
+              <span class="sr-only">Cerrar</span>
+              <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="oradorForm" onsubmit="return false;">
+              <div class="mb-3">
+                <label for="nombre" class="form-label">
+                  Nombre Completo <span class="text-danger">*</span>
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="nombre"
+                  name="nombre"
+                  required
+                />
+              </div>
+
+              <div class="mb-3">
+                <label for="congregacion" class="form-label">
+                  Congregación <span class="text-danger">*</span>
+                </label>
+                <select
+                  class="form-select"
+                  id="congregacion"
+                  name="congregacion_id"
+                  required
+                >
+                  <option value="" selected disabled>
+                    Seleccione una congregación
+                  </option>
+                  <!-- Las opciones se cargarán dinámicamente -->
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label for="privilegio" class="form-label">Privilegio</label>
+                <select class="form-select" id="privilegio" name="privilegio">
+                  <option value="">Ninguno</option>
+                  <option value="Siervo Ministerial">Siervo Ministerial</option>
+                  <option value="Anciano">Anciano</option>
+                  <option value="Precursor">Precursor</option>
+                  <option value="Misionero">Misionero</option>
+                  <option value="Betelita">Betelita</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label for="es_saliente" class="form-label"
+                  >¿Es Saliente?</label
+                >
+                <select class="form-select" id="es_saliente" name="es_saliente">
+                  <option value="true">Sí</option>
+                  <option value="false" selected>No</option>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label for="observaciones" class="form-label"
+                  >Observaciones</label
+                >
+                <textarea
+                  class="form-control"
+                  id="observaciones"
+                  name="observaciones"
+                  rows="3"
+                ></textarea>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline"
+              data-bs-dismiss="modal"
+            >
+              Cancelar
+            </button>
+            <button type="button" class="btn btn-primary" id="btnGuardarOrador">
+              <i class="fas fa-save me-2"></i>Guardar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirmación de eliminación -->
+    <div
+      class="modal fade"
+      id="confirmarEliminarModal"
+      tabindex="-1"
+      role="dialog"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Confirmar Eliminación</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Cerrar"
+            ></button>
+          </div>
+          <div class="modal-body">
+            ¿Estás seguro de que deseas eliminar este orador? Esta acción no se
+            puede deshacer.
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline"
+              data-bs-dismiss="modal"
+            >
+              Cancelar
+            </button>
+            <button type="button" class="btn btn-danger" id="confirmarEliminar">
+              <i class="fas fa-trash-alt me-2"></i>Eliminar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      // Cargar módulos en orden
+      import { supabase } from "../scripts/supabase.js";
+      import { ThemeManager } from "../scripts/theme.js";
+      import { initializeSidebar } from "../scripts/sidebar.js";
+      import {
+        isAuthenticated,
+        updateUserInfo,
+        redirectToLogin,
+      } from "../scripts/auth/auth-utils.js";
+      import { initializeLogoutButton } from "../scripts/auth/logout-handler.js";
+
+      // Inicializar la aplicación
+      document.addEventListener("DOMContentLoaded", async () => {
+        try {
+          // Verificar autenticación
+          if (!isAuthenticated()) {
+            redirectToLogin();
+            return;
+          }
+
+          // Actualizar información del usuario
+          updateUserInfo();
+
+          // Inicializar tema y sidebar
+          new ThemeManager();
+          initializeSidebar();
+          initializeLogoutButton();
+
+          // Cargar módulo principal de oradores
+          const oradoresModule = await import("../scripts/oradores.js");
+          await oradoresModule.initOradores();
+
+          console.log("Módulo de oradores inicializado correctamente");
+        } catch (error) {
+          console.error("Error al cargar la aplicación:", error);
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "Ocurrió un error al cargar la aplicación. Por favor, recarga la página.",
+            confirmButtonText: "Aceptar",
+          });
+        }
+      });
+    </script>
   </body>
 </html>

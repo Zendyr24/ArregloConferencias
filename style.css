@@ -1025,10 +1025,6 @@ table.data-table.hover tbody tr:hover {
   transition: color 0.3s ease;
 }
 
-.btn-icon:hover {
-  background-color: var(--color-primary-light);
-}
-
 .btn-icon:hover i {
   color: var(--color-primary);
 }
