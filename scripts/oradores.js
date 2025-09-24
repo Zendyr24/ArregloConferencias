@@ -1,5 +1,6 @@
-// Importar la instancia de Supabase desde el módulo
+// Importar dependencias
 import { supabase } from './supabase.js';
+import { isAuthenticated, redirectToLogin } from './auth/auth-utils.js';
 
 // Variables globales
 let oradores = [];
@@ -8,22 +9,42 @@ const itemsPerPage = 10;
 let oradoresFiltrados = [];
 
 // Elementos del DOM
-const tbody = document.querySelector(".data-table tbody");
-const mobileTable = document.querySelector(".mobile-table");
-const searchInput = document.getElementById("buscarOrador");
-const limpiarBusqueda = document.getElementById("limpiarBusqueda");
-const paginationPrev = document.getElementById("pagination-prev");
-const paginationNext = document.getElementById("pagination-next");
-const paginationStart = document.getElementById("pagination-start");
-const paginationEnd = document.getElementById("pagination-end");
-const paginationTotal = document.getElementById("pagination-total");
-const importExportPanel = document.getElementById("importExportPanel");
-const toggleImportExport = document.getElementById("toggleImportExport");
+let tbody;
+let mobileTable;
+let searchInput;
+let limpiarBusqueda;
+let paginationPrev;
+let paginationNext;
+let paginationStart;
+let paginationEnd;
+let paginationTotal;
+let importExportPanel;
+let toggleImportExport;
 
-// Inicialización
-export async function initOradores() {
+// Inicializar el módulo de oradores
+document.addEventListener('DOMContentLoaded', async () => {
   try {
-    // Configurar eventos primero
+    // Verificar autenticación
+    if (!isAuthenticated()) {
+      redirectToLogin();
+      return;
+    }
+    
+
+    // Inicializar referencias a elementos del DOM
+    tbody = document.querySelector(".data-table tbody");
+    mobileTable = document.querySelector(".mobile-table");
+    searchInput = document.getElementById("buscarOrador");
+    limpiarBusqueda = document.getElementById("limpiarBusqueda");
+    paginationPrev = document.getElementById("pagination-prev");
+    paginationNext = document.getElementById("pagination-next");
+    paginationStart = document.getElementById("pagination-start");
+    paginationEnd = document.getElementById("pagination-end");
+    paginationTotal = document.getElementById("pagination-total");
+    importExportPanel = document.getElementById("importExportPanel");
+    toggleImportExport = document.getElementById("toggleImportExport");
+
+    // Configurar eventos
     setupEventListeners();
     
     // Inicializar búsqueda
@@ -32,34 +53,33 @@ export async function initOradores() {
     // Cargar datos iniciales
     await cargarOradores();
     
-    console.log('Módulo de oradores inicializado correctamente');
-    return true;
+    console.log("Módulo de oradores inicializado correctamente");
   } catch (error) {
-    console.error('Error al inicializar el módulo de oradores:', error);
-    return false;
+    console.error("Error al inicializar el módulo de oradores:", error);
+    mostrarMensaje('Error al inicializar el módulo de oradores', 'error');
   }
-}
+});
 
 // Configurar event listeners
 function setupEventListeners() {
   // La búsqueda ahora se maneja en inicializarBusqueda()
-  
+
   // Manejador de eventos para el botón Agregar Orador
-  const btnAgregarOrador = document.getElementById('btnAgregarOrador');
+  const btnAgregarOrador = document.getElementById("btnAgregarOrador");
   if (btnAgregarOrador) {
-    btnAgregarOrador.addEventListener('click', () => mostrarModalNuevoOrador());
+    btnAgregarOrador.addEventListener("click", () => mostrarModalNuevoOrador());
   }
-  
+
   // Manejador de eventos para los botones de acción
-  document.addEventListener('click', (e) => {
-    const button = e.target.closest('[data-action]');
+  document.addEventListener("click", (e) => {
+    const button = e.target.closest("[data-action]");
     if (!button) return;
-    
+
     const action = button.dataset.action;
     const id = button.dataset.id;
-    
-    if (action === 'edit') editarOrador(id);
-    if (action === 'delete') eliminarOrador(id);
+
+    if (action === "edit") editarOrador(id);
+    if (action === "delete") eliminarOrador(id);
   });
 
   // Paginación
@@ -89,33 +109,56 @@ function setupEventListeners() {
   const btnExportar = document.getElementById("btnExportar");
   const btnExportarPDF = document.getElementById("btnExportarPDF");
 
-  if (toggleImportExport) {
-    toggleImportExport.addEventListener("click", (e) => {
-      e.preventDefault();
-      toggleImportExportPanel(e);
-    });
-  }
+  try {
+    // Configurar el botón de alternar panel de importación/exportación
+    if (toggleImportExport) {
+      toggleImportExport.addEventListener("click", (e) => {
+        e.preventDefault();
+        toggleImportExportPanel(e);
+      });
+    }
 
-  if (btnImportar) {
-    btnImportar.addEventListener("click", async (e) => {
-      e.preventDefault();
-      try {
-        await importarDesdeExcel();
-      } catch (error) {
-        console.error('Error al importar desde Excel:', error);
-      }
-    });
-  }
+    // Configurar botón de importar
+    if (btnImportar) {
+      btnImportar.addEventListener("click", async (e) => {
+        e.preventDefault();
+        try {
+          await importarDesdeExcel();
+        } catch (error) {
+          console.error("Error al importar desde Excel:", error);
+          mostrarMensaje('Error al importar desde Excel', 'error');
+        }
+      });
+    }
 
-  if (btnExportar) {
-    btnExportar.addEventListener("click", async (e) => {
-      e.preventDefault();
-      try {
-        await exportarAExcel();
-      } catch (error) {
-        console.error('Error al exportar a Excel:', error);
-      }
-    });
+    // Configurar botón de exportar a Excel
+    if (btnExportar) {
+      btnExportar.addEventListener("click", async (e) => {
+        e.preventDefault();
+        try {
+          await exportarAExcel();
+        } catch (error) {
+          console.error("Error al exportar a Excel:", error);
+          mostrarMensaje('Error al exportar a Excel', 'error');
+        }
+      });
+    }
+
+    // Configurar botón de exportar a PDF
+    if (btnExportarPDF) {
+      btnExportarPDF.addEventListener("click", async (e) => {
+        e.preventDefault();
+        try {
+          await exportarAPDF();
+        } catch (error) {
+          console.error("Error al exportar a PDF:", error);
+          mostrarMensaje('Error al exportar a PDF', 'error');
+        }
+      });
+    }
+  } catch (error) {
+    console.error("Error al configurar los botones de importar/exportar:", error);
+    mostrarMensaje('Error al configurar los botones de importar/exportar', 'error');
   }
 
   if (btnExportarPDF) {
@@ -124,7 +167,7 @@ function setupEventListeners() {
       try {
         await exportarAPDF();
       } catch (error) {
-        console.error('Error al exportar a PDF:', error);
+        console.error("Error al exportar a PDF:", error);
       }
     });
   }
@@ -135,6 +178,13 @@ function setupEventListeners() {
 
 // Cargar oradores desde la base de datos
 async function cargarOradores() {
+  // Asegurarse de que tbody esté definido
+  const tbody = document.querySelector(".data-table tbody");
+  if (!tbody) {
+    console.error('No se encontró el elemento tbody');
+    return;
+  }
+
   try {
     // Mostrar estado de carga
     tbody.innerHTML = `
@@ -147,11 +197,11 @@ async function cargarOradores() {
       </tr>`;
 
     // Verificar que supabase esté inicializado
-    if (!supabase || typeof supabase.from !== 'function') {
+    if (!supabase || typeof supabase.from !== "function") {
       tbody.innerHTML = `
         <tr>
           <td colspan="5" class="text-center text-muted">
-            No se pudieron cargar los datos
+            Error: No se pudo conectar con la base de datos
           </td>
         </tr>`;
       return;
@@ -159,8 +209,8 @@ async function cargarOradores() {
 
     // Obtener oradores
     const { data: oradoresData, error: oradoresError } = await supabase
-      .from('oradores')
-      .select('*');
+      .from("oradores")
+      .select("*");
 
     if (oradoresError) throw oradoresError;
     if (!oradoresData || oradoresData.length === 0) {
@@ -171,48 +221,53 @@ async function cargarOradores() {
 
     // Obtener IDs de publicadores
     const publicadorIds = oradoresData
-      .map(orador => orador.publicador_id)
+      .map((orador) => orador.publicador_id)
       .filter(Boolean);
 
     // Obtener información de publicadores
     const { data: publicadoresData, error: publicadoresError } = await supabase
-      .from('publicadores')
-      .select(`
+      .from("publicadores")
+      .select(
+        `
         id,
         nombre,
         privilegio_servicio,
         congregacion_id,
         congregacion:congregacion_id (id, nombre)
-      `)
-      .in('id', publicadorIds);
+      `
+      )
+      .in("id", publicadorIds);
 
     if (publicadoresError) throw publicadoresError;
 
     // Mapear datos
     const publicadoresMap = {};
-    publicadoresData.forEach(pub => {
+    publicadoresData.forEach((pub) => {
       publicadoresMap[pub.id] = {
-        nombre: pub.nombre || 'Sin nombre',
-        privilegio: pub.privilegio_servicio || 'Sin privilegio',
-        congregacion: pub.congregacion?.nombre || 'Sin congregación',
-        congregacion_id: pub.congregacion_id
+        nombre: pub.nombre || "Sin nombre",
+        privilegio: pub.privilegio_servicio || "Sin privilegio",
+        congregacion: pub.congregacion?.nombre || "Sin congregación",
+        congregacion_id: pub.congregacion_id,
       };
     });
 
     // Combinar datos
-    oradores = oradoresData.map(orador => ({
+    oradores = oradoresData.map((orador) => ({
       id: orador.id,
       publicador_id: orador.publicador_id,
-      nombre: publicadoresMap[orador.publicador_id]?.nombre || 'Sin nombre',
-      privilegio: publicadoresMap[orador.publicador_id]?.privilegio || 'Sin privilegio',
+      nombre: publicadoresMap[orador.publicador_id]?.nombre || "Sin nombre",
+      privilegio:
+        publicadoresMap[orador.publicador_id]?.privilegio || "Sin privilegio",
       saliente: orador.saliente || false,
-      congregacion: publicadoresMap[orador.publicador_id]?.congregacion || 'Sin congregación',
-      congregacion_id: publicadoresMap[orador.publicador_id]?.congregacion_id
+      congregacion:
+        publicadoresMap[orador.publicador_id]?.congregacion ||
+        "Sin congregación",
+      congregacion_id: publicadoresMap[orador.publicador_id]?.congregacion_id,
     }));
 
     renderOradores();
   } catch (error) {
-    console.error('Error al cargar oradores:', error);
+    console.error("Error al cargar oradores:", error);
     tbody.innerHTML = `
       <tr>
         <td colspan="5" class="text-center text-muted">
@@ -322,10 +377,14 @@ async function renderOradores() {
         </td>
         <td class="col-acciones">
           <div class="acciones-botones">
-            <button class="btn-icon" data-action="edit" data-id="${orador.id}" title="Editar">
+            <button class="btn-icon" data-action="edit" data-id="${
+              orador.id
+            }" title="Editar">
               <i class="fas fa-edit"></i>
             </button>
-            <button class="btn-icon" data-action="delete" data-id="${orador.id}" title="Eliminar">
+            <button class="btn-icon" data-action="delete" data-id="${
+              orador.id
+            }" title="Eliminar">
               <i class="fas fa-trash"></i>
             </button>
           </div>
@@ -340,7 +399,7 @@ async function renderOradores() {
     // Actualizar tabla móvil
     updateMobileTable(paginatedOradores);
   } catch (error) {
-    console.error('Error al renderizar oradores:', error);
+    console.error("Error al renderizar oradores:", error);
     tbody.innerHTML = `
       <tr>
         <td colspan="5" class="text-center text-muted">
@@ -353,10 +412,10 @@ async function renderOradores() {
 // Actualizar la tabla móvil
 function updateMobileTable(oradores) {
   if (!mobileTable) return;
-  
+
   try {
     mobileTable.innerHTML = "";
-    
+
     if (!oradores || oradores.length === 0) {
       mobileTable.innerHTML = `
         <div class="mobile-table-row">
@@ -368,44 +427,50 @@ function updateMobileTable(oradores) {
     }
 
     oradores.forEach((orador) => {
-      const mobileCard = document.createElement('div');
-      mobileCard.className = 'mobile-table-row';
+      const mobileCard = document.createElement("div");
+      mobileCard.className = "mobile-table-row";
       mobileCard.innerHTML = `
         <div class="mobile-table-cell">
           <span class="label">Nombre:</span>
-          <span class="value">${orador.nombre || 'N/A'}</span>
+          <span class="value">${orador.nombre || "N/A"}</span>
         </div>
         <div class="mobile-table-cell">
           <span class="label">Congregación:</span>
-          <span class="value">${orador.congregacion || 'N/A'}</span>
+          <span class="value">${orador.congregacion || "N/A"}</span>
         </div>
         <div class="mobile-table-cell">
           <span class="label">Privilegio:</span>
-          <span class="value">${orador.privilegio || 'N/A'}</span>
+          <span class="value">${orador.privilegio || "N/A"}</span>
         </div>
         <div class="mobile-table-cell">
           <span class="label">Saliente:</span>
           <span class="value">
-            <span class="saliente-badge ${orador.saliente ? 'activo' : 'inactivo'}">
-              ${orador.saliente ? 'Sí' : 'No'}
+            <span class="saliente-badge ${
+              orador.saliente ? "activo" : "inactivo"
+            }">
+              ${orador.saliente ? "Sí" : "No"}
             </span>
           </span>
         </div>
         <div class="mobile-table-actions">
-          <button class="btn-action" data-action="edit" data-id="${orador.id}" title="Editar">
+          <button class="btn-action" data-action="edit" data-id="${
+            orador.id
+          }" title="Editar">
             <i class="fas fa-edit"></i>
             <span>Editar</span>
           </button>
-          <button class="btn-action text-danger" data-action="delete" data-id="${orador.id}" title="Eliminar">
+          <button class="btn-action text-danger" data-action="delete" data-id="${
+            orador.id
+          }" title="Eliminar">
             <i class="fas fa-trash"></i>
             <span>Eliminar</span>
           </button>
         </div>`;
-      
+
       mobileTable.appendChild(mobileCard);
     });
   } catch (error) {
-    console.error('Error al actualizar la tabla móvil:', error);
+    console.error("Error al actualizar la tabla móvil:", error);
     mobileTable.innerHTML = `
       <div class="mobile-table-row">
         <div class="mobile-table-cell">
@@ -459,35 +524,42 @@ async function cargarPublicadoresParaOradores() {
   try {
     // Primero, obtenemos todos los publicadores que pueden ser oradores
     const { data: publicadores, error: errorPublicadores } = await supabase
-      .from('publicadores')
-      .select('id, nombre, privilegio_servicio, congregacion_id, congregacion(nombre)')
-      .in('privilegio_servicio', ['Anciano', 'Siervo Ministerial']);
+      .from("publicadores")
+      .select(
+        "id, nombre, privilegio_servicio, congregacion_id, congregacion(nombre)"
+      )
+      .in("privilegio_servicio", ["Anciano", "Siervo Ministerial"]);
 
     if (errorPublicadores) throw errorPublicadores;
     if (!publicadores || publicadores.length === 0) return [];
 
     // Luego, obtenemos los IDs de los publicadores que ya son oradores
     const { data: oradoresExistentes, error: errorOradores } = await supabase
-      .from('oradores')
-      .select('publicador_id');
+      .from("oradores")
+      .select("publicador_id");
 
     if (errorOradores) throw errorOradores;
-    
+
     // Extraemos los IDs de los publicadores que ya son oradores
-    const idsOradoresExistentes = oradoresExistentes.map(orador => orador.publicador_id);
-    
+    const idsOradoresExistentes = oradoresExistentes.map(
+      (orador) => orador.publicador_id
+    );
+
     // Filtramos los publicadores para excluir los que ya son oradores
     const publicadoresDisponibles = publicadores.filter(
-      publicador => !idsOradoresExistentes.includes(publicador.id)
+      (publicador) => !idsOradoresExistentes.includes(publicador.id)
     );
-    
+
     // Ordenamos alfabéticamente por nombre
     publicadoresDisponibles.sort((a, b) => a.nombre.localeCompare(b.nombre));
-    
+
     return publicadoresDisponibles;
   } catch (error) {
-    console.error('Error al cargar publicadores para oradores:', error);
-    mostrarMensaje('Error al cargar la lista de publicadores: ' + error.message, 'error');
+    console.error("Error al cargar publicadores para oradores:", error);
+    mostrarMensaje(
+      "Error al cargar la lista de publicadores: " + error.message,
+      "error"
+    );
     return [];
   }
 }
@@ -496,222 +568,388 @@ async function cargarPublicadoresParaOradores() {
 async function mostrarModalNuevoOrador(orador = null) {
   try {
     // Obtener referencias a los elementos del DOM
-    const modalElement = document.getElementById('oradorModal');
+    const modalElement = document.getElementById("oradorModal");
     if (!modalElement) {
-      throw new Error('No se encontró el elemento del modal');
+      throw new Error("No se encontró el elemento del modal");
     }
-    
+
     // Inicializar el modal de Bootstrap
     const modal = new bootstrap.Modal(modalElement);
-    
+
     // Obtener referencias a los elementos del formulario
-    const form = document.getElementById('oradorForm');
-    const publicadorSelect = document.getElementById('publicador_id');
-    const tituloModal = document.getElementById('oradorModalTitle');
-    const btnGuardar = document.getElementById('guardarOrador');
-    
+    const form = document.getElementById("oradorForm");
+    const publicadorSelect = document.getElementById("publicador_id");
+    const tituloModal = document.getElementById("oradorModalTitle");
+    const btnGuardar = document.getElementById("guardarOrador");
+
     if (!form || !publicadorSelect || !tituloModal || !btnGuardar) {
-      throw new Error('No se encontraron todos los elementos necesarios en el formulario');
+      throw new Error(
+        "No se encontraron todos los elementos necesarios en el formulario"
+      );
     }
-    
+
     // Limpiar el formulario y deshabilitar el botón de guardar temporalmente
     form.reset();
     btnGuardar.disabled = true;
-    
+
     // Configurar el título del modal
-    tituloModal.textContent = orador ? 'Editar Orador' : 'Nuevo Orador';
-    
+    tituloModal.textContent = orador ? "Editar Orador" : "Nuevo Orador";
+
     try {
-      // Cargar publicadores disponibles
-      const publicadores = await cargarPublicadoresParaOradores();
-      
-      // Limpiar opciones existentes excepto la primera
-      while (publicadorSelect.options.length > 1) {
-        publicadorSelect.remove(1);
+      // Si estamos editando, mostrar solo el publicador actual
+      if (orador) {
+        // Deshabilitar el select y mostrar solo el publicador actual
+        publicadorSelect.disabled = true;
+
+        // Crear una opción con el publicador actual
+        publicadorSelect.innerHTML = "";
+        const option = document.createElement("option");
+        option.value = orador.publicador_id;
+        option.textContent = orador.publicador
+          ? `${orador.publicador.nombre} (${orador.publicador.privilegio_servicio})`
+          : "Cargando...";
+        publicadorSelect.appendChild(option);
+
+        // Establecer los demás valores del formulario
+        const salienteCheckbox = document.getElementById("saliente");
+        if (salienteCheckbox) {
+          salienteCheckbox.checked = orador.saliente || false;
+        }
+        btnGuardar.setAttribute("data-id", orador.id);
       }
-      
-      // Agregar opciones de publicadores
-      if (publicadores && publicadores.length > 0) {
-        publicadores.forEach(pub => {
-          const option = document.createElement('option');
+      // Si es un nuevo orador, cargar la lista de publicadores disponibles
+      else {
+        // Cargar publicadores disponibles
+        const publicadores = await cargarPublicadoresParaOradores();
+
+        // Limpiar opciones existentes
+        publicadorSelect.innerHTML =
+          '<option value="" selected disabled>Seleccione un publicador (Anciano o Siervo Ministerial)</option>';
+
+        // Verificar si hay publicadores disponibles
+        if (!publicadores || publicadores.length === 0) {
+          mostrarMensaje(
+            "No hay publicadores disponibles para agregar como oradores",
+            "info"
+          );
+          return; // Salir temprano si no hay publicadores
+        }
+
+        // Agregar opciones de publicadores
+        publicadores.forEach((pub) => {
+          const option = document.createElement("option");
           option.value = pub.id;
           option.textContent = `${pub.nombre} (${pub.privilegio_servicio})`;
           publicadorSelect.appendChild(option);
         });
-        
-        // Si es edición, establecer los valores del orador
-        if (orador) {
-          publicadorSelect.value = orador.publicador_id;
-          const salienteCheckbox = document.getElementById('saliente');
-          if (salienteCheckbox) {
-            salienteCheckbox.checked = orador.saliente || false;
-          }
-          btnGuardar.setAttribute('data-id', orador.id);
-        } else {
-          btnGuardar.removeAttribute('data-id');
-        }
-      } else {
-        // No hay publicadores disponibles
-        mostrarMensaje('No hay publicadores disponibles para agregar como oradores', 'info');
-        return; // Salir temprano si no hay publicadores
+
+        // Asegurarse de que el botón no tenga data-id para nuevo orador
+        btnGuardar.removeAttribute("data-id");
       }
-      
+
       // Mostrar el modal
       modal.show();
-      
     } catch (error) {
-      console.error('Error al cargar los publicadores:', error);
-      mostrarMensaje('Error al cargar la lista de publicadores', 'error');
+      console.error("Error al cargar los publicadores:", error);
+      mostrarMensaje("Error al cargar la lista de publicadores", "error");
       return; // Salir si hay un error
     } finally {
       // Habilitar el botón de guardar cuando todo esté listo
       btnGuardar.disabled = false;
     }
-    
   } catch (error) {
-    console.error('Error al mostrar el modal de orador:', error);
-    mostrarMensaje('Error al cargar el formulario: ' + error.message, 'error');
+    console.error("Error al mostrar el modal de orador:", error);
+    mostrarMensaje("Error al cargar el formulario: " + error.message, "error");
   }
 }
 
 // Guardar orador (crear o actualizar)
 async function guardarOrador(event) {
   event.preventDefault();
-  
-  const form = document.getElementById('oradorForm');
+
+  const form = document.getElementById("oradorForm");
   const formData = new FormData(form);
-  const oradorId = document.getElementById('guardarOrador').getAttribute('data-id');
-  const publicadorId = formData.get('publicador_id');
-  const saliente = formData.get('saliente') === 'on';
-  
+  const oradorId = document
+    .getElementById("guardarOrador")
+    .getAttribute("data-id");
+  const publicadorId = formData.get("publicador_id");
+  const saliente = formData.get("saliente") === "on";
+
   try {
-    // Validar que se haya seleccionado un publicador
-    if (!publicadorId) {
-      mostrarMensaje('Por favor seleccione un publicador', 'error');
+    // Solo validar la selección de publicador si es un nuevo registro
+    if (!oradorId && !publicadorId) {
+      mostrarMensaje("Por favor seleccione un publicador", "error");
       return;
     }
-    
-    // Verificar si el publicador ya es orador (solo para nuevo registro)
+
+    // Si es un nuevo registro, verificar que el publicador no sea ya un orador
     if (!oradorId) {
       try {
         const { data: oradorExistente, error: errorExistente } = await supabase
-          .from('oradores')
-          .select('id')
-          .eq('publicador_id', publicadorId);
-          
+          .from("oradores")
+          .select("id")
+          .eq("publicador_id", publicadorId);
+
         if (oradorExistente && oradorExistente.length > 0) {
-          mostrarMensaje('Este publicador ya está registrado como orador', 'error');
+          mostrarMensaje(
+            "Este publicador ya está registrado como orador",
+            "error"
+          );
           return;
         }
       } catch (error) {
-        console.error('Error al verificar orador existente:', error);
+        console.error("Error al verificar orador existente:", error);
         // Continuar con el guardado a pesar del error de verificación
       }
     }
-    
+
+    // Obtener el publicador seleccionado (para nuevo orador) o el actual (para edición)
+    let publicador;
+
+    if (oradorId) {
+      // Si estamos editando, obtener el publicador actual
+      const { data: oradorActual, error: oradorError } = await supabase
+        .from("oradores")
+        .select("publicador_id")
+        .eq("id", oradorId)
+        .single();
+
+      if (oradorError) throw oradorError;
+
+      const { data: publicadorData, error: publicadorError } = await supabase
+        .from("publicadores")
+        .select("id, nombre, privilegio_servicio, congregacion_id")
+        .eq("id", publicadorId || oradorActual.publicador_id)
+        .single();
+
+      if (publicadorError) throw publicadorError;
+      publicador = publicadorData;
+    } else {
+      // Si es un nuevo orador, obtener los datos del publicador seleccionado
+      publicador = (
+        await supabase
+          .from("publicadores")
+          .select("id, nombre, privilegio_servicio, congregacion_id")
+          .eq("id", publicadorId)
+          .single()
+      ).data;
+    }
+
+    if (!publicador) {
+      throw new Error("No se pudo obtener la información del publicador");
+    }
+
     // Preparar los datos para guardar
     const oradorData = {
-      publicador_id: publicadorId,
+      publicador_id: publicador.id,
       saliente: saliente,
-      organizacion_id: 1 // Ajustar según sea necesario
+      publicador: {
+        id: publicador.id,
+        nombre: publicador.nombre,
+        privilegio_servicio: publicador.privilegio_servicio,
+        congregacion_id: publicador.congregacion_id,
+      },
+      organizacion_id: 1, // Ajustar según sea necesario
     };
-    
+
     let error = null;
-    
+
     // Crear o actualizar el orador
     if (oradorId) {
       // Actualizar orador existente
       const { error: updateError } = await supabase
-        .from('oradores')
-        .update(oradorData)
-        .eq('id', oradorId);
-      
+        .from("oradores")
+        .update({
+          saliente: oradorData.saliente,
+          // No actualizamos el publicador_id al editar
+        })
+        .eq("id", oradorId);
+
       error = updateError;
     } else {
       // Crear nuevo orador
-      const { error: insertError } = await supabase
-        .from('oradores')
-        .insert([oradorData]);
-      
+      const { error: insertError } = await supabase.from("oradores").insert([
+        {
+          publicador_id: oradorData.publicador_id,
+          saliente: oradorData.saliente,
+          organizacion_id: oradorData.organizacion_id,
+        },
+      ]);
+
       error = insertError;
     }
-    
+
     if (error) throw error;
-    
+
     // Cerrar el modal
-    const modalElement = document.getElementById('oradorModal');
+    const modalElement = document.getElementById("oradorModal");
     if (modalElement) {
       const modal = bootstrap.Modal.getInstance(modalElement);
       if (modal) {
         modal.hide();
       }
     }
-    
+
     // Mostrar mensaje de éxito
     mostrarMensaje(
-      `Orador ${oradorId ? 'actualizado' : 'agregado'} correctamente`,
-      'success'
+      `Orador ${oradorId ? "actualizado" : "agregado"} correctamente`,
+      "success"
     );
-    
+
     // Recargar la lista de oradores
     await cargarOradores();
-    
+
     // Desplazarse al principio de la página para ver el mensaje
     window.scrollTo(0, 0);
-    
   } catch (error) {
-    console.error('Error al guardar el orador:', error);
-    mostrarMensaje('Error al guardar el orador', 'error');
+    console.error("Error al guardar el orador:", error);
+    mostrarMensaje("Error al guardar el orador", "error");
   }
 }
 
 // Configurar el manejador de eventos para el formulario
-document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('oradorForm');
-  if (form) {
-    form.addEventListener('submit', guardarOrador);
-  }
-});
+const form = document.getElementById("oradorForm");
+if (form) {
+  form.addEventListener("submit", guardarOrador);
+}
 
 // Editar orador
-function editarOrador(id) {
-  const orador = oradores.find((o) => o.id === id);
-  if (orador) {
-    mostrarModalNuevoOrador(orador);
-  } else {
-    console.error("No se encontró el orador seleccionado");
+async function editarOrador(id) {
+  try {
+    // Mostrar indicador de carga
+    const btnEditar = document.querySelector(
+      `button[data-id="${id}"][onclick*="editarOrador"]`
+    );
+    const originalText = btnEditar ? btnEditar.innerHTML : "";
+
+    if (btnEditar) {
+      btnEditar.disabled = true;
+      btnEditar.innerHTML =
+        '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Cargando...';
+    }
+
+    // Buscar el orador en la lista local
+    let orador = oradores.find((o) => o.id === id);
+
+    // Si no está en la lista local, intentar cargarlo desde la base de datos
+    if (!orador) {
+      const { data, error } = await supabase
+        .from("oradores")
+        .select(
+          `
+          id,
+          publicador_id,
+          saliente,
+          publicador:publicador_id (id, nombre, privilegio_servicio)
+        `
+        )
+        .eq("id", id)
+        .single();
+
+      if (error) throw error;
+      if (!data) throw new Error("No se encontró el orador seleccionado");
+
+      orador = {
+        id: data.id,
+        publicador_id: data.publicador_id,
+        saliente: data.saliente,
+        publicador: data.publicador,
+      };
+
+      // Agregar a la lista local para futuras referencias
+      oradores.push(orador);
+    }
+
+    // Mostrar el modal con los datos del orador
+    await mostrarModalNuevoOrador(orador);
+  } catch (error) {
+    console.error("Error al cargar el orador para editar:", error);
+    mostrarMensaje(
+      "Error al cargar los datos del orador: " +
+        (error.message || "Error desconocido"),
+      "error"
+    );
+  } finally {
+    // Restaurar el botón de editar
+    const btnEditar = document.querySelector(
+      `button[data-id="${id}"][onclick*="editarOrador"]`
+    );
+    if (btnEditar) {
+      btnEditar.disabled = false;
+      btnEditar.innerHTML = originalText || '<i class="fas fa-edit"></i>';
+    }
   }
 }
 
 // Eliminar orador
 async function eliminarOrador(id) {
-  if (
-    !confirm(
-      "¿Está seguro de que desea eliminar este orador? Esta acción no se puede deshacer."
-    )
-  ) {
-    return;
-  }
+  // Mostrar confirmación con SweetAlert2
+  const result = await Swal.fire({
+    title: "¿Está seguro?",
+    text: "Esta acción eliminará al orador permanentemente y no se podrá deshacer.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Sí, eliminar",
+    cancelButtonText: "Cancelar",
+    reverseButtons: true,
+  });
 
-  try {
-    const { error } = await supabase.from("oradores").delete().eq("id", id);
+  // Si el usuario confirma la eliminación
+  if (result.isConfirmed) {
+    try {
+      // Mostrar indicador de carga
+      const btnEliminar = document.querySelector(
+        `button[data-id="${id}"][onclick*="eliminarOrador"]`
+      );
+      const originalContent = btnEliminar ? btnEliminar.innerHTML : "";
 
-    if (error) throw error;
+      if (btnEliminar) {
+        btnEliminar.disabled = true;
+        btnEliminar.innerHTML =
+          '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Eliminando...';
+      }
 
-    // Actualizar la lista de oradores
-    oradores = oradores.filter((o) => o.id !== id);
+      // Proceder directamente con la eliminación ya que la tabla de asignaciones no existe
+      const { error } = await supabase.from("oradores").delete().eq("id", id);
 
-    // Si la página actual queda vacía y no es la primera, retroceder una página
-    const filteredOradores = getFiltredOradores();
-    const totalPages = Math.ceil(filteredOradores.length / itemsPerPage);
-    if (currentPage > 1 && currentPage > totalPages) {
-      currentPage = totalPages;
+      if (error) throw error;
+
+      // Mostrar mensaje de éxito
+      await Swal.fire({
+        title: "¡Eliminado!",
+        text: "El orador ha sido eliminado correctamente.",
+        icon: "success",
+        confirmButtonColor: "#3085d6",
+        confirmButtonText: "Aceptar",
+      });
+
+      // Actualizar la lista de oradores
+      await cargarOradores();
+    } catch (error) {
+      console.error("Error al eliminar el orador:", error);
+
+      // Mostrar mensaje de error
+      await Swal.fire({
+        title: "Error",
+        text:
+          "No se pudo eliminar el orador: " +
+          (error.message || "Error desconocido"),
+        icon: "error",
+        confirmButtonColor: "#3085d6",
+        confirmButtonText: "Aceptar",
+      });
+    } finally {
+      // Restaurar el botón de eliminar
+      const btnEliminar = document.querySelector(
+        `button[data-id="${id}"][onclick*="eliminarOrador"]`
+      );
+      if (btnEliminar) {
+        btnEliminar.disabled = false;
+        btnEliminar.innerHTML = originalContent;
+      }
     }
-
-    renderOradores();
-    console.log("Orador eliminado correctamente");
-  } catch (error) {
-    console.error("Error al eliminar orador:", error);
   }
 }
 
@@ -1073,14 +1311,6 @@ window.mostrarModalNuevoOrador = mostrarModalNuevoOrador;
 window.editarOrador = editarOrador;
 window.eliminarOrador = eliminarOrador;
 window.guardarOrador = guardarOrador;
-
-// Exportar función de inicialización
-export default {
-  init: initOradores,
-  mostrarModalNuevoOrador,
-  editarOrador,
-  eliminarOrador
-};
 window.exportarAExcel = exportarAExcel;
 window.exportarAPDF = exportarAPDF;
 
@@ -1090,9 +1320,9 @@ window.addEventListener("resize", () => {
     const filteredOradores = getFiltredOradores();
     const start = (currentPage - 1) * itemsPerPage;
     const end = start + itemsPerPage;
-    const paginatedOradores = filteredOradores.slice(start, end);
-    updateMobileTable(paginatedOradores);
+    const oradoresPaginados = filteredOradores.slice(start, end);
+    updateMobileTable(oradoresPaginados);
   } catch (error) {
-    console.error('Error en el manejador de redimensión:', error);
+    console.error("Error al manejar el redimensionamiento:", error);
   }
 });
