@@ -208,6 +208,52 @@
       </footer>
     </div>
 
+    <!-- Modal para agregar/editar orador -->
+    <div class="modal fade" id="oradorModal" tabindex="-1" role="dialog" aria-labelledby="oradorModalTitle" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 class="modal-title h5" id="oradorModalTitle">
+              Nuevo Orador
+            </h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar">
+              <span class="sr-only">Cerrar</span>
+              <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="oradorForm" onsubmit="return false;">
+              <div class="mb-3">
+                <label for="publicador_id" class="form-label">
+                  Seleccionar Publicador <span class="text-danger">*</span>
+                </label>
+                <select class="form-select" id="publicador_id" name="publicador_id" required>
+                  <option value="" selected disabled>
+                    Seleccione un publicador (Anciano o Siervo Ministerial)
+                  </option>
+                  <!-- Las opciones se cargarán dinámicamente -->
+                </select>
+                <small class="form-text text-muted">Solo se muestran publicadores con privilegio de Anciano o Siervo Ministerial</small>
+              </div>
+
+              <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="saliente" name="saliente">
+                <label class="form-check-label" for="saliente">Orador Saliente</label>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              Cancelar
+            </button>
+            <button type="button" class="btn btn-primary" id="guardarOrador" onclick="guardarOrador(event)">
+              Guardar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- SweetAlert2 para notificaciones -->
     <link
       rel="stylesheet"
@@ -231,113 +277,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
     <!-- Módulos principales -->
-    <!-- Modal para agregar/editar orador -->
-    <div
-      class="modal fade"
-      id="oradorModal"
-      tabindex="-1"
-      role="dialog"
-      aria-labelledby="oradorModalTitle"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h2 class="modal-title h5" id="oradorModalTitle">Nuevo Orador</h2>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-              aria-label="Cerrar"
-            >
-              <span class="sr-only">Cerrar</span>
-              <i class="fas fa-times" aria-hidden="true"></i>
-            </button>
-          </div>
-          <div class="modal-body">
-            <form id="oradorForm" onsubmit="return false;">
-              <div class="mb-3">
-                <label for="nombre" class="form-label">
-                  Nombre Completo <span class="text-danger">*</span>
-                </label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="nombre"
-                  name="nombre"
-                  required
-                />
-              </div>
-
-              <div class="mb-3">
-                <label for="congregacion" class="form-label">
-                  Congregación <span class="text-danger">*</span>
-                </label>
-                <select
-                  class="form-select"
-                  id="congregacion"
-                  name="congregacion_id"
-                  required
-                >
-                  <option value="" selected disabled>
-                    Seleccione una congregación
-                  </option>
-                  <!-- Las opciones se cargarán dinámicamente -->
-                </select>
-              </div>
-
-              <div class="mb-3">
-                <label for="privilegio" class="form-label">Privilegio</label>
-                <select class="form-select" id="privilegio" name="privilegio">
-                  <option value="">Ninguno</option>
-                  <option value="Siervo Ministerial">Siervo Ministerial</option>
-                  <option value="Anciano">Anciano</option>
-                  <option value="Precursor">Precursor</option>
-                  <option value="Misionero">Misionero</option>
-                  <option value="Betelita">Betelita</option>
-                  <option value="Otro">Otro</option>
-                </select>
-              </div>
-
-              <div class="mb-3">
-                <label for="es_saliente" class="form-label"
-                  >¿Es Saliente?</label
-                >
-                <select class="form-select" id="es_saliente" name="es_saliente">
-                  <option value="true">Sí</option>
-                  <option value="false" selected>No</option>
-                </select>
-              </div>
-
-              <div class="mb-3">
-                <label for="observaciones" class="form-label"
-                  >Observaciones</label
-                >
-                <textarea
-                  class="form-control"
-                  id="observaciones"
-                  name="observaciones"
-                  rows="3"
-                ></textarea>
-              </div>
-            </form>
-          </div>
-          <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-outline"
-              data-bs-dismiss="modal"
-            >
-              Cancelar
-            </button>
-            <button type="button" class="btn btn-primary" id="btnGuardarOrador">
-              <i class="fas fa-save me-2"></i>Guardar
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
+    
     <!-- Confirmación de eliminación -->
     <div
       class="modal fade"
@@ -377,6 +317,9 @@
       </div>
     </div>
 
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
     <script type="module">
       // Cargar módulos en orden
       import { supabase } from "../scripts/supabase.js";

@@ -44,6 +44,12 @@ export async function initOradores() {
 function setupEventListeners() {
   // La búsqueda ahora se maneja en inicializarBusqueda()
   
+  // Manejador de eventos para el botón Agregar Orador
+  const btnAgregarOrador = document.getElementById('btnAgregarOrador');
+  if (btnAgregarOrador) {
+    btnAgregarOrador.addEventListener('click', () => mostrarModalNuevoOrador());
+  }
+  
   // Manejador de eventos para los botones de acción
   document.addEventListener('click', (e) => {
     const button = e.target.closest('[data-action]');
@@ -448,12 +454,224 @@ function getBadgeClass(estado) {
   }
 }
 
-// Mostrar modal para agregar/editar orador
-function mostrarModalNuevoOrador(orador = null) {
-  // Implementar lógica del modal
-  console.log("Mostrar modal para:", orador ? "editar" : "nuevo", "orador");
-  // Aquí iría el código para mostrar el modal con el formulario
+// Cargar publicadores que pueden ser oradores (Ancianos o Siervos Ministeriales) y que no estén ya como oradores
+async function cargarPublicadoresParaOradores() {
+  try {
+    // Primero, obtenemos todos los publicadores que pueden ser oradores
+    const { data: publicadores, error: errorPublicadores } = await supabase
+      .from('publicadores')
+      .select('id, nombre, privilegio_servicio, congregacion_id, congregacion(nombre)')
+      .in('privilegio_servicio', ['Anciano', 'Siervo Ministerial']);
+
+    if (errorPublicadores) throw errorPublicadores;
+    if (!publicadores || publicadores.length === 0) return [];
+
+    // Luego, obtenemos los IDs de los publicadores que ya son oradores
+    const { data: oradoresExistentes, error: errorOradores } = await supabase
+      .from('oradores')
+      .select('publicador_id');
+
+    if (errorOradores) throw errorOradores;
+    
+    // Extraemos los IDs de los publicadores que ya son oradores
+    const idsOradoresExistentes = oradoresExistentes.map(orador => orador.publicador_id);
+    
+    // Filtramos los publicadores para excluir los que ya son oradores
+    const publicadoresDisponibles = publicadores.filter(
+      publicador => !idsOradoresExistentes.includes(publicador.id)
+    );
+    
+    // Ordenamos alfabéticamente por nombre
+    publicadoresDisponibles.sort((a, b) => a.nombre.localeCompare(b.nombre));
+    
+    return publicadoresDisponibles;
+  } catch (error) {
+    console.error('Error al cargar publicadores para oradores:', error);
+    mostrarMensaje('Error al cargar la lista de publicadores: ' + error.message, 'error');
+    return [];
+  }
 }
+
+// Mostrar modal para agregar/editar orador
+async function mostrarModalNuevoOrador(orador = null) {
+  try {
+    // Obtener referencias a los elementos del DOM
+    const modalElement = document.getElementById('oradorModal');
+    if (!modalElement) {
+      throw new Error('No se encontró el elemento del modal');
+    }
+    
+    // Inicializar el modal de Bootstrap
+    const modal = new bootstrap.Modal(modalElement);
+    
+    // Obtener referencias a los elementos del formulario
+    const form = document.getElementById('oradorForm');
+    const publicadorSelect = document.getElementById('publicador_id');
+    const tituloModal = document.getElementById('oradorModalTitle');
+    const btnGuardar = document.getElementById('guardarOrador');
+    
+    if (!form || !publicadorSelect || !tituloModal || !btnGuardar) {
+      throw new Error('No se encontraron todos los elementos necesarios en el formulario');
+    }
+    
+    // Limpiar el formulario y deshabilitar el botón de guardar temporalmente
+    form.reset();
+    btnGuardar.disabled = true;
+    
+    // Configurar el título del modal
+    tituloModal.textContent = orador ? 'Editar Orador' : 'Nuevo Orador';
+    
+    try {
+      // Cargar publicadores disponibles
+      const publicadores = await cargarPublicadoresParaOradores();
+      
+      // Limpiar opciones existentes excepto la primera
+      while (publicadorSelect.options.length > 1) {
+        publicadorSelect.remove(1);
+      }
+      
+      // Agregar opciones de publicadores
+      if (publicadores && publicadores.length > 0) {
+        publicadores.forEach(pub => {
+          const option = document.createElement('option');
+          option.value = pub.id;
+          option.textContent = `${pub.nombre} (${pub.privilegio_servicio})`;
+          publicadorSelect.appendChild(option);
+        });
+        
+        // Si es edición, establecer los valores del orador
+        if (orador) {
+          publicadorSelect.value = orador.publicador_id;
+          const salienteCheckbox = document.getElementById('saliente');
+          if (salienteCheckbox) {
+            salienteCheckbox.checked = orador.saliente || false;
+          }
+          btnGuardar.setAttribute('data-id', orador.id);
+        } else {
+          btnGuardar.removeAttribute('data-id');
+        }
+      } else {
+        // No hay publicadores disponibles
+        mostrarMensaje('No hay publicadores disponibles para agregar como oradores', 'info');
+        return; // Salir temprano si no hay publicadores
+      }
+      
+      // Mostrar el modal
+      modal.show();
+      
+    } catch (error) {
+      console.error('Error al cargar los publicadores:', error);
+      mostrarMensaje('Error al cargar la lista de publicadores', 'error');
+      return; // Salir si hay un error
+    } finally {
+      // Habilitar el botón de guardar cuando todo esté listo
+      btnGuardar.disabled = false;
+    }
+    
+  } catch (error) {
+    console.error('Error al mostrar el modal de orador:', error);
+    mostrarMensaje('Error al cargar el formulario: ' + error.message, 'error');
+  }
+}
+
+// Guardar orador (crear o actualizar)
+async function guardarOrador(event) {
+  event.preventDefault();
+  
+  const form = document.getElementById('oradorForm');
+  const formData = new FormData(form);
+  const oradorId = document.getElementById('guardarOrador').getAttribute('data-id');
+  const publicadorId = formData.get('publicador_id');
+  const saliente = formData.get('saliente') === 'on';
+  
+  try {
+    // Validar que se haya seleccionado un publicador
+    if (!publicadorId) {
+      mostrarMensaje('Por favor seleccione un publicador', 'error');
+      return;
+    }
+    
+    // Verificar si el publicador ya es orador (solo para nuevo registro)
+    if (!oradorId) {
+      try {
+        const { data: oradorExistente, error: errorExistente } = await supabase
+          .from('oradores')
+          .select('id')
+          .eq('publicador_id', publicadorId);
+          
+        if (oradorExistente && oradorExistente.length > 0) {
+          mostrarMensaje('Este publicador ya está registrado como orador', 'error');
+          return;
+        }
+      } catch (error) {
+        console.error('Error al verificar orador existente:', error);
+        // Continuar con el guardado a pesar del error de verificación
+      }
+    }
+    
+    // Preparar los datos para guardar
+    const oradorData = {
+      publicador_id: publicadorId,
+      saliente: saliente,
+      organizacion_id: 1 // Ajustar según sea necesario
+    };
+    
+    let error = null;
+    
+    // Crear o actualizar el orador
+    if (oradorId) {
+      // Actualizar orador existente
+      const { error: updateError } = await supabase
+        .from('oradores')
+        .update(oradorData)
+        .eq('id', oradorId);
+      
+      error = updateError;
+    } else {
+      // Crear nuevo orador
+      const { error: insertError } = await supabase
+        .from('oradores')
+        .insert([oradorData]);
+      
+      error = insertError;
+    }
+    
+    if (error) throw error;
+    
+    // Cerrar el modal
+    const modalElement = document.getElementById('oradorModal');
+    if (modalElement) {
+      const modal = bootstrap.Modal.getInstance(modalElement);
+      if (modal) {
+        modal.hide();
+      }
+    }
+    
+    // Mostrar mensaje de éxito
+    mostrarMensaje(
+      `Orador ${oradorId ? 'actualizado' : 'agregado'} correctamente`,
+      'success'
+    );
+    
+    // Recargar la lista de oradores
+    await cargarOradores();
+    
+    // Desplazarse al principio de la página para ver el mensaje
+    window.scrollTo(0, 0);
+    
+  } catch (error) {
+    console.error('Error al guardar el orador:', error);
+    mostrarMensaje('Error al guardar el orador', 'error');
+  }
+}
+
+// Configurar el manejador de eventos para el formulario
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('oradorForm');
+  if (form) {
+    form.addEventListener('submit', guardarOrador);
+  }
+});
 
 // Editar orador
 function editarOrador(id) {
@@ -854,6 +1072,7 @@ async function importarDesdeExcel() {
 window.mostrarModalNuevoOrador = mostrarModalNuevoOrador;
 window.editarOrador = editarOrador;
 window.eliminarOrador = eliminarOrador;
+window.guardarOrador = guardarOrador;
 
 // Exportar función de inicialización
 export default {
