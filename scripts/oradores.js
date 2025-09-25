@@ -1543,6 +1543,14 @@ async function importarDesdeExcel(file) {
             confirmButtonText: "Sí, continuar",
             cancelButtonText: "Cancelar",
             showLoaderOnConfirm: true,
+            preConfirm: () => {
+              return new Promise((resolve) => {
+                // Simulamos una pequeña demora para mostrar el loader
+                setTimeout(() => {
+                  resolve();
+                }, 500);
+              });
+            }
           });
 
           if (!isConfirmed) {
@@ -1571,6 +1579,14 @@ async function importarDesdeExcel(file) {
             confirmButtonText: "Continuar con la importación",
             cancelButtonText: "Cancelar",
             showLoaderOnConfirm: true,
+            preConfirm: () => {
+              return new Promise((resolve) => {
+                // Simulamos una pequeña demora para mostrar el loader
+                setTimeout(() => {
+                  resolve();
+                }, 500);
+              });
+            }
           });
 
           if (!isConfirmed) {
