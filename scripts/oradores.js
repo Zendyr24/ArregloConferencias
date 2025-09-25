@@ -1,6 +1,18 @@
 // Importar dependencias
-import { supabase } from './supabase.js';
-import { isAuthenticated, redirectToLogin } from './auth/auth-utils.js';
+import { supabase } from "./supabase.js";
+import {
+  isAuthenticated,
+  redirectToLogin,
+  updateUserInfo,
+  getCurrentUser,
+} from "./auth/auth-utils.js";
+
+// Verificar autenticación
+if (!isAuthenticated()) {
+  redirectToLogin();
+}
+
+// XLSX is now available globally from the CDN
 
 // Variables globales
 let oradores = [];
@@ -22,14 +34,16 @@ let importExportPanel;
 let toggleImportExport;
 
 // Inicializar el módulo de oradores
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener("DOMContentLoaded", async () => {
   try {
     // Verificar autenticación
     if (!isAuthenticated()) {
       redirectToLogin();
       return;
     }
-    
+
+    // Actualizar la información del usuario en la interfaz
+    updateUserInfo();
 
     // Inicializar referencias a elementos del DOM
     tbody = document.querySelector(".data-table tbody");
@@ -46,22 +60,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Configurar eventos
     setupEventListeners();
-    
+
     // Inicializar búsqueda
     inicializarBusqueda();
-    
+
     // Cargar datos iniciales
     await cargarOradores();
-    
+
     console.log("Módulo de oradores inicializado correctamente");
   } catch (error) {
     console.error("Error al inicializar el módulo de oradores:", error);
-    mostrarMensaje('Error al inicializar el módulo de oradores', 'error');
+    mostrarMensaje("Error al inicializar el módulo de oradores", "error");
   }
 });
 
 // Configurar event listeners
 function setupEventListeners() {
+  // Configurar botón de cierre de sesión
+  const logoutButton = document.getElementById("app-logout-button");
+  if (logoutButton) {
+    logoutButton.addEventListener("click", () => {
+      // Limpiar la sesión
+      localStorage.removeItem("user");
+      // Redirigir a la página de inicio de sesión
+      window.location.href = "../index.html";
+    });
+  }
+
   // La búsqueda ahora se maneja en inicializarBusqueda()
 
   // Manejador de eventos para el botón Agregar Orador
@@ -120,56 +145,88 @@ function setupEventListeners() {
 
     // Configurar botón de importar
     if (btnImportar) {
-      btnImportar.addEventListener("click", async (e) => {
+      let isImporting = false;
+      
+      const handleImport = (e) => {
         e.preventDefault();
-        try {
-          await importarDesdeExcel();
-        } catch (error) {
-          console.error("Error al importar desde Excel:", error);
-          mostrarMensaje('Error al importar desde Excel', 'error');
-        }
-      });
+        
+        if (isImporting) return;
+        
+        // Crear input de archivo
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.xlsx, .xls';
+        
+        input.onchange = async (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          
+          const button = e.currentTarget;
+          button.disabled = true;
+          isImporting = true;
+          
+          try {
+            await importarDesdeExcel(file);
+          } catch (error) {
+            console.error("Error al importar:", error);
+            mostrarMensaje(`Error al importar: ${error.message}`, 'error');
+          } finally {
+            button.disabled = false;
+            isImporting = false;
+          }
+        };
+        
+        // Disparar el diálogo de selección de archivo
+        input.click();
+      };
+      
+      btnImportar.addEventListener('click', handleImport);
     }
 
     // Configurar botón de exportar a Excel
     if (btnExportar) {
-      btnExportar.addEventListener("click", async (e) => {
+      const handleExportExcel = async (e) => {
         e.preventDefault();
+        const button = e.currentTarget;
+        button.disabled = true;
         try {
           await exportarAExcel();
         } catch (error) {
           console.error("Error al exportar a Excel:", error);
-          mostrarMensaje('Error al exportar a Excel', 'error');
+          mostrarMensaje(`Error al exportar a Excel: ${error.message}`, 'error');
+        } finally {
+          button.disabled = false;
         }
-      });
+      };
+      btnExportar.addEventListener("click", handleExportExcel);
     }
 
     // Configurar botón de exportar a PDF
     if (btnExportarPDF) {
-      btnExportarPDF.addEventListener("click", async (e) => {
+      const handleExportPDF = async (e) => {
         e.preventDefault();
+        const button = e.currentTarget;
+        button.disabled = true;
         try {
           await exportarAPDF();
         } catch (error) {
           console.error("Error al exportar a PDF:", error);
-          mostrarMensaje('Error al exportar a PDF', 'error');
+          mostrarMensaje(`Error al exportar a PDF: ${error.message}`, 'error');
+        } finally {
+          button.disabled = false;
         }
-      });
+      };
+      btnExportarPDF.addEventListener("click", handleExportPDF);
     }
   } catch (error) {
-    console.error("Error al configurar los botones de importar/exportar:", error);
-    mostrarMensaje('Error al configurar los botones de importar/exportar', 'error');
-  }
-
-  if (btnExportarPDF) {
-    btnExportarPDF.addEventListener("click", async (e) => {
-      e.preventDefault();
-      try {
-        await exportarAPDF();
-      } catch (error) {
-        console.error("Error al exportar a PDF:", error);
-      }
-    });
+    console.error(
+      "Error al configurar los botones de importar/exportar:",
+      error
+    );
+    mostrarMensaje(
+      "Error al configurar los botones de importar/exportar",
+      "error"
+    );
   }
 
   // Configurar el listener para cerrar el panel al hacer clic fuera
@@ -181,7 +238,7 @@ async function cargarOradores() {
   // Asegurarse de que tbody esté definido
   const tbody = document.querySelector(".data-table tbody");
   if (!tbody) {
-    console.error('No se encontró el elemento tbody');
+    console.error("No se encontró el elemento tbody");
     return;
   }
 
@@ -813,21 +870,21 @@ if (form) {
   form.addEventListener("submit", guardarOrador);
 }
 
-// Editar orador
+// Función para editar un orador
 async function editarOrador(id) {
+  // Guardar el texto original del botón
+  const btnEditar = document.querySelector(
+    `button[data-id="${id}"][onclick*="editarOrador"]`
+  );
+  const originalText = btnEditar ? btnEditar.innerHTML : "";
+
+  if (btnEditar) {
+    btnEditar.disabled = true;
+    btnEditar.innerHTML =
+      '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Cargando...';
+  }
+
   try {
-    // Mostrar indicador de carga
-    const btnEditar = document.querySelector(
-      `button[data-id="${id}"][onclick*="editarOrador"]`
-    );
-    const originalText = btnEditar ? btnEditar.innerHTML : "";
-
-    if (btnEditar) {
-      btnEditar.disabled = true;
-      btnEditar.innerHTML =
-        '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Cargando...';
-    }
-
     // Buscar el orador en la lista local
     let orador = oradores.find((o) => o.id === id);
 
@@ -1081,230 +1138,520 @@ function setupClickOutsideListener() {
 // Exportar a Excel
 async function exportarAExcel() {
   try {
-    // Verificar si hay datos para exportar
-    if (oradores.length === 0) {
-      console.warn("No hay datos para exportar");
+    // Obtener los datos actualizados de la base de datos
+    const { data: oradores, error } = await supabase
+      .from("oradores")
+      .select(
+        `
+        publicador_id,
+        saliente,
+        publicador:publicador_id (
+          nombre,
+          privilegio_servicio,
+          congregacion:congregacion_id(nombre)
+        )
+      `
+      )
+      .order("publicador_id", { ascending: true });
+
+    if (error) throw error;
+
+    if (!oradores || oradores.length === 0) {
+      mostrarMensaje("No hay oradores para exportar", "warning");
       return;
     }
 
-    // Crear un libro de trabajo de ExcelJS
-    const ExcelJS = window.ExcelJS;
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Oradores");
-
-    // Definir las columnas
-    worksheet.columns = [
-      { header: "Nombre", key: "nombre", width: 30 },
-      { header: "Congregación", key: "congregacion", width: 25 },
-      { header: "Teléfono", key: "telefono", width: 20 },
-      { header: "Correo Electrónico", key: "email", width: 30 },
-      { header: "Disponibilidad", key: "disponibilidad", width: 20 },
+    // Definir encabezados
+    const headers = [
+      "Nombre",
+      "Privilegio de Servicio",
+      "Congregación",
+      "Es Saliente",
     ];
 
-    // Agregar los datos
+    // Formatear los datos para Excel
+    const data = [headers];
+
+    // Mapear los datos para el Excel
     oradores.forEach((orador) => {
-      worksheet.addRow({
-        nombre: orador.nombre || "",
-        congregacion:
-          typeof orador.congregacion === "object"
-            ? orador.congregacion.nombre
-            : orador.congregacion || "",
-        telefono: orador.telefono || "",
-        email: orador.email || "",
-        disponibilidad: orador.disponibilidad || "",
-      });
+      data.push([
+        orador.publicador?.nombre || "Sin nombre",
+        orador.publicador?.privilegio_servicio || "",
+        orador.publicador?.congregacion?.nombre || "Sin congregación",
+        orador.saliente ? "Sí" : "No",
+      ]);
     });
 
-    // Estilizar el encabezado
-    const headerRow = worksheet.getRow(1);
-    headerRow.font = { bold: true };
-    headerRow.fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FFD3D3D3" },
-    };
+    // Crear un nuevo libro de Excel
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(data);
+
+    // Ajustar el ancho de las columnas
+    const columnWidths = [
+      { wch: 30 }, // Nombre
+      { wch: 25 }, // Privilegio de Servicio
+      { wch: 25 }, // Congregación
+      { wch: 15 }, // Es Saliente
+    ];
+    ws["!cols"] = columnWidths;
+
+    // Añadir la hoja al libro
+    XLSX.utils.book_append_sheet(wb, ws, "Oradores");
 
     // Generar el archivo Excel
-    const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `oradores_${new Date().toISOString().split("T")[0]}.xlsx`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+    const fecha = new Date().toISOString().split("T")[0];
+    const fileName = `oradores_${fecha}.xlsx`;
 
-    console.log("Exportación a Excel completada con éxito");
+    try {
+      // Usar XLSX para generar el archivo
+      const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+
+      // Usar FileSaver.js para guardar el archivo
+      const data = new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      // Guardar el archivo usando FileSaver.js
+      saveAs(data, fileName);
+    } catch (e) {
+      console.error("Error al exportar a Excel:", e);
+      throw e; // Relanzar el error para que sea manejado por el catch externo
+    }
+
+    mostrarMensaje("Exportación completada con éxito", "success");
   } catch (error) {
     console.error("Error al exportar a Excel:", error);
+    mostrarMensaje(
+      "Error al exportar a Excel: " + (error.message || "Error desconocido"),
+      "error"
+    );
   }
+}
+
+// Helper function for Excel export
+function s2ab(s) {
+  const buf = new ArrayBuffer(s.length);
+  const view = new Uint8Array(buf);
+  for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xff;
+  return buf;
 }
 
 // Exportar a PDF
 async function exportarAPDF() {
   try {
-    // Verificar si hay datos para exportar
-    if (oradores.length === 0) {
-      console.warn("No hay datos para exportar");
+    // Obtener los datos actualizados de la base de datos
+    const { data: oradores, error } = await supabase
+      .from("oradores")
+      .select(
+        `
+        publicador_id,
+        saliente,
+        publicador:publicador_id (
+          nombre,
+          privilegio_servicio,
+          congregacion:congregacion_id(nombre)
+        )
+      `
+      )
+      .order("publicador_id", { ascending: true });
+
+    if (error) throw error;
+
+    if (!oradores || oradores.length === 0) {
+      mostrarMensaje("No hay oradores para exportar", "warning");
       return;
     }
 
     // Crear un nuevo documento PDF
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+    const doc = new jspdf.jsPDF();
 
     // Título del documento
-    doc.setFontSize(18);
+    doc.setFontSize(20);
     doc.text("Lista de Oradores", 14, 22);
-    doc.setFontSize(11);
-    doc.setTextColor(100);
 
     // Fecha de generación
+    doc.setFontSize(10);
     doc.text(`Generado el: ${new Date().toLocaleDateString()}`, 14, 30);
 
-    // Configuración de la tabla
-    const columns = [
-      { title: "Nombre", dataKey: "nombre" },
-      { title: "Congregación", dataKey: "congregacion" },
-      { title: "Teléfono", dataKey: "telefono" },
-      { title: "Correo", dataKey: "email" },
-      { title: "Disponibilidad", dataKey: "disponibilidad" },
+    // Preparar los datos para la tabla
+    const headers = [
+      "Nombre",
+      "Privilegio de Servicio",
+      "Congregación",
+      "Es Saliente",
     ];
 
-    // Preparar los datos
-    const rows = oradores.map((orador) => ({
-      nombre: orador.nombre || "",
-      congregacion:
-        typeof orador.congregacion === "object"
-          ? orador.congregacion.nombre
-          : orador.congregacion || "",
-      telefono: orador.telefono || "",
-      email: orador.email || "",
-      disponibilidad: orador.disponibilidad || "",
-    }));
+    const datos = oradores.map((orador) => [
+      orador.publicador?.nombre || "Sin nombre",
+      orador.publicador?.privilegio_servicio || "",
+      orador.publicador?.congregacion?.nombre || "Sin congregación",
+      orador.saliente ? "Sí" : "No",
+    ]);
 
     // Agregar la tabla al PDF
     doc.autoTable({
-      head: [columns.map((col) => col.title)],
-      body: rows.map((row) => columns.map((col) => row[col.dataKey])),
+      head: [headers],
+      body: datos,
       startY: 40,
       styles: {
-        fontSize: 9,
-        cellPadding: 3,
-        overflow: "linebreak",
+        fontSize: 8,
+        cellPadding: 2,
+        valign: "middle",
         lineWidth: 0.1,
         lineColor: [0, 0, 0],
       },
       headStyles: {
-        fillColor: [211, 211, 211],
-        textColor: 0,
+        fillColor: [41, 128, 185], // Color azul similar al de la interfaz
+        textColor: 255,
         fontStyle: "bold",
+        halign: "center",
       },
       alternateRowStyles: {
         fillColor: [245, 245, 245],
       },
+      margin: { top: 40 },
     });
 
     // Guardar el PDF
     doc.save(`oradores_${new Date().toISOString().split("T")[0]}.pdf`);
 
-    console.log("Exportación a PDF completada con éxito");
+    mostrarMensaje("Exportación a PDF completada con éxito", "success");
   } catch (error) {
     console.error("Error al exportar a PDF:", error);
+    mostrarMensaje(
+      "Error al exportar a PDF: " + (error.message || "Error desconocido"),
+      "error"
+    );
   }
 }
 
-// Importar desde Excel
-async function importarDesdeExcel() {
+// Función auxiliar para normalizar texto (eliminar acentos y convertir a minúsculas)
+function normalizarTexto(texto) {
+  return texto
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+// Función para buscar un publicador por nombre
+async function buscarPublicadorPorNombre(nombre) {
+  if (!nombre) return null;
+
+  const nombreNormalizado = normalizarTexto(nombre);
+
   try {
-    // Crear un input de tipo archivo
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".xlsx, .xls";
+    // Buscar por coincidencia parcial en el nombre
+    const { data, error } = await supabase
+      .from("publicadores")
+      .select("*")
+      .ilike("nombre", `%${nombre}%`);
 
-    input.onchange = async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
+    if (error) {
+      console.error("Error al buscar publicador:", error);
+      return null;
+    }
 
-      try {
-        // Mostrar mensaje en consola
-        console.log("Procesando archivo, por favor espere...");
+    if (!data || data.length === 0) {
+      console.log(`No se encontró publicador con nombre: ${nombre}`);
+      return null;
+    }
 
-        // Leer el archivo Excel
-        const buffer = await file.arrayBuffer();
-        const ExcelJS = window.ExcelJS;
-        const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.load(buffer);
+    // Buscar coincidencia exacta ignorando mayúsculas/minúsculas y acentos
+    const coincidenciaExacta = data.find(
+      (p) => normalizarTexto(p.nombre) === nombreNormalizado
+    );
 
-        // Obtener la primera hoja
-        const worksheet = workbook.worksheets[0];
-        if (!worksheet) {
-          throw new Error("El archivo no contiene hojas válidas");
+    // Si hay una coincidencia exacta, devolverla, de lo contrario devolver la primera coincidencia
+    const publicador = coincidenciaExacta || data[0];
+    
+    console.log(`Publicador encontrado para '${nombre}':`, publicador);
+    return publicador;
+  } catch (error) {
+    console.error("Error inesperado al buscar publicador:", error);
+    return null;
+  }
+}
+
+// Función para importar oradores desde un archivo Excel
+async function importarDesdeExcel(file) {
+  const loadingSwal = Swal.fire({
+    title: 'Procesando archivo',
+    html: 'Por favor espere mientras se procesa el archivo...',
+    allowOutsideClick: false,
+    didOpen: () => {
+      Swal.showLoading();
+    },
+  });
+
+  try {
+    if (!file) {
+      throw new Error('No se seleccionó ningún archivo');
+    }
+
+
+    try {
+      // Leer el archivo Excel usando XLSX
+      const buffer = await file.arrayBuffer();
+      const data = new Uint8Array(buffer);
+      const workbook = XLSX.read(data, { type: "array" });
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+
+      if (!worksheet) {
+        throw new Error("El archivo no contiene hojas válidas");
+      }
+
+      // Convertir la hoja a JSON
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+      if (jsonData.length < 2) {
+        throw new Error("El archivo está vacío o no contiene datos");
+      }
+
+      // Obtener los encabezados y validar
+      const headers = jsonData[0].map(header => String(header || '').trim().toLowerCase());
+      const requiredHeaders = ["nombre"];
+      const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+
+      if (missingHeaders.length > 0) {
+        throw new Error(`Faltan encabezados requeridos: ${missingHeaders.join(", ")}`);
+      }
+
+      // Procesar filas de datos
+      const filasConErrores = [];
+      const filasConAdvertencias = [];
+      const nuevosOradores = [];
+
+      // Obtener todos los oradores existentes
+      const { data: oradoresActuales, error: errorOradores } = await supabase
+        .from("oradores")
+        .select(`
+          id,
+          publicadores (
+            id,
+            nombre
+          )
+        `);
+
+      if (errorOradores) throw errorOradores;
+
+      // Crear un mapa de oradores existentes por ID y nombre
+      const oradoresPorId = new Map();
+      const oradoresPorNombre = new Map();
+
+      oradoresActuales.forEach((orador) => {
+        if (orador.publicadores) {
+          oradoresPorId.set(orador.publicadores.id, orador);
+          const nombreCompleto = `${orador.publicadores.nombre}`
+            .toLowerCase()
+            .trim();
+          oradoresPorNombre.set(nombreCompleto, orador);
         }
+      });
 
-        // Obtener los datos
-        const data = [];
-        const headers = [];
+      // Procesar cada fila del archivo
+      for (let i = 1; i < jsonData.length; i++) {
+        const row = jsonData[i];
+        if (!row || row.length === 0) continue;
 
-        // Leer la primera fila como encabezados
-        const headerRow = worksheet.getRow(1);
-        headerRow.eachCell((cell, colNumber) => {
-          headers[colNumber] = cell.value?.toString().toLowerCase() || "";
+        const rowData = {};
+        
+        // Mapear los valores a los encabezados
+        headers.forEach((header, index) => {
+          rowData[header] = row[index] !== undefined ? String(row[index]).trim() : '';
         });
 
-        // Validar encabezados requeridos
-        const requiredHeaders = ["nombre"];
-        const missingHeaders = requiredHeaders.filter(
-          (h) => !headers.includes(h)
-        );
-
-        if (missingHeaders.length > 0) {
-          throw new Error(
-            `Faltan encabezados requeridos: ${missingHeaders.join(", ")}`
-          );
+        const nombreCompleto = String(rowData.nombre || '').trim();
+        
+        // Validar nombre
+        if (!nombreCompleto) {
+          filasConErrores.push({
+            fila: i + 1,
+            mensaje: "Nombre vacío"
+          });
+          continue;
         }
 
-        // Leer las filas de datos
-        worksheet.eachRow((row, rowNumber) => {
-          if (rowNumber === 1) return; // Saltar la fila de encabezado
+        // Buscar el publicador por nombre
+        const publicador = await buscarPublicadorPorNombre(nombreCompleto);
 
-          const rowData = {};
-          row.eachCell((cell, colNumber) => {
-            const header = headers[colNumber];
-            if (header) {
-              rowData[header] = cell.value;
-            }
+        if (!publicador) {
+          filasConErrores.push({
+            fila: i + 1,
+            mensaje: `No se encontró el publicador: ${nombreCompleto}`
+          });
+          continue;
+        }
+
+        // Verificar si ya es orador
+        if (oradoresPorId.has(publicador.id)) {
+          filasConAdvertencias.push({
+            fila: i + 1,
+            mensaje: `El publicador ya está en la lista de oradores: ${nombreCompleto}`
+          });
+          continue;
+        }
+
+        // Verificar si hay otro orador con el mismo nombre (caso de nombres duplicados)
+        const nombreNormalizado = normalizarTexto(nombreCompleto);
+        if (
+          Array.from(oradoresPorNombre.keys()).some(
+            (nombre) => normalizarTexto(nombre) === nombreNormalizado
+          )
+        ) {
+          filasConAdvertencias.push({
+            fila: i + 1,
+            mensaje: `Posible duplicado: ${nombreCompleto}`
+          });
+          // Continuamos de todos modos, ya que es solo una advertencia
+        }
+
+        // Agregar a la lista de nuevos oradores
+        nuevosOradores.push({
+          publicador_id: publicador.id,
+          saliente:
+            rowData.saliente === "Sí" ||
+            rowData.saliente === "Si" ||
+            rowData.saliente === "1" ||
+            rowData.saliente === true
+        });
+
+        // Agregar al mapa de oradores para evitar duplicados en esta importación
+        oradoresPorId.set(publicador.id, { publicadores: publicador });
+        oradoresPorNombre.set(nombreCompleto.toLowerCase(), {
+          publicadores: publicador
+        });
+      }
+
+      // Mostrar resumen de advertencias si las hay
+      if (filasConAdvertencias.length > 0) {
+        const mensajeAdvertencias =
+          `Se encontraron ${filasConAdvertencias.length} advertencias. ¿Desea continuar con la importación?<br><br>` +
+          filasConAdvertencias
+            .slice(0, 5)
+            .map(w => `Fila ${w.fila}: ${w.mensaje}`)
+            .join("<br>") +
+          (filasConAdvertencias.length > 5
+            ? `<br>...y ${filasConAdvertencias.length - 5} más.`
+            : "");
+
+          const { isConfirmed } = await Swal.fire({
+            title: "Advertencias",
+            html: mensajeAdvertencias,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Sí, continuar",
+            cancelButtonText: "Cancelar",
+            showLoaderOnConfirm: true,
           });
 
-          if (Object.keys(rowData).length > 0) {
-            data.push(rowData);
+          if (!isConfirmed) {
+            throw new Error("Importación cancelada por el usuario");
           }
-        });
-
-        if (data.length === 0) {
-          throw new Error("No se encontraron datos para importar");
         }
 
-        // Aquí iría la lógica para guardar los datos en Supabase
-        console.log(`Se importaron ${data.length} oradores correctamente`);
+        // Mostrar resumen de errores si los hay
+        if (filasConErrores.length > 0) {
+          const mensajeErrores =
+            `Se encontraron ${filasConErrores.length} errores en el archivo. ` +
+            "Se importarán los registros válidos.<br><br>" +
+            filasConErrores
+              .slice(0, 5)
+              .map((e) => `Fila ${e.fila}: ${e.mensaje}`)
+              .join("<br>") +
+            (filasConErrores.length > 5
+              ? `<br>...y ${filasConErrores.length - 5} más.`
+              : "");
+
+          const { isConfirmed } = await Swal.fire({
+            title: "Errores en el archivo",
+            html: mensajeErrores,
+            icon: "error",
+            showCancelButton: true,
+            confirmButtonText: "Continuar con la importación",
+            cancelButtonText: "Cancelar",
+            showLoaderOnConfirm: true,
+          });
+
+          if (!isConfirmed) {
+            throw new Error("Importación cancelada por el usuario");
+          }
+        }
+
+        // Si no hay oradores para importar, mostrar mensaje y salir
+        if (nuevosOradores.length === 0) {
+          await Swal.fire({
+            title: "Nada que importar",
+            text: "No se encontraron nuevos oradores para importar.",
+            icon: "info"
+          });
+          return;
+        }
+
+        // Insertar los nuevos oradores en lotes para evitar timeouts
+        const batchSize = 50;
+        const totalBatches = Math.ceil(nuevosOradores.length / batchSize);
+        let oradoresImportados = 0;
+
+        for (let i = 0; i < nuevosOradores.length; i += batchSize) {
+          const batch = nuevosOradores.slice(i, i + batchSize);
+          const { error: insertError } = await supabase
+            .from("oradores")
+            .insert(batch);
+
+          if (insertError) throw insertError;
+
+          oradoresImportados += batch.length;
+
+          // Actualizar el progreso
+          const progreso = Math.round(
+            ((i + batch.length) / nuevosOradores.length) * 100
+          );
+          
+          if (Swal.isVisible()) {
+            Swal.update({
+              title: `Importando oradores... (${progreso}%)`,
+              html: `Procesando lote ${Math.ceil((i + batchSize) / batchSize)} de ${totalBatches}<br>${oradoresImportados} de ${nuevosOradores.length} oradores importados`
+            });
+          }
+        }
+
+        // Mostrar mensaje de éxito
+        await Swal.fire({
+          title: "¡Importación exitosa!",
+          text: `Se importaron ${oradoresImportados} oradores correctamente.`,
+          icon: "success"
+        });
 
         // Recargar la lista de oradores
-        cargarOradores();
+        await cargarOradores();
       } catch (error) {
-        console.error("Error al procesar el archivo:", error);
+        console.error("Error durante la importación:", error);
+        
+        // Cerrar cualquier diálogo de carga pendiente
+        if (Swal.isVisible()) {
+          await Swal.hideLoading();
+          await Swal.close();
+        }
+        
+        mostrarMensaje(
+          "Error al importar desde Excel: " + (error.message || "Error desconocido"),
+          "error"
+        );
+      } finally {
+        // Asegurarse de que el diálogo de carga se cierre
+        if (Swal.isVisible()) {
+          await Swal.close();
+        }
       }
-    };
-
-    // Disparar el diálogo de selección de archivo
-    input.click();
-  } catch (error) {
-    console.error("Error en la importación:", error);
+    } catch (error) {
+      console.error("Error en la función importarDesdeExcel:", error);
+      mostrarMensaje(
+        error.message || "Ocurrió un error inesperado al importar desde Excel",
+        "error"
+      );
+    }
   }
-}
 
 // Exportar funciones para acceso global
 window.mostrarModalNuevoOrador = mostrarModalNuevoOrador;
