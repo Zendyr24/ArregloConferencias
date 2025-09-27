@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bosquejos - Gestor de Arreglos</title>
+    <title>Coordinadores - Gestor de Arreglos</title>
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
@@ -12,10 +12,8 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
-    <!-- Estilos principales -->
     <link rel="stylesheet" href="../style.css" />
-    <!-- Estilos específicos para la página de bosquejos -->
-    <link rel="stylesheet" href="../assets/css/bosquejos.css" />
+    <link rel="stylesheet" href="../assets/css/coordinadores.css" />
   </head>
   <body>
     <div class="dashboard">
@@ -25,7 +23,7 @@
           <button class="sidebar-toggle" id="sidebarToggle">
             <i class="fas fa-bars"></i>
           </button>
-          <h1>Bosquejos</h1>
+          <h1>Coordinadores</h1>
         </div>
         <div class="header-right">
           <div class="user-info">
@@ -33,12 +31,12 @@
             <span class="user-role">Administrador</span>
           </div>
           <div class="header-actions">
-            <!--aqui va el boton de logout-->
+            <button id="app-logout-button" class="btn-icon" title="Cerrar sesión">
+              <i class="fas fa-sign-out-alt"></i>
+            </button>
           </div>
         </div>
       </header>
-
-      <!-- Sidebar -->
       <aside class="sidebar" id="sidebar">
         <nav class="sidebar-nav">
           <ul>
@@ -49,21 +47,13 @@
               </a>
             </li>
             <li class="nav-item">
-              <a
-                href="congregaciones.html"
-                class="nav-link"
-                id="nav-congregaciones"
-              >
+              <a href="congregaciones.html" class="nav-link" id="nav-congregaciones">
                 <i class="fas fa-users"></i>
                 <span>Congregaciones</span>
               </a>
             </li>
             <li class="nav-item">
-              <a
-                href="publicadores.html"
-                class="nav-link"
-                id="nav-publicadores"
-              >
+              <a href="publicadores.html" class="nav-link" id="nav-publicadores">
                 <i class="fas fa-user-friends"></i>
                 <span>Publicadores</span>
               </a>
@@ -75,11 +65,7 @@
               </a>
             </li>
             <li class="nav-item">
-              <a
-                href="coordinadores.html"
-                class="nav-link"
-                id="nav-coordinadores"
-              >
+              <a href="coordinadores.html" class="nav-link" id="nav-coordinadores">
                 <i class="fas fa-address-book"></i>
                 <span>Coordinadores</span>
               </a>
@@ -97,11 +83,7 @@
               </a>
             </li>
             <li class="nav-item">
-              <a
-                href="asignaciones.html"
-                class="nav-link"
-                id="nav-asignaciones"
-              >
+              <a href="asignaciones.html" class="nav-link" id="nav-asignaciones">
                 <i class="fas fa-tasks"></i>
                 <span>Asignaciones</span>
               </a>
@@ -122,15 +104,14 @@
         </nav>
       </aside>
 
-      <!-- Main Content -->
       <main class="main-content" id="mainContent">
         <div class="content-section">
           <div class="section-header">
             <div class="section-header-row">
-              <h3>Lista de Bosquejos</h3>
+              <h3>Lista de Coordinadores</h3>
               <div class="btn-group">
-                <button class="btn btn-primary" id="btnNuevoBosquejo">
-                  <i class="fas fa-plus"></i> Nuevo Bosquejo
+                <button id="btnAgregarCoordinador" class="btn btn-primary">
+                  <i class="fas fa-plus"></i> Agregar Coordinador
                 </button>
                 <button class="btn btn-outline" id="toggleImportExport">
                   Importar/Exportar
@@ -139,11 +120,7 @@
               </div>
             </div>
 
-            <div
-              class="import-export-panel"
-              id="importExportPanel"
-              style="display: none"
-            >
+            <div class="import-export-panel" id="importExportPanel">
               <div class="import-export-buttons">
                 <div class="btn-group">
                   <button class="btn btn-outline" id="btnImportar">
@@ -163,30 +140,41 @@
               </div>
             </div>
           </div>
-
+          <!-- Barra de búsqueda -->
           <div class="search-bar">
             <div class="search-input">
               <i class="fas fa-search"></i>
               <input
                 type="text"
-                placeholder="Buscar bosquejos por número o título..."
+                id="buscarCoordinador"
+                placeholder="Buscar coordinadores..."
+                autocomplete="off"
               />
             </div>
           </div>
 
-          <div class="table-responsive">
-            <table class="data-table">
+          <div class="table-container">
+            <table class="data-table" id="tablaCoordinadores">
               <thead>
                 <tr>
-                  <th class="col-numero">Número</th>
-                  <th class="col-titulo">Título</th>
-                  <th class="col-acciones text-center">Acciones</th>
+                  <th class="col-nombre">Nombre</th>
+                  <th class="col-telefono">Teléfono</th>
+                  <th class="col-privilegio">Privilegio</th>
+                  <th class="col-congregacion">Congregación</th>
+                  <th class="col-acciones">Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                <!-- Las filas se cargarán dinámicamente desde JavaScript -->
+                <tr>
+                  <td colspan="5" class="empty-state">Cargando coordinadores...</td>
+                </tr>
               </tbody>
             </table>
+
+            <!-- Versión móvil -->
+            <div class="mobile-table">
+              <div class="mobile-loading">Cargando coordinadores...</div>
+            </div>
 
             <!-- Controles de paginación -->
             <div class="pagination-container">
@@ -216,59 +204,65 @@
       </footer>
     </div>
 
-    <!-- Modal para nuevo bosquejo -->
-    <div
-      class="modal fade"
-      id="modalBosquejo"
-      tabindex="-1"
-      role="dialog"
-      aria-labelledby="modalBosquejoTitle"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog modal-dialog-centered" role="document">
+    <!-- Modal para agregar/editar coordinador -->
+    <div class="modal fade" id="coordinadorModal" tabindex="-1" role="dialog" aria-labelledby="coordinadorModalTitle" aria-hidden="true">
+      <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h2 class="modal-title h5" id="modalBosquejoTitle">
-              Nuevo Bosquejo
+            <h2 class="modal-title h5" id="coordinadorModalTitle">
+              Nuevo Coordinador
             </h2>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-              aria-label="Cerrar modal"
-            >
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar">
               <span class="sr-only">Cerrar</span>
               <i class="fas fa-times" aria-hidden="true"></i>
             </button>
           </div>
           <div class="modal-body">
-            <form id="formBosquejo">
-              <input type="hidden" id="bosquejoId" />
+            <form id="coordinadorForm" onsubmit="return false;">
               <div class="mb-3">
-                <label for="numero" class="form-label">Número</label>
+                <label for="publicador_id" class="form-label">
+                  Seleccionar Publicador <span class="text-danger">*</span>
+                </label>
+                <select class="form-select" id="publicador_id" name="publicador_id" required>
+                  <option value="" selected disabled>
+                    Seleccione un publicador
+                  </option>
+                  <!-- Las opciones se cargarán dinámicamente -->
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label for="telefono" class="form-label">
+                  Teléfono <span class="text-danger">*</span>
+                </label>
                 <input
-                  type="number"
+                  type="tel"
                   class="form-control"
-                  id="numero"
+                  id="telefono"
+                  name="telefono"
+                  placeholder="Ej: +58 412-1234567"
                   required
-                  min="1"
                 />
               </div>
+
               <div class="mb-3">
-                <label for="titulo" class="form-label">Título</label>
-                <input type="text" class="form-control" id="titulo" required />
+                <label for="congregacion_id" class="form-label">
+                  Congregación <span class="text-danger">*</span>
+                </label>
+                <select class="form-select" id="congregacion_id" name="congregacion_id" required>
+                  <option value="" selected disabled>
+                    Seleccione una congregación
+                  </option>
+                  <!-- Las opciones se cargarán dinámicamente -->
+                </select>
               </div>
             </form>
           </div>
           <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-bs-dismiss="modal"
-            >
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
               Cancelar
             </button>
-            <button type="submit" form="formBosquejo" class="btn btn-primary">
+            <button type="button" class="btn btn-primary" id="guardarCoordinador">
               Guardar
             </button>
           </div>
@@ -276,32 +270,49 @@
       </div>
     </div>
 
-    <script type="module" src="../scripts/app.js"></script>
-    <!-- Input oculto para importar archivos -->
-    <input
-      type="file"
-      id="inputArchivo"
-      accept=".xlsx, .xls"
-      style="display: none"
-    />
+    <!-- Confirmación de eliminación -->
+    <div class="modal fade" id="confirmarEliminarModal" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Confirmar Eliminación</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body">
+            ¿Está seguro de que desea eliminar este coordinador? Esta acción no se puede deshacer.
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" data-bs-dismiss="modal">
+              Cancelar
+            </button>
+            <button type="button" class="btn btn-danger" id="confirmarEliminar">
+              <i class="fas fa-trash-alt me-2"></i>Eliminar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
-    <!-- SheetJS CDN para manejo de Excel -->
-    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
-
-    <!-- jsPDF y jspdf-autotable para exportar a PDF -->
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- SheetJS para importación/exportación de Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <!-- jsPDF y jsPDF AutoTable para exportación a PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script>
-      // Hacer que jsPDF esté disponible globalmente
-      window.jsPDF = window.jspdf.jsPDF;
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
-
-    <!-- Authentication Script -->
-    <script type="module" src="../scripts/auth/bosquejos-auth.js"></script>
-    <script type="module" src="../scripts/supabase.js"></script>
-    <script type="module" src="../scripts/bosquejos.js"></script>
-    <script type="module" src="../scripts/sidebar.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <!-- FileSaver.js for handling file downloads -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    
+    <!-- Scripts principales -->
+    <script type="module" src="../scripts/app.js"></script>
     <script type="module" src="../scripts/theme.js"></script>
-    <script type="module" src="../scripts/auth/logout-handler.js"></script>
+    <script type="module" src="../scripts/coordinadores.js"></script>
+    
+    <!-- Loader -->
+    <div id="loader" class="loader-overlay" style="display: none;">
+      <div class="loader-spinner"></div>
+    </div>
   </body>
 </html>

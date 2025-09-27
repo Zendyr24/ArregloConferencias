@@ -32,9 +32,7 @@
             <span class="user-name">Usuario</span>
             <span class="user-role">Administrador</span>
           </div>
-          <div class="header-actions">
-            
-          </div>
+          <div class="header-actions"></div>
         </div>
       </header>
 
@@ -59,7 +57,11 @@
               </a>
             </li>
             <li class="nav-item">
-              <a href="publicadores.html" class="nav-link" id="nav-publicadores">
+              <a
+                href="publicadores.html"
+                class="nav-link"
+                id="nav-publicadores"
+              >
                 <i class="fas fa-user-friends"></i>
                 <span>Publicadores</span>
               </a>
@@ -68,6 +70,16 @@
               <a href="oradores.html" class="nav-link" id="nav-oradores">
                 <i class="fas fa-user-tie"></i>
                 <span>Oradores</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                href="coordinadores.html"
+                class="nav-link"
+                id="nav-coordinadores"
+              >
+                <i class="fas fa-address-book"></i>
+                <span>Coordinadores</span>
               </a>
             </li>
             <li class="nav-item">
@@ -212,11 +224,20 @@
     </div>
 
     <!-- Modal para nueva/editar congregación -->
-    <div class="modal fade" id="modalCongregacion" tabindex="-1" role="dialog" aria-labelledby="modalCongregacionTitle" aria-hidden="true">
+    <div
+      class="modal fade"
+      id="modalCongregacion"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="modalCongregacionTitle"
+      aria-hidden="true"
+    >
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h2 class="modal-title h5" id="modalCongregacionTitle">Nueva Congregación</h2>
+            <h2 class="modal-title h5" id="modalCongregacionTitle">
+              Nueva Congregación
+            </h2>
             <button
               type="button"
               class="btn-close"
@@ -231,7 +252,9 @@
             <form id="formCongregacion" class="needs-validation" novalidate>
               <input type="hidden" id="congregacionId" />
               <div class="mb-3">
-                <label for="nombre" class="form-label">Nombre de la Congregación</label>
+                <label for="nombre" class="form-label"
+                  >Nombre de la Congregación</label
+                >
                 <input type="text" class="form-control" id="nombre" required />
               </div>
               <div class="mb-3">
@@ -240,10 +263,16 @@
               </div>
               <div class="mb-3">
                 <label for="direccion" class="form-label">Dirección</label>
-                <textarea class="form-control" id="direccion" rows="2"></textarea>
+                <textarea
+                  class="form-control"
+                  id="direccion"
+                  rows="2"
+                ></textarea>
               </div>
               <div class="mb-3">
-                <label for="horario" class="form-label">Horario de Reuniones</label>
+                <label for="horario" class="form-label"
+                  >Horario de Reuniones</label
+                >
                 <input
                   type="text"
                   class="form-control"
@@ -254,10 +283,18 @@
             </form>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
               Cancelar
             </button>
-            <button type="submit" form="formCongregacion" class="btn btn-primary">
+            <button
+              type="submit"
+              form="formCongregacion"
+              class="btn btn-primary"
+            >
               Guardar
             </button>
           </div>
@@ -276,10 +313,10 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    
+
     <!-- Authentication Script -->
     <script type="module" src="../scripts/auth/congregaciones-auth.js"></script>
-    
+
     <!-- Application Scripts -->
     <script type="module" src="../scripts/app.js"></script>
     <script type="module" src="../scripts/theme.js"></script>
@@ -292,6 +329,6 @@
       // Hacer jsPDF disponible globalmente
       window.jsPDF = window.jspdf.jsPDF;
     </script>
-      <script type="module" src="../scripts/auth/logout-handler.js"></script>
-</body>
+    <script type="module" src="../scripts/auth/logout-handler.js"></script>
+  </body>
 </html>

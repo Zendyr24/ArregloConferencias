@@ -31,7 +31,11 @@
             <span class="user-role">Administrador</span>
           </div>
           <div class="header-actions">
-            <button id="app-logout-button" class="btn-icon" title="Cerrar sesión">
+            <button
+              id="app-logout-button"
+              class="btn-icon"
+              title="Cerrar sesión"
+            >
               <i class="fas fa-sign-out-alt"></i>
             </button>
           </div>
@@ -70,6 +74,16 @@
               <a href="oradores.html" class="nav-link" id="nav-oradores">
                 <i class="fas fa-user-tie"></i>
                 <span>Oradores</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                href="coordinadores.html"
+                class="nav-link"
+                id="nav-coordinadores"
+              >
+                <i class="fas fa-address-book"></i>
+                <span>Coordinadores</span>
               </a>
             </li>
             <li class="nav-item">
@@ -211,14 +225,24 @@
     </div>
 
     <!-- Modal para agregar/editar orador -->
-    <div class="modal fade" id="oradorModal" tabindex="-1" role="dialog" aria-labelledby="oradorModalTitle" aria-hidden="true">
+    <div
+      class="modal fade"
+      id="oradorModal"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="oradorModalTitle"
+      aria-hidden="true"
+    >
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h2 class="modal-title h5" id="oradorModalTitle">
-              Nuevo Orador
-            </h2>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar">
+            <h2 class="modal-title h5" id="oradorModalTitle">Nuevo Orador</h2>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Cerrar"
+            >
               <span class="sr-only">Cerrar</span>
               <i class="fas fa-times" aria-hidden="true"></i>
             </button>
@@ -229,26 +253,50 @@
                 <label for="publicador_id" class="form-label">
                   Seleccionar Publicador <span class="text-danger">*</span>
                 </label>
-                <select class="form-select" id="publicador_id" name="publicador_id" required>
+                <select
+                  class="form-select"
+                  id="publicador_id"
+                  name="publicador_id"
+                  required
+                >
                   <option value="" selected disabled>
                     Seleccione un publicador (Anciano o Siervo Ministerial)
                   </option>
                   <!-- Las opciones se cargarán dinámicamente -->
                 </select>
-                <small class="form-text text-muted">Solo se muestran publicadores con privilegio de Anciano o Siervo Ministerial</small>
+                <small class="form-text text-muted"
+                  >Solo se muestran publicadores con privilegio de Anciano o
+                  Siervo Ministerial</small
+                >
               </div>
 
               <div class="mb-3 form-check">
-                <input type="checkbox" class="form-check-input" id="saliente" name="saliente">
-                <label class="form-check-label" for="saliente">Orador Saliente</label>
+                <input
+                  type="checkbox"
+                  class="form-check-input"
+                  id="saliente"
+                  name="saliente"
+                />
+                <label class="form-check-label" for="saliente"
+                  >Orador Saliente</label
+                >
               </div>
             </form>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
               Cancelar
             </button>
-            <button type="button" class="btn btn-primary" id="guardarOrador" onclick="guardarOrador(event)">
+            <button
+              type="button"
+              class="btn btn-primary"
+              id="guardarOrador"
+              onclick="guardarOrador(event)"
+            >
               Guardar
             </button>
           </div>
@@ -279,7 +327,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
     <!-- Módulos principales -->
-    
+
     <!-- Confirmación de eliminación -->
     <div
       class="modal fade"
@@ -327,14 +375,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- FileSaver.js for handling file downloads -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-    
+
     <!-- Scripts principales -->
     <script type="module" src="../scripts/app.js"></script>
     <script type="module" src="../scripts/theme.js"></script>
     <script type="module" src="../scripts/oradores.js"></script>
-    
+
     <!-- Loader -->
-    <div id="loader" class="loader-overlay" style="display: none;">
+    <div id="loader" class="loader-overlay" style="display: none">
       <div class="loader-spinner"></div>
     </div>
   </body>

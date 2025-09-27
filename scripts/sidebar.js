@@ -40,6 +40,7 @@ export function initializeSidebar() {
     "congregaciones.html": "nav-congregaciones",
     "publicadores.html": "nav-publicadores",
     "oradores.html": "nav-oradores",
+    "coordinadores.html": "nav-coordinadores",
     "bosquejos.html": "nav-bosquejos",
     "arreglos.html": "nav-arreglos",
     "asignaciones.html": "nav-asignaciones",
