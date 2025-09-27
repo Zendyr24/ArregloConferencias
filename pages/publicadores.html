@@ -249,7 +249,7 @@
             </button>
           </div>
           <div class="modal-body">
-            <form id="publicadorForm" onsubmit="return false;">
+            <form id="publicadorForm" onsubmit="event.preventDefault(); return false;">
               <div class="mb-3">
                 <label for="nombre" class="form-label"
                   >Nombre Completo <span class="text-danger">*</span></label
@@ -340,6 +340,7 @@
               type="submit"
               class="btn btn-primary"
               id="guardarPublicador"
+              form="publicadorForm"
             >
               Guardar
             </button>

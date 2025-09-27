@@ -454,12 +454,52 @@ async function mostrarModalNuevoCoordinador(coordinador = null) {
       }
     } else {
       btnGuardar.removeAttribute("data-id");
-      // Cargar publicadores cuando se seleccione una congregación
-      congregacionSelect.addEventListener("change", async () => {
-        const congregacionId = congregacionSelect.value;
-        await cargarPublicadores(publicadorSelect, congregacionId);
-      });
     }
+    
+    // Cargar publicadores cuando se seleccione una congregación
+    const handleCongregacionChange = async () => {
+      const congregacionId = congregacionSelect.value;
+      console.log('Congregación seleccionada ID:', congregacionId);
+      
+      // Mostrar estado de carga
+      publicadorSelect.disabled = true;
+      publicadorSelect.innerHTML = '<option value="" selected disabled>Cargando publicadores...</option>';
+      
+      try {
+        if (congregacionId) {
+          await cargarPublicadores(publicadorSelect, congregacionId);
+        } else {
+          publicadorSelect.innerHTML = '<option value="" selected disabled>Seleccione una congregación primero</option>';
+        }
+      } catch (error) {
+        console.error('Error al manejar cambio de congregación:', error);
+        publicadorSelect.innerHTML = `
+          <option value="" selected disabled>
+            Error al cargar los publicadores
+          </option>
+        `;
+      } finally {
+        publicadorSelect.disabled = false;
+      }
+    };
+    
+    // Configurar el evento de cambio de congregación
+    const setupCongregacionChange = () => {
+      // Remover cualquier event listener previo para evitar duplicados
+      const newCongregacionSelect = document.getElementById("congregacion_id");
+      if (newCongregacionSelect) {
+        newCongregacionSelect.removeEventListener("change", handleCongregacionChange);
+        newCongregacionSelect.addEventListener("change", handleCongregacionChange);
+        
+        // Si ya hay una congregación seleccionada, cargar sus publicadores
+        if (newCongregacionSelect.value) {
+          handleCongregacionChange();
+        }
+      }
+    };
+    
+    // Configurar el evento después de un breve retraso para asegurar que el DOM esté listo
+    setTimeout(setupCongregacionChange, 100);
 
     // Mostrar el modal
     modal.show();
@@ -498,27 +538,69 @@ async function cargarCongregaciones(selectElement) {
 // Cargar publicadores de una congregación en un select
 async function cargarPublicadores(selectElement, congregacionId, publicadorSeleccionadoId = null) {
   try {
+    console.log('Cargando publicadores para congregación ID:', congregacionId);
+    
+    if (!congregacionId) {
+      console.error('No se proporcionó un ID de congregación válido');
+      selectElement.innerHTML = '<option value="" selected disabled>Seleccione una congregación primero</option>';
+      return;
+    }
+
     const { data: publicadores, error } = await supabase
       .from('publicadores')
       .select('id, nombre')
       .eq('congregacion_id', congregacionId)
       .order('nombre', { ascending: true });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error en la consulta de publicadores:', error);
+      throw error;
+    }
+
+    console.log('Publicadores encontrados:', publicadores);
 
     // Limpiar opciones existentes
-    selectElement.innerHTML = '<option value="" selected disabled>Seleccione un publicador</option>';
+    selectElement.innerHTML = '';
+    
+    // Agregar opción por defecto
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = 'Seleccione un publicador';
+    defaultOption.disabled = true;
+    defaultOption.selected = true;
+    selectElement.appendChild(defaultOption);
 
-    // Agregar opciones
+    // Verificar si hay publicadores
+    if (publicadores.length === 0) {
+      const noDataOption = document.createElement('option');
+      noDataOption.value = '';
+      noDataOption.textContent = 'No hay publicadores disponibles';
+      noDataOption.disabled = true;
+      selectElement.appendChild(noDataOption);
+      return;
+    }
+
+    // Agregar publicadores
     publicadores.forEach(publicador => {
       const option = document.createElement('option');
       option.value = publicador.id;
       option.textContent = publicador.nombre;
-      option.selected = (publicadorSeleccionadoId && publicador.id === publicadorSeleccionadoId);
+      
+      // Marcar como seleccionado si coincide con el ID proporcionado
+      if (publicadorSeleccionadoId && publicador.id === publicadorSeleccionadoId) {
+        option.selected = true;
+      }
+      
       selectElement.appendChild(option);
     });
   } catch (error) {
     console.error("Error al cargar los publicadores:", error);
+    // Mostrar mensaje de error en el select
+    selectElement.innerHTML = `
+      <option value="" selected disabled>
+        Error al cargar los publicadores
+      </option>
+    `;
     throw error;
   }
 }
@@ -681,9 +763,7 @@ async function confirmarEliminarCoordinador(id) {
 }
 
 // Eliminar coordinador
-async function eliminarCoordinador() {
-  const id = document.getElementById("confirmarEliminar").getAttribute("data-id");
-  
+async function eliminarCoordinador(id) {
   if (!id) {
     console.error("No se proporcionó un ID de coordinador para eliminar");
     return;

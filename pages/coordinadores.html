@@ -220,14 +220,25 @@
           <div class="modal-body">
             <form id="coordinadorForm" onsubmit="return false;">
               <div class="mb-3">
+                <label for="congregacion_id" class="form-label">
+                  Congregación <span class="text-danger">*</span>
+                </label>
+                <select class="form-select" id="congregacion_id" name="congregacion_id" required>
+                  <option value="" selected disabled>
+                    Seleccione una congregación
+                  </option>
+                  <!-- Las opciones se cargarán dinámicamente -->
+                </select>
+              </div>
+
+              <div class="mb-3">
                 <label for="publicador_id" class="form-label">
                   Seleccionar Publicador <span class="text-danger">*</span>
                 </label>
-                <select class="form-select" id="publicador_id" name="publicador_id" required>
+                <select class="form-select" id="publicador_id" name="publicador_id" required disabled>
                   <option value="" selected disabled>
-                    Seleccione un publicador
+                    Primero seleccione una congregación
                   </option>
-                  <!-- Las opciones se cargarán dinámicamente -->
                 </select>
               </div>
 
@@ -243,18 +254,6 @@
                   placeholder="Ej: +58 412-1234567"
                   required
                 />
-              </div>
-
-              <div class="mb-3">
-                <label for="congregacion_id" class="form-label">
-                  Congregación <span class="text-danger">*</span>
-                </label>
-                <select class="form-select" id="congregacion_id" name="congregacion_id" required>
-                  <option value="" selected disabled>
-                    Seleccione una congregación
-                  </option>
-                  <!-- Las opciones se cargarán dinámicamente -->
-                </select>
               </div>
             </form>
           </div>

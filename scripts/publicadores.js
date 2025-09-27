@@ -1175,9 +1175,12 @@ async function manejarEnvioFormulario(event) {
   const submitButton = form.querySelector('button[type="submit"]');
   
   // Deshabilitar el botón de envío para evitar múltiples envíos
-  const originalButtonText = submitButton.innerHTML;
-  submitButton.disabled = true;
-  submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...';
+  let originalButtonText = '';
+  if (submitButton) {
+    originalButtonText = submitButton.innerHTML || 'Guardar';
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...';
+  }
   
   try {
     // Obtener el ID del publicador del formulario
@@ -1282,7 +1285,9 @@ async function manejarEnvioFormulario(event) {
     // Restaurar el estado del botón de envío
     if (submitButton) {
       submitButton.disabled = false;
-      submitButton.innerHTML = originalButtonText;
+      if (originalButtonText) {
+        submitButton.innerHTML = originalButtonText;
+      }
     }
   }
 }
@@ -1335,15 +1340,31 @@ function inicializarModal() {
   });
 
   // Manejar el envío del formulario
-  newForm.addEventListener('submit', function handleSubmit(e) {
-    e.preventDefault();
-    manejarEnvioFormulario(e).then(() => {
-      // Cerrar el modal después de guardar exitosamente
-      publicadorModal.hide();
-    }).catch(error => {
-      console.error('Error al procesar el formulario:', error);
+  const form = document.getElementById('publicadorForm');
+  if (form) {
+    form.addEventListener('submit', async function handleSubmit(e) {
+      e.preventDefault();
+      const submitButton = this.querySelector('button[type="submit"]');
+      const originalButtonText = submitButton ? submitButton.innerHTML : '';
+      
+      try {
+        if (submitButton) {
+          submitButton.disabled = true;
+          submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...';
+        }
+        
+        await manejarEnvioFormulario(e);
+        publicadorModal.hide();
+      } catch (error) {
+        console.error('Error al procesar el formulario:', error);
+      } finally {
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.innerHTML = originalButtonText;
+        }
+      }
     });
-  });
+  }
   
   // Limpiar recursos cuando el modal se cierre
   modalElement.addEventListener('hidden.bs.modal', function() {
