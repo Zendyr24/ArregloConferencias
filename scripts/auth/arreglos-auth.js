@@ -1,3 +1,4 @@
+// scripts/auth/arreglos-auth.js
 import {
   isAuthenticated,
   updateUserInfo,

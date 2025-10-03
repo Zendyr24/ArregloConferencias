@@ -1,12 +1,8 @@
 // scripts/arreglos.js
 import { supabase } from "./supabase.js";
 import { db } from "./db.js";
-import {
-  isAuthenticated,
-  redirectToLogin,
-  updateUserInfo,
-  getCurrentUser,
-} from "./auth/auth-utils.js";
+import "./auth/arreglos-auth.js"; // Importa el archivo de autenticación
+import { isAuthenticated, updateUserInfo, redirectToLogin, getCurrentUser } from "./auth/auth-utils.js";
 
 // Variable global para la instancia del calendario
 let calendar;
@@ -31,8 +27,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Cargar los arreglos en el calendario
     await cargarArreglos();
-
-   } catch (error) {
+  } catch (error) {
     console.error("Error al inicializar el módulo de arreglos:", error);
     mostrarNotificacion("Error al inicializar el módulo de arreglos", "error");
   }
@@ -77,17 +72,12 @@ function inicializarCalendario() {
 // Cargar programas con sus arreglos desde Supabase
 async function cargarArreglos() {
   try {
-    // Obtener el usuario actual
+    // Obtener el usuario actual del localStorage
     const user = getCurrentUser();
-
+    
     if (!user) {
       console.error("No se pudo obtener la información del usuario");
-      mostrarNotificacion(
-        "Error de autenticación. Por favor, inicie sesión nuevamente.",
-        "error"
-      );
-      redirectToLogin();
-      return;
+      return [];
     }
 
     // Obtener la organización del usuario
@@ -116,28 +106,29 @@ async function cargarArreglos() {
         id,
         fecha,
         tipo,
-        organizacion_id,
         arreglos:arreglo(
           id,
           tipo_movimiento,
+          orador_id,
+          bosquejo_id,
+          congregacion_destino_id,
           descripcion,
-          orador:oradores!inner(
+          orador:orador_id(
             id,
-            publicador:publicadores(
+            publicador:publicador_id(
               id,
               nombre,
-              privilegio_servicio,
-              congregacion:congregacion(
+              congregacion:congregacion_id(
                 id,
                 nombre,
                 circuito
               )
             )
           ),
-          bosquejo:bosquejos(
+          bosquejo:bosquejo_id(
             id,
-            numero,
-            titulo
+            titulo,
+            numero
           ),
           congregacion_destino:congregacion_destino_id(
             id,
@@ -158,125 +149,88 @@ async function cargarArreglos() {
       return [];
     }
 
-    // Convertir los programas y sus arreglos al formato de eventos del calendario
+    // Limpiar el calendario
+    const calendarEl = document.getElementById("calendar");
+    if (!calendarEl) return [];
+
+    const calendar = new FullCalendar.Calendar(calendarEl);
+    calendar.removeAllEvents();
+
+    // Procesar cada programa y sus arreglos
     const eventos = [];
-    
-    programas.forEach(programa => {
-      const startDate = new Date(programa.fecha);
-      const endDate = new Date(startDate);
-      
-      // Establecer 1 hora de duración por defecto
-      endDate.setHours(startDate.getHours() + 1);
 
-      // Crear un evento principal para el programa
-      eventos.push({
-        id: `programa_${programa.id}`,
-        title: `Programa: ${programa.tipo || 'Sin título'}`,
-        start: startDate,
-        end: endDate,
+    programas.forEach((programa) => {
+      // Crear un evento para el programa
+      const eventoPrograma = {
+        id: `programa-${programa.id}`,
+        title: `Programa: ${programa.tipo}`,
+        start: programa.fecha_hora,
         allDay: false,
+        backgroundColor: "#4e73df",
+        borderColor: "#4e73df",
+        textColor: "#fff",
         extendedProps: {
-          tipo: 'programa',
-          programa_id: programa.id,
-          tipo_programa: programa.tipo,
-          organizacion_id: programa.organizacion_id,
-          arreglos: programa.arreglos || []
+          tipo: "programa",
+          programaId: programa.id,
+          arreglos: programa.arreglos || [],
         },
-        backgroundColor: '#4a6baf',
-        borderColor: '#3a5a9a',
-        textColor: '#ffffff'
-      });
+      };
 
-      // Crear eventos individuales para cada arreglo
+      eventos.push(eventoPrograma);
+
+      // Crear eventos para cada arreglo del programa
       if (programa.arreglos && programa.arreglos.length > 0) {
         programa.arreglos.forEach((arreglo, index) => {
-          const orador = arreglo.orador?.publicador;
-          const oradorNombre = orador ? `${orador.nombre} ${orador.apellido || ''}`.trim() : 'Orador no especificado';
-          const bosquejo = arreglo.bosquejo;
-          const bosquejoInfo = bosquejo ? `Bosquejo ${bosquejo.numero}: ${bosquejo.titulo}` : 'Sin bosquejo';
-          const congregacionDestino = arreglo.congregacion_destino;
-          const tipoMovimiento = arreglo.tipo_movimiento || 'interno';
-          
-          // Determinar el título según el tipo de movimiento
-          let title = oradorNombre;
-          if (tipoMovimiento === 'saliente') {
-            title = `→ ${oradorNombre}`;
-            if (congregacionDestino?.nombre) {
-              title += ` → ${congregacionDestino.nombre}`;
-            }
-          } else if (tipoMovimiento === 'entrante') {
-            title = `← ${oradorNombre}`;
-            if (congregacionDestino?.nombre) {
-              title = `${congregacionDestino.nombre} ${title}`;
-            }
-          }
+          const tituloArreglo = `Arreglo: ${arreglo.tipo_movimiento}`;
+          const descripcion = `${arreglo.orador?.nombre || "Sin orador"} - ${
+            arreglo.bosquejo?.titulo || "Sin bosquejo"
+          }`;
 
-          eventos.push({
-            id: `arreglo_${arreglo.id}`,
-            groupId: `programa_${programa.id}`,
-            title: title,
-            start: startDate,
-            end: endDate,
+          const eventoArreglo = {
+            id: `arreglo-${arreglo.id}`,
+            groupId: `programa-${programa.id}`,
+            title: tituloArreglo,
+            start: programa.fecha_hora,
             allDay: false,
+            backgroundColor: obtenerColorPorEstado(
+              arreglo.estado || "pendiente"
+            ),
+            borderColor: obtenerColorPorEstado(arreglo.estado || "pendiente"),
+            textColor: obtenerColorTextoPorEstado(
+              arreglo.estado || "pendiente"
+            ),
             extendedProps: {
-              tipo: 'arreglo',
-              programa_id: programa.id,
-              arreglo_id: arreglo.id,
-              tipo_movimiento: tipoMovimiento,
-              orador_id: arreglo.orador_id,
-              orador_nombre: oradorNombre,
-              bosquejo_id: bosquejo?.id,
-              bosquejo_info: bosquejoInfo,
-              congregacion_destino_id: arreglo.congregacion_destino_id,
-              congregacion_destino: congregacionDestino?.nombre,
-              notas: arreglo.notas,
-              organizacion_id: programa.organizacion_id
+              tipo: "arreglo",
+              programaId: programa.id,
+              arregloId: arreglo.id,
+              descripcion: descripcion,
+              tipoMovimiento: arreglo.tipo_movimiento,
+              orador: arreglo.orador,
+              bosquejo: arreglo.bosquejo,
+              congregacionDestino: arreglo.congregacion_destino,
+              observaciones: arreglo.observaciones,
+              estado: arreglo.estado || "pendiente",
             },
-            backgroundColor: obtenerColorPorTipoMovimiento(tipoMovimiento),
-            borderColor: oscurecerColor(obtenerColorPorTipoMovimiento(tipoMovimiento)),
-            textColor: '#ffffff',
-            className: `tipo-movimiento-${tipoMovimiento}`
-          });
+          };
+
+          eventos.push(eventoArreglo);
         });
       }
     });
 
-    // Función auxiliar para obtener color según el tipo de movimiento
-    function obtenerColorPorTipoMovimiento(tipo) {
-      const colores = {
-        saliente: '#e74c3c',  // Rojo para salientes
-        entrante: '#2ecc71',  // Verde para entrantes
-        interno: '#3498db'    // Azul para internos
-      };
-      return colores[tipo] || '#95a5a6';  // Gris por defecto
-    }
-
-    // Función para oscurecer un color (para el borde)
-    function oscurecerColor(hex, porcentaje = 20) {
-      // Convertir a RGB
-      let r = parseInt(hex.slice(1, 3), 16);
-      let g = parseInt(hex.slice(3, 5), 16);
-      let b = parseInt(hex.slice(5, 7), 16);
-
-      // Oscurecer
-      r = Math.max(0, r - (r * porcentaje / 100));
-      g = Math.max(0, g - (g * porcentaje / 100));
-      b = Math.max(0, b - (b * porcentaje / 100));
-
-      // Volver a convertir a HEX
-      return `#${Math.round(r).toString(16).padStart(2, '0')}${Math.round(g).toString(16).padStart(2, '0')}${Math.round(b).toString(16).padStart(2, '0')}`;
-    }
-
-    // Actualizar el calendario con los eventos
-    calendar.removeAllEvents();
+    // Agregar eventos al calendario
     calendar.addEventSource(eventos);
+
+    // Actualizar la lista de próximos eventos
     actualizarProximosEventos(eventos);
-    
+
     return eventos;
+
+    // Cerrar el bloque try y agregar manejo de errores
   } catch (error) {
-    console.error("Error inesperado al cargar arreglos:", error);
+    console.error("Error al cargar los arreglos:", error);
     mostrarNotificacion(
-      "Error al cargar los arreglos. Por favor, intente nuevamente.",
+      "Error al cargar los arreglos. Por favor, intente de nuevo.",
       "error"
     );
     return [];
@@ -471,136 +425,170 @@ async function mostrarModalArreglo(programa = {}) {
     const esNuevo = !programa.id;
 
     // Actualizar el título del modal
-    document.getElementById('modalTitulo').textContent = esNuevo ? 'Nuevo Programa' : 'Editar Programa';
-    
+    document.getElementById("modalTitulo").textContent = esNuevo
+      ? "Nuevo Programa"
+      : "Editar Programa";
+
     // Actualizar ID del programa si existe
-    if (!esNuevo) {
-      document.getElementById('programaId').value = programa.id;
-    } else {
-      document.getElementById('programaId').value = '';
+    const programaIdInput = document.getElementById("programaId");
+    if (programaIdInput) {
+      programaIdInput.value = esNuevo ? "" : programa.id;
     }
 
     // Actualizar fecha y hora del programa
-    const fechaHoraInicio = programa.fecha_hora_inicio ? new Date(programa.fecha_hora_inicio) : new Date();
-    const fechaHoraFin = programa.fecha_hora_fin ? new Date(programa.fecha_hora_fin) : new Date(fechaHoraInicio);
-    
-    // Si no hay hora de finalización, establecer 1 hora después
-    if (!programa.fecha_hora_fin) {
-      fechaHoraFin.setHours(fechaHoraInicio.getHours() + 1);
+    const fechaHoraInput = document.getElementById("fechaHora");
+    if (fechaHoraInput) {
+      const fechaHora = programa.fecha_hora
+        ? new Date(programa.fecha_hora)
+        : new Date();
+      fechaHoraInput.value = formatearFechaParaInput(fechaHora);
     }
 
-    // Formatear fechas para los inputs
-    document.getElementById('fechaHora').value = formatearFechaParaInput(fechaHoraInicio);
-    
     // Actualizar tipo de programa
-    if (programa.tipo_programa) {
-      document.getElementById('tipoPrograma').value = programa.tipo_programa;
-    } else {
-      document.getElementById('tipoPrograma').value = 'reunion'; // Valor por defecto
+    const tipoProgramaSelect = document.getElementById("tipoPrograma");
+    if (tipoProgramaSelect) {
+      tipoProgramaSelect.value = programa.tipo || "reunion"; // Valor por defecto
     }
 
     // Limpiar contenedor de arreglos
-    const arreglosContainer = document.getElementById('arreglosContainer');
-    arreglosContainer.innerHTML = '';
-    
-    // Mostrar mensaje si no hay arreglos
-    const sinArreglosMensaje = document.getElementById('sinArreglosMensaje');
-    
-    // Cargar arreglos existentes si los hay
-    if (programa.arreglos && programa.arreglos.length > 0) {
-      if (sinArreglosMensaje) {
-        sinArreglosMensaje.style.display = 'none';
+    const arreglosContainer = document.getElementById("arreglosContainer");
+    if (arreglosContainer) {
+      arreglosContainer.innerHTML = "";
+
+      // Mostrar mensaje si no hay arreglos
+      const sinArreglosMensaje = document.getElementById("sinArreglosMensaje");
+
+      // Si hay arreglos existentes, mostrarlos
+      if (programa.arreglos && programa.arreglos.length > 0) {
+        if (sinArreglosMensaje) {
+          sinArreglosMensaje.style.display = "none";
+        }
+        programa.arreglos.forEach((arreglo, index) => {
+          agregarArregloAlFormulario(
+            arreglo,
+            index,
+            oradores,
+            congregaciones,
+            bosquejos
+          );
+        });
+      } else if (esNuevo) {
+        // Si es un programa nuevo, agregar un arreglo vacío por defecto
+        const arregloVacio = {
+          tipo_movimiento: "saliente",
+          orador_id: "",
+          bosquejo_id: "",
+          congregacion_id: "",
+          observaciones: "",
+        };
+        agregarArregloAlFormulario(
+          arregloVacio,
+          0,
+          oradores,
+          congregaciones,
+          bosquejos
+        );
+      } else if (sinArreglosMensaje) {
+        // Mostrar mensaje si no hay arreglos y no es un programa nuevo
+        sinArreglosMensaje.style.display = "block";
       }
-      programa.arreglos.forEach((arreglo, index) => {
-        agregarArregloAlFormulario(arreglo, index, oradores, congregaciones, bosquejos);
-      });
-    } else if (sinArreglosMensaje) {
-      sinArreglosMensaje.style.display = 'block';
     }
 
+    // Configurar eventos del modal
+    configurarEventosModal(programa);
+
+    // Mostrar el modal
+    const modal = new bootstrap.Modal(document.getElementById("arregloModal"));
+    modal.show();
+
     // Configurar botón de agregar arreglo
-    const btnAgregarArreglo = document.getElementById('btnAgregarArreglo');
+    const btnAgregarArreglo = document.getElementById("btnAgregarArreglo");
     if (btnAgregarArreglo) {
       btnAgregarArreglo.onclick = () => {
-        agregarArregloAlFormulario(null, document.querySelectorAll('.arreglo-card').length, oradores, congregaciones, bosquejos);
+        agregarArregloAlFormulario(
+          null,
+          document.querySelectorAll(".arreglo-card").length,
+          oradores,
+          congregaciones,
+          bosquejos
+        );
+        const sinArreglosMensaje =
+          document.getElementById("sinArreglosMensaje");
         if (sinArreglosMensaje) {
-          sinArreglosMensaje.style.display = 'none';
+          sinArreglosMensaje.style.display = "none";
         }
       };
     }
 
     // Mostrar u ocultar botón de eliminar programa
-    const btnEliminarPrograma = document.getElementById('btnEliminarPrograma');
+    const btnEliminarPrograma = document.getElementById("btnEliminarPrograma");
     if (btnEliminarPrograma) {
-      btnEliminarPrograma.style.display = esNuevo ? 'none' : 'block';
-    }
-
-    // Inicializar el modal de Bootstrap
-    const modalElement = document.getElementById('arregloModal');
-    if (modalElement) {
-      // Eliminar cualquier instancia previa del modal
-      const modalInstance = bootstrap.Modal.getInstance(modalElement);
-      if (modalInstance) {
-        modalInstance.dispose();
-      }
-      
-      // Inicializar el modal
-      const modal = new bootstrap.Modal(modalElement);
-      modal.show();
-
-      // Configurar manejadores de eventos del modal
-      configurarEventosModal(programa);
+      btnEliminarPrograma.style.display = esNuevo ? "none" : "block";
     }
   } catch (error) {
-    console.error('Error al cargar el modal de arreglo:', error);
-    mostrarNotificacion('Error al cargar el formulario', 'error');
+    console.error("Error al mostrar el modal de arreglo:", error);
+    mostrarNotificacion("Error al cargar el formulario de arreglo", "error");
   }
 }
 
 // Función para agregar un formulario de arreglo al contenedor
-function agregarArregloAlFormulario(arreglo, index, oradores, congregaciones, bosquejos) {
-  const arreglosContainer = document.getElementById('arreglosContainer');
-  const arregloId = arreglo ? `arreglo-${arreglo.id}` : `nuevo-arreglo-${Date.now()}`;
+function agregarArregloAlFormulario(
+  arreglo,
+  index,
+  oradores,
+  congregaciones,
+  bosquejos
+) {
+  const arreglosContainer = document.getElementById("arreglosContainer");
+  const arregloId = arreglo
+    ? `arreglo-${arreglo.id}`
+    : `nuevo-arreglo-${Date.now()}`;
   const esNuevo = !arreglo || !arreglo.id;
-  
+
   // Crear el elemento del arreglo
-  const arregloElement = document.createElement('div');
-  arregloElement.className = 'card mb-3 arreglo-card';
+  const arregloElement = document.createElement("div");
+  arregloElement.className = "card mb-3 arreglo-card";
   arregloElement.dataset.arregloId = arregloId;
-  
+
   // Crear el encabezado del card con los colores globales
-  const cardHeader = document.createElement('div');
-  cardHeader.className = 'card-header text-center bg-primary text-white';
-  cardHeader.style.borderBottom = '1px solid var(--color-border)';
+  const cardHeader = document.createElement("div");
+  cardHeader.className = "card-header text-center bg-primary text-white";
+  cardHeader.style.borderBottom = "1px solid var(--color-border)";
   cardHeader.innerHTML = `
     <h5 class="mb-0 fw-semibold">Arreglo #${index + 1}</h5>
   `;
-  
+
   // Crear el cuerpo del card
-  const cardBody = document.createElement('div');
-  cardBody.className = 'card-body';
-  
+  const cardBody = document.createElement("div");
+  cardBody.className = "card-body";
+
   // Crear el formulario de arreglo
-  const form = document.createElement('form');
-  form.className = 'arreglo-form';
+  const form = document.createElement("form");
+  form.className = "arreglo-form";
   form.dataset.arregloId = arregloId;
-  
+
   // Si es un arreglo existente, agregar el ID oculto
   if (!esNuevo) {
     form.innerHTML += `
       <input type="hidden" name="arregloId" value="${arreglo.id}">
     `;
   }
-  
+
   // Tipo de movimiento
   form.innerHTML = `
     <div class="mb-3">
       <label class="form-label">Tipo de Movimiento</label>
       <select class="form-select tipo-movimiento" name="tipo_movimiento" required>
         <option value="">Seleccione un tipo</option>
-        <option value="saliente" ${arreglo?.tipo_movimiento === 'saliente' ? 'selected' : ''}>Orador que sale</option>
-        <option value="entrante" ${arreglo?.tipo_movimiento === 'entrante' ? 'selected' : ''}>Orador que entra</option>
-        <option value="interno" ${arreglo?.tipo_movimiento === 'interno' ? 'selected' : ''}>Orador interno</option>
+        <option value="saliente" ${
+          arreglo?.tipo_movimiento === "saliente" ? "selected" : ""
+        }>Orador que sale</option>
+        <option value="entrante" ${
+          arreglo?.tipo_movimiento === "entrante" ? "selected" : ""
+        }>Orador que entra</option>
+        <option value="interno" ${
+          arreglo?.tipo_movimiento === "interno" ? "selected" : ""
+        }>Orador interno</option>
       </select>
     </div>
     
@@ -610,15 +598,21 @@ function agregarArregloAlFormulario(arreglo, index, oradores, congregaciones, bo
           <label class="form-label">Orador</label>
           <select class="form-select orador-select" name="orador_id" required>
             <option value="">Seleccione un orador</option>
-            ${oradores.map(orador => `
+            ${oradores
+              .map(
+                (orador) => `
               <option value="${orador.id}" 
                       data-congregacion-id="${orador.congregacion_id}"
                       data-congregacion-nombre="${orador.congregacion_nombre}"
-                      data-congregacion-circuito="${orador.congregacion_circuito || ''}"
-                      ${arreglo?.orador_id === orador.id ? 'selected' : ''}>
+                      data-congregacion-circuito="${
+                        orador.congregacion_circuito || ""
+                      }"
+                      ${arreglo?.orador_id === orador.id ? "selected" : ""}>
                 ${orador.nombre} (${orador.congregacion_nombre})
               </option>
-            `).join('')}
+            `
+              )
+              .join("")}
           </select>
         </div>
       </div>
@@ -627,11 +621,17 @@ function agregarArregloAlFormulario(arreglo, index, oradores, congregaciones, bo
           <label class="form-label">Bosquejo</label>
           <select class="form-select bosquejo-select" name="bosquejo_id" required>
             <option value="">Seleccione un bosquejo</option>
-            ${bosquejos.map(bosquejo => `
-              <option value="${bosquejo.id}" ${arreglo?.bosquejo_id === bosquejo.id ? 'selected' : ''}>
+            ${bosquejos
+              .map(
+                (bosquejo) => `
+              <option value="${bosquejo.id}" ${
+                  arreglo?.bosquejo_id === bosquejo.id ? "selected" : ""
+                }>
                 ${bosquejo.numero}. ${bosquejo.titulo}
               </option>
-            `).join('')}
+            `
+              )
+              .join("")}
           </select>
         </div>
       </div>
@@ -642,10 +642,16 @@ function agregarArregloAlFormulario(arreglo, index, oradores, congregaciones, bo
         <div class="mb-3">
           <label class="form-label">Congregación de Origen</label>
           <div class="form-control-plaintext congregacion-origen-display" style="min-height: 38px; padding: 0.375rem 0.75rem; border: 1px solid transparent;">
-            ${arreglo?.congregacion_origen_nombre || 'Seleccione un orador'}
-            ${arreglo?.congregacion_origen_circuito ? `(${arreglo.congregacion_origen_circuito})` : ''}
+            ${arreglo?.congregacion_origen_nombre || "Seleccione un orador"}
+            ${
+              arreglo?.congregacion_origen_circuito
+                ? `(${arreglo.congregacion_origen_circuito})`
+                : ""
+            }
           </div>
-          <input type="hidden" class="congregacion-origen" name="congregacion_origen_id" value="${arreglo?.congregacion_origen_id || ''}">
+          <input type="hidden" class="congregacion-origen" name="congregacion_origen_id" value="${
+            arreglo?.congregacion_origen_id || ""
+          }">
         </div>
       </div>
       <div class="col-md-6">
@@ -653,11 +659,17 @@ function agregarArregloAlFormulario(arreglo, index, oradores, congregaciones, bo
           <label class="form-label">Congregación de Destino</label>
           <select class="form-select congregacion-destino" name="congregacion_destino_id">
             <option value="">Seleccione una congregación</option>
-            ${congregaciones.map(cong => `
-              <option value="${cong.id}" ${arreglo?.congregacion_destino_id === cong.id ? 'selected' : ''}>
+            ${congregaciones
+              .map(
+                (cong) => `
+              <option value="${cong.id}" ${
+                  arreglo?.congregacion_destino_id === cong.id ? "selected" : ""
+                }>
                 ${cong.nombre} (${cong.circuito})
               </option>
-            `).join('')}
+            `
+              )
+              .join("")}
           </select>
         </div>
       </div>
@@ -665,109 +677,127 @@ function agregarArregloAlFormulario(arreglo, index, oradores, congregaciones, bo
     
     <div class="mb-3">
   `;
-  
+
   // Agregar el formulario al card body
   cardBody.appendChild(form);
-  
+
   // Crear el footer del card para el botón de eliminar
-  const cardFooter = document.createElement('div');
-  cardFooter.className = 'card-footer text-center';
+  const cardFooter = document.createElement("div");
+  cardFooter.className = "card-footer text-center";
   cardFooter.innerHTML = `
     <button type="button" class="btn btn-outline-danger btn-sm btn-eliminar-arreglo" data-arreglo-id="${arregloId}">
       <i class="fas fa-trash me-1"></i> Eliminar Arreglo
     </button>
   `;
-  
+
   // Agregar elementos al DOM
   arregloElement.appendChild(cardHeader);
   arregloElement.appendChild(cardBody);
   arregloElement.appendChild(cardFooter);
   arreglosContainer.appendChild(arregloElement);
-  
+
   // Obtener referencias a los elementos del formulario
-  const congregacionOrigenSelect = arregloElement.querySelector('.congregacion-origen');
-  const congregacionDestinoSelect = arregloElement.querySelector('.congregacion-destino');
-  const oradorSelect = arregloElement.querySelector('.orador-select');
-  const tipoMovimientoSelect = arregloElement.querySelector('.tipo-movimiento');
-  
+  const congregacionOrigenSelect = arregloElement.querySelector(
+    ".congregacion-origen"
+  );
+  const congregacionDestinoSelect = arregloElement.querySelector(
+    ".congregacion-destino"
+  );
+  const oradorSelect = arregloElement.querySelector(".orador-select");
+  const tipoMovimientoSelect = arregloElement.querySelector(".tipo-movimiento");
+
   // Función para actualizar la congregación de origen basada en el orador seleccionado
   const actualizarCongregacionOrigen = () => {
     const oradorOption = oradorSelect.options[oradorSelect.selectedIndex];
-    const congregacionOrigenDisplay = arregloElement.querySelector('.congregacion-origen-display');
-    const congregacionOrigenInput = arregloElement.querySelector('.congregacion-origen');
-    
+    const congregacionOrigenDisplay = arregloElement.querySelector(
+      ".congregacion-origen-display"
+    );
+    const congregacionOrigenInput = arregloElement.querySelector(
+      ".congregacion-origen"
+    );
+
     if (oradorOption && oradorOption.dataset.congregacionId) {
       // Actualizar el display y el input oculto
-      const nombreCongregacion = oradorOption.dataset.congregacionNombre || '';
-      const circuitoCongregacion = oradorOption.dataset.congregacionCircuito || '';
-      const displayText = `${nombreCongregacion}${circuitoCongregacion ? ` (${circuitoCongregacion})` : ''}`;
-      
-      congregacionOrigenDisplay.textContent = displayText || 'No especificada';
+      const nombreCongregacion = oradorOption.dataset.congregacionNombre || "";
+      const circuitoCongregacion =
+        oradorOption.dataset.congregacionCircuito || "";
+      const displayText = `${nombreCongregacion}${
+        circuitoCongregacion ? ` (${circuitoCongregacion})` : ""
+      }`;
+
+      congregacionOrigenDisplay.textContent = displayText || "No especificada";
       congregacionOrigenInput.value = oradorOption.dataset.congregacionId;
     } else {
-      congregacionOrigenDisplay.textContent = 'Seleccione un orador';
-      congregacionOrigenInput.value = '';
+      congregacionOrigenDisplay.textContent = "Seleccione un orador";
+      congregacionOrigenInput.value = "";
     }
   };
-  
+
   // Función para actualizar la visibilidad de los campos según el tipo de movimiento
   const actualizarCamposPorTipoMovimiento = () => {
     const tipoMovimiento = tipoMovimientoSelect.value;
-    
+
     // Actualizar la congregación de origen cuando cambia el orador
     actualizarCongregacionOrigen();
-    
+
     // Mostrar/ocultar campos según el tipo de movimiento
     switch (tipoMovimiento) {
-      case 'saliente':
+      case "saliente":
         // Para saliente, mostrar destino como requerido
         congregacionDestinoSelect.required = true;
         break;
-      case 'entrante':
+      case "entrante":
         // Para entrante, mostrar origen como requerido
         // La congregación de origen ya está establecida por el orador
         break;
-      case 'interno':
+      case "interno":
       default:
         // Para interno, no se requiere destino
         congregacionDestinoSelect.required = false;
         break;
     }
   };
-  
+
   // Configurar eventos
-  tipoMovimientoSelect.addEventListener('change', actualizarCamposPorTipoMovimiento);
-  oradorSelect.addEventListener('change', actualizarCamposPorTipoMovimiento);
-  
+  tipoMovimientoSelect.addEventListener(
+    "change",
+    actualizarCamposPorTipoMovimiento
+  );
+  oradorSelect.addEventListener("change", actualizarCamposPorTipoMovimiento);
+
   // Configurar evento para eliminar arreglo
-  const btnEliminar = arregloElement.querySelector('.btn-eliminar-arreglo');
+  const btnEliminar = arregloElement.querySelector(".btn-eliminar-arreglo");
   if (btnEliminar) {
-    btnEliminar.addEventListener('click', (e) => {
+    btnEliminar.addEventListener("click", (e) => {
       e.preventDefault();
-      if (confirm('¿Está seguro de que desea eliminar este arreglo?')) {
+      if (confirm("¿Está seguro de que desea eliminar este arreglo?")) {
         // Si es un arreglo existente, marcar para eliminación
         if (!esNuevo) {
-          const inputEliminado = document.createElement('input');
-          inputEliminado.type = 'hidden';
-          inputEliminado.name = 'arreglos_eliminados';
+          const inputEliminado = document.createElement("input");
+          inputEliminado.type = "hidden";
+          inputEliminado.name = "arreglos_eliminados";
           inputEliminado.value = arreglo.id;
           form.appendChild(inputEliminado);
-          arregloElement.style.display = 'none'; // Ocultar en lugar de eliminar
+          arregloElement.style.display = "none"; // Ocultar en lugar de eliminar
         } else {
           arregloElement.remove(); // Eliminar si es un arreglo nuevo
         }
-        
+
         // Mostrar mensaje si no quedan arreglos
-        if (document.querySelectorAll('.arreglo-card:not([style*="display: none"])').length === 0) {
-          document.getElementById('sinArreglosMensaje').style.display = 'block';
+        if (
+          document.querySelectorAll(
+            '.arreglo-card:not([style*="display: none"])'
+          ).length === 0
+        ) {
+          document.getElementById("sinArreglosMensaje").style.display = "block";
         }
       }
     });
   }
-  
+
   // Inicializar los campos según el tipo de movimiento
   actualizarCamposPorTipoMovimiento();
-  
+
   // Retornar el elemento del arreglo creado
   return arregloElement;
 }
@@ -775,163 +805,279 @@ function agregarArregloAlFormulario(arreglo, index, oradores, congregaciones, bo
 // Función auxiliar para formatear fecha para input datetime-local
 function formatearFechaParaInput(fecha) {
   const d = new Date(fecha);
-  const pad = (num) => num.toString().padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const pad = (num) => num.toString().padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
+    d.getHours()
+  )}:${pad(d.getMinutes())}`;
 }
 
 // Función para configurar los eventos del modal
-function configurarEventosModal(programa) {
-  // Configurar el formulario
-  const form = document.getElementById('arregloForm');
-  if (form) {
-    form.onsubmit = (e) => {
+function configurarEventosModal(programa = {}) {
+  // Configurar botón de guardar programa
+  const btnGuardar = document.getElementById("btnGuardarPrograma");
+  if (btnGuardar) {
+    // Remover todos los eventos existentes del botón
+    const newBtnGuardar = btnGuardar.cloneNode(true);
+    btnGuardar.parentNode.replaceChild(newBtnGuardar, btnGuardar);
+    
+    // Cambiar el tipo del botón a 'button' para evitar el envío del formulario
+    newBtnGuardar.type = 'button';
+    
+    // Agregar un solo manejador de eventos
+    newBtnGuardar.onclick = async (e) => {
       e.preventDefault();
-      guardarArreglo();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      
+      // Deshabilitar el botón para evitar múltiples clics
+      newBtnGuardar.disabled = true;
+      newBtnGuardar.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Guardando...';
+      
+      try {
+        await guardarPrograma();
+      } finally {
+        // Restaurar el botón después de guardar o en caso de error
+        newBtnGuardar.disabled = false;
+        newBtnGuardar.innerHTML = '<i class="fas fa-save me-1"></i> Guardar Programa';
+      }
     };
   }
 
-  // Configurar botón de guardar
-  const btnGuardar = document.getElementById('btnGuardar');
-  if (btnGuardar) {
-    btnGuardar.onclick = guardarArreglo;
+  // Configurar botón de eliminar si existe
+  const btnEliminar = document.getElementById("btnEliminar");
+  if (btnEliminar && programa.id) {
+    btnEliminar.onclick = () => eliminarArreglo(programa.id);
   }
 
-  // Configurar botón de eliminar si existe
-  const btnEliminar = document.getElementById('btnEliminar');
-  if (btnEliminar && arreglo.id) {
-    btnEliminar.onclick = () => {
-      if (confirm('¿Está seguro de que desea eliminar este arreglo?')) {
-        eliminarArreglo(arreglo.id);
-      }
+  // Configurar botón para agregar nuevo arreglo
+  const btnAgregarArreglo = document.getElementById("btnAgregarArreglo");
+  if (btnAgregarArreglo) {
+    btnAgregarArreglo.onclick = async () => {
+      // Obtener datos necesarios para el nuevo arreglo
+      const [oradores, congregaciones, bosquejos] = await Promise.all([
+        obtenerOradores(),
+        obtenerCongregaciones(),
+        obtenerBosquejos(),
+      ]);
+
+      // Crear un nuevo arreglo vacío
+      const nuevoArreglo = {
+        tipo_movimiento: "saliente",
+        orador_id: "",
+        bosquejo_id: "",
+        congregacion_id: "",
+        observaciones: "",
+      };
+
+      // Obtener el índice para el nuevo arreglo
+      const index = document.querySelectorAll(".arreglo-card").length;
+
+      // Agregar el nuevo arreglo al formulario
+      agregarArregloAlFormulario(
+        nuevoArreglo,
+        index,
+        oradores,
+        congregaciones,
+        bosquejos
+      );
     };
   }
 }
 
-// Guardar arreglo (crear o actualizar)
-async function guardarArreglo() {
+// Guardar programa con sus arreglos
+async function guardarPrograma() {
   try {
-    const form = document.getElementById("arregloForm");
-    if (!form) return;
-
-    const formData = new FormData(form);
-    const arregloData = Object.fromEntries(formData.entries());
-
-    // Obtener valores de los selectores
-    const oradorId = document.getElementById('oradorSelect').value;
-    const bosquejoId = document.getElementById('bosquejoSelect').value;
-    const congregacionDestinoId = document.getElementById('congregacion_destino_id').value;
+    // Obtener datos del formulario del programa
+    const programaId = document.getElementById("programaId")?.value || "";
+    const fechaHora = document.getElementById("fechaHora")?.value;
+    const tipoPrograma = document.getElementById("tipoPrograma")?.value;
 
     // Validar campos requeridos
-    if (!oradorId || !bosquejoId || !congregacionDestinoId) {
+    if (!fechaHora || !tipoPrograma) {
+      const mensaje = !fechaHora ? 'La fecha y hora son requeridas' : 'El tipo de programa es requerido';
       mostrarNotificacion(
-        "Por favor complete todos los campos requeridos",
+        `Por favor complete todos los campos requeridos del programa: ${mensaje}`,
         "error"
       );
       return;
     }
 
-    // Combinar fecha y hora en un solo campo datetime
-    const [anio, mes, dia] = arregloData.fecha.split("-");
-    const [horas, minutos] = arregloData.hora.split(":");
+    // Obtener los arreglos del formulario
+    const arreglos = [];
+    const arregloElements = document.querySelectorAll(".arreglo-card");
 
-    // Crear fecha con la zona horaria local
-    const fechaHora = new Date(anio, mes - 1, dia, horas, minutos);
+    for (const element of arregloElements) {
+      const index = Array.from(arregloElements).indexOf(element);
+      
+      // Usar selectores basados en la estructura real del formulario
+      const tipoMovimiento = element.querySelector('select[name="tipo_movimiento"]')?.value;
+      const oradorId = element.querySelector('select[name="orador_id"]')?.value;
+      const bosquejoId = element.querySelector('select[name="bosquejo_id"]')?.value;
+      const congregacionDestinoId = element.querySelector('select[name="congregacion_destino_id"]')?.value;
+      const observaciones = element.querySelector('textarea[name="observaciones"]')?.value || '';
+      
 
-    // Preparar datos para guardar
-    const datosGuardar = {
-      fecha: fechaHora.toISOString(),
-      orador_id: oradorId,
-      bosquejo_id: bosquejoId,
-      congregacion_destino_id: congregacionDestinoId,
-      descripcion: arregloData.descripcion || ''
+      // Validar campos requeridos del arreglo
+      if (!tipoMovimiento || !oradorId || !bosquejoId) {
+        mostrarNotificacion(
+          `Por favor complete todos los campos requeridos en el arreglo #${
+            parseInt(index) + 1
+          }`,
+          "error"
+        );
+        return;
+      }
+      
+      // Solo requerir congregación de destino si es un movimiento de salida
+      if (tipoMovimiento === 'saliente' && !congregacionDestinoId) {
+        mostrarNotificacion(
+          `Por favor seleccione una congregación de destino para el arreglo #${
+            parseInt(index) + 1
+          }`,
+          "error"
+        );
+        return;
+      }
+
+      arreglos.push({
+        tipo_movimiento: tipoMovimiento,
+        orador_id: oradorId,
+        bosquejo_id: bosquejoId,
+        congregacion_destino_id: congregacionDestinoId,
+        observaciones: observaciones,
+      });
+    }
+
+    if (arreglos.length === 0) {
+      mostrarNotificacion("Debe agregar al menos un arreglo", "error");
+      return;
+    }
+
+    // Crear objeto con los datos del programa
+    const programaData = {
+      fecha: new Date(fechaHora).toISOString(),
+      tipo: tipoPrograma,
+      organizacion_id: 1 // Asegúrate de establecer el ID de la organización correcto
     };
 
     // Si es una actualización, agregar el ID
-    if (arregloData.id) {
-      datosGuardar.id = arregloData.id;
+    if (programaId) {
+      programaData.id = programaId;
     }
 
-    // Convertir a formato ISO para almacenar en la base de datos
-    arregloData.fecha = fechaHora.toISOString();
-
-    // Eliminar el campo de hora temporal que ya no necesitamos
-    delete arregloData.hora;
-
-    // Obtener el ID de la organización del usuario actual
-    const user = supabase.auth.user();
-    if (!user) throw new Error("Usuario no autenticado");
-
-    const { data: usuario, error: errorUsuario } = await supabase
-      .from("users")
-      .select("organizacion_id")
-      .eq("id", user.id)
+    // Guardar el programa en la base de datos
+    const { data: programaGuardado, error: programaError } = await supabase
+      .from("programa")
+      .upsert(programaData, { onConflict: "id" })
+      .select()
       .single();
 
-    if (errorUsuario || !usuario)
-      throw new Error("Error al obtener la organización del usuario");
+    if (programaError) throw programaError;
 
-    // Asignar la organización al arreglo
-    arregloData.organizacion_id = usuario.organizacion_id;
+    // Obtener el ID del programa (nuevo o existente)
+    const programaIdGuardado = programaGuardado.id;
+    
+    // Si es una actualización, eliminar los arreglos antiguos primero
+    if (programaId) {
+      const { error: deleteError } = await supabase
+        .from("arreglo")
+        .delete()
+        .eq("programa_id", programaIdGuardado);
 
-    // Convertir valores vacíos a null
-    Object.keys(arregloData).forEach((key) => {
-      if (arregloData[key] === "") arregloData[key] = null;
-    });
-
-    // Guardar el arreglo
-    let resultado;
-    if (arregloData.id) {
-      // Actualizar arreglo existente
-      const id = arregloData.id;
-      delete arregloData.id;
-
-      const { data, error } = await db.actualizar("arreglos", id, arregloData);
-      if (error) throw error;
-
-      resultado = data;
-      mostrarNotificacion("Arreglo actualizado correctamente", "success");
-    } else {
-      // Crear nuevo arreglo
-      const { data, error } = await db.insertar("arreglos", arregloData);
-      if (error) throw error;
-
-      resultado = data;
-      mostrarNotificacion("Arreglo creado correctamente", "success");
+      if (deleteError) throw deleteError;
     }
+
+    // Guardar cada arreglo en la tabla de arreglos
+    for (const arreglo of arreglos) {
+      const { error: arregloError } = await supabase
+        .from('arreglo')
+        .insert({
+          programa_id: programaIdGuardado,
+          tipo_movimiento: arreglo.tipo_movimiento,
+          orador_id: arreglo.orador_id,
+          bosquejo_id: arreglo.bosquejo_id,
+          congregacion_destino_id: arreglo.congregacion_destino_id,
+          descripcion: arreglo.observaciones || '',
+          organizacion_id: 1 // Asegúrate de establecer el ID de la organización correcto
+        });
+      
+      if (arregloError) throw arregloError;
+    }
+    
+    // Obtener los arreglos recién guardados para mostrarlos
+    const { error: arreglosGuardadosError } = await supabase
+      .from('arreglo')
+      .select('*')
+      .eq('programa_id', programaIdGuardado);
+      
+    if (arreglosGuardadosError) {
+      // Solo mostramos notificación al usuario, no es un error crítico
+    }
+    
+    // Cerrar el modal y recargar los datos
+    const modal = bootstrap.Modal.getInstance(document.getElementById('arregloModal'));
+    if (modal) modal.hide();
+
+    // Recargar los arreglos en el calendario
+    await cargarArreglos();
+    
+    // Mostrar notificación de éxito
+    mostrarNotificacion('Programa guardado correctamente', 'success');
+  } catch (error) {
+    mostrarNotificacion(
+      `Error al guardar el programa: ${error.message}`,
+      "error"
+    );
+    throw error;
+  }
+}
+
+// Eliminar programa y sus arreglos
+async function eliminarArreglo(id) {
+  try {
+    if (
+      !confirm(
+        "¿Está seguro de que desea eliminar este programa y todos sus arreglos asociados?"
+      )
+    ) {
+      return;
+    }
+
+    // Eliminar primero los arreglos asociados al programa
+    const { error: errorArreglos } = await supabase
+      .from("arreglo")
+      .delete()
+      .eq("programa_id", id);
+
+    if (errorArreglos) throw errorArreglos;
+
+    // Luego eliminar el programa
+    const { error: errorPrograma } = await supabase
+      .from("programa")
+      .delete()
+      .eq("id", id);
+
+    if (errorPrograma) throw errorPrograma;
 
     // Actualizar el calendario
     await cargarArreglos();
 
-    // Cerrar el modal
+    // Cerrar el modal si está abierto
     const modal = bootstrap.Modal.getInstance(
       document.getElementById("arregloModal")
     );
     if (modal) modal.hide();
 
-    return resultado;
-  } catch (error) {
-    console.error("Error al guardar el arreglo:", error);
     mostrarNotificacion(
-      "Error al guardar el arreglo: " + error.message,
+      "Programa y sus arreglos eliminados correctamente",
+      "success"
+    );
+  } catch (error) {
+    console.error("Error al eliminar el programa:", error);
+    mostrarNotificacion(
+      `Error al eliminar el programa: ${error.message}`,
       "error"
     );
-  }
-}
-
-// Eliminar arreglo
-async function eliminarArreglo(id) {
-  try {
-    const { error } = await db.eliminar("arreglos", id);
-
-    if (error) throw error;
-
-    // Actualizar el calendario
-    await cargarArreglos();
-
-    mostrarNotificacion("Arreglo eliminado correctamente", "success");
-  } catch (error) {
-    console.error("Error al eliminar el arreglo:", error);
-    mostrarNotificacion("Error al eliminar el arreglo", "error");
   }
 }
 
@@ -941,7 +1087,8 @@ async function obtenerOradores() {
     // Primero obtenemos los oradores con información de sus congregaciones
     const { data: oradores, error: oradoresError } = await supabase
       .from("oradores")
-      .select(`
+      .select(
+        `
         *,
         publicadores:publicadores (
           id,
@@ -952,7 +1099,8 @@ async function obtenerOradores() {
             circuito
           )
         )
-      `)
+      `
+      )
       .order("id", { ascending: true });
 
     if (oradoresError) throw oradoresError;
@@ -961,7 +1109,7 @@ async function obtenerOradores() {
     return oradores.map((orador) => {
       const publicador = orador.publicadores;
       const congregacion = publicador?.congregacion || {};
-      
+
       return {
         id: orador.id,
         nombre: publicador?.nombre || "Orador",
@@ -969,7 +1117,7 @@ async function obtenerOradores() {
         publicador_id: orador.publicador_id,
         congregacion_id: congregacion.id || null,
         congregacion_nombre: congregacion.nombre || "Sin congregación",
-        congregacion_circuito: congregacion.circuito || ""
+        congregacion_circuito: congregacion.circuito || "",
       };
     });
   } catch (error) {
@@ -979,7 +1127,8 @@ async function obtenerOradores() {
     try {
       const { data: oradoresBasicos, error: basicoError } = await supabase
         .from("oradores")
-        .select(`
+        .select(
+          `
           id, 
           publicador_id,
           publicadores:publicadores (
@@ -987,7 +1136,8 @@ async function obtenerOradores() {
             nombre,
             congregacion_id
           )
-        `)
+        `
+        )
         .order("id", { ascending: true });
 
       if (!basicoError && oradoresBasicos) {
@@ -998,7 +1148,7 @@ async function obtenerOradores() {
           publicador_id: o.publicador_id,
           congregacion_id: o.publicadores?.congregacion_id || null,
           congregacion_nombre: "Sin información",
-          congregacion_circuito: ""
+          congregacion_circuito: "",
         }));
       }
     } catch (e) {
@@ -1141,24 +1291,29 @@ function configurarEventos() {
       }
     });
 
-  // Configurar botón de cierre de sesión
-  const logoutButton = document.getElementById("app-logout-button");
-  if (logoutButton) {
-    logoutButton.addEventListener("click", (e) => {
-      e.preventDefault();
-      // Limpiar la sesión
-      localStorage.removeItem("user");
-      // Redirigir a la página de inicio de sesión
-      window.location.href = "../index.html";
-    });
-  }
-}
+  // Manejador para los botones de acción en la lista de próximos eventos
+  document
+    .querySelector(".event-list")
+    ?.addEventListener("click", async (e) => {
+      const btn = e.target.closest("[data-action]");
+      if (!btn) return;
 
-// Inicializar la página si estamos en la sección de arreglos
-if (window.location.pathname.endsWith("arreglos.html")) {
-  document.addEventListener("DOMContentLoaded", () => {
-    inicializarCalendario();
-    cargarArreglos();
-    configurarEventos();
-  });
+      const action = btn.getAttribute("data-action");
+      const id = btn.getAttribute("data-id");
+
+      if (action === "view" && id) {
+        e.preventDefault();
+        const { data: arreglo, error } = await db.obtenerPorId("arreglo", id);
+
+        if (error) {
+          console.error("Error al cargar el arreglo:", error);
+          mostrarNotificacion("Error al cargar el arreglo", "error");
+          return;
+        }
+
+        if (arreglo) {
+          mostrarModalArreglo(arreglo);
+        }
+      }
+    });
 }
