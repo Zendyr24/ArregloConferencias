@@ -13,6 +13,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
     <link rel="stylesheet" href="../style.css" />
+    <link rel="stylesheet" href="../assets/css/asignaciones.css" />
   </head>
   <body>
     <div class="dashboard">
@@ -121,18 +122,6 @@
 
       <!-- Main Content -->
       <main class="main-content" id="mainContent">
-        <div class="page-header">
-          <h2>Gestión de Asignaciones</h2>
-          <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-              <li class="breadcrumb-item">
-                <a href="../index.html">Inicio</a>
-              </li>
-              <li class="breadcrumb-item active">Asignaciones</li>
-            </ol>
-          </nav>
-        </div>
-
         <div class="content-section">
           <div class="section-header">
             <h3>Asignaciones Pendientes</h3>
@@ -215,13 +204,20 @@
             <!-- More assignment cards -->
           </div>
 
-          <div class="pagination">
-            <button class="btn btn-sm btn-outline" disabled>
-              <i class="fas fa-chevron-left"></i> Anterior
+          <!-- Controles de paginación -->
+          <div class="pagination-container">
+            <button class="page-nav" id="pagination-prev" disabled>
+              <i class="fas fa-chevron-left"></i>
             </button>
-            <span>Página 1 de 3</span>
-            <button class="btn btn-sm btn-outline">
-              Siguiente <i class="fas fa-chevron-right"></i>
+
+            <div class="pagination-info">
+              <span id="pagination-start">0</span> -
+              <span id="pagination-end">0</span> de
+              <span id="pagination-total">0</span>
+            </div>
+
+            <button class="page-nav" id="pagination-next" disabled>
+              <i class="fas fa-chevron-right"></i>
             </button>
           </div>
         </div>

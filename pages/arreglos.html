@@ -17,6 +17,7 @@
       href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css"
     />
     <link rel="stylesheet" href="../style.css" />
+    <link rel="stylesheet" href="../assets/css/arreglos.css" />
   </head>
   <body>
     <div class="dashboard">
@@ -122,41 +123,10 @@
           </ul>
         </nav>
       </aside>
-
       <!-- Main Content -->
       <main class="main-content" id="mainContent">
-        <div class="page-header">
-          <h2>Calendario de Arreglos</h2>
-          <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-              <li class="breadcrumb-item">
-                <a href="../index.html">Inicio</a>
-              </li>
-              <li class="breadcrumb-item active">Arreglos</li>
-            </ol>
-          </nav>
-        </div>
-
         <div class="content-section">
-          <div class="section-header">
-            <div class="view-options">
-              <button class="btn btn-outline active">Mes</button>
-              <button class="btn btn-outline">Semana</button>
-              <button class="btn btn-outline">Día</button>
-              <button class="btn btn-outline">Lista</button>
-            </div>
-            <div class="actions">
-              <button class="btn btn-outline">
-                <i class="fas fa-print"></i> Imprimir
-              </button>
-              <button class="btn btn-primary">
-                <i class="fas fa-plus"></i> Nuevo Arreglo
-              </button>
-            </div>
-          </div>
-
           <div id="calendar"></div>
-
           <div class="upcoming-events">
             <h3>Próximos Eventos</h3>
             <div class="event-list">
@@ -196,35 +166,162 @@
     <!-- FullCalendar -->
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/es.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Modal de Programa y Arreglos -->
+    <div class="modal fade" id="arregloModal" tabindex="-1" role="dialog" aria-labelledby="arregloModalTitle" aria-hidden="true">
+      <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 class="modal-title h5" id="arregloModalTitle">
+              <i class="fas fa-calendar-alt me-2"></i>
+              <span id="modalTitulo">Nuevo Programa</span>
+            </h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar">
+              <span class="sr-only">Cerrar</span>
+              <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="modal-body p-0">
+            <div class="bg-primary text-white p-3">
+              <h2 class="h5 mb-0 text-center">
+                <i class="far fa-calendar-check me-2"></i>Información del Programa
+              </h2>
+            </div>
+            <form id="programaForm" onsubmit="event.preventDefault(); return false;" class="p-4">
+              <input type="hidden" id="programaId">
+              
+              <!-- Contenido del Programa -->
+              <div class="d-flex flex-column align-items-center">
+                <div class="w-100" style="max-width: 800px;">
+                  <div class="row justify-content-center">
+                    <!-- Fecha y Hora -->
+                    <div class="col-md-6 mb-4">
+                      <div class="text-center">
+                        <label for="fechaHora" class="form-label fw-medium d-block mb-2">
+                          <i class="far fa-calendar me-1"></i> Fecha y Hora <span class="text-danger">*</span>
+                        </label>
+                        <input type="datetime-local" class="form-control text-center" id="fechaHora" required style="max-width: 300px; margin: 0 auto;">
+                      </div>
+                    </div>
+                    
+                    <!-- Tipo de Programa -->
+                    <div class="col-md-6 mb-4">
+                      <div class="text-center">
+                        <label for="tipoPrograma" class="form-label fw-medium d-block mb-2">
+                          <i class="fas fa-tag me-1"></i> Tipo de Programa
+                        </label>
+                        <select class="form-select text-center" id="tipoPrograma" style="max-width: 300px; margin: 0 auto;">
+                          <option value="reunion">Reunión de fin de semana</option>
+                          <option value="asamblea">Asamblea de Circuito</option>
+                          <option value="especial">Evento Especial</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </form>
+
+            <!-- Lista de Arreglos -->
+            <div class="arreglos-section p-4">
+              <div class="section-header">
+                <h5 class="section-title">
+                  <i class="fas fa-exchange-alt"></i>
+                  <span>Arreglos</span>
+                </h5>
+                <button type="button" class="btn-add" id="btnAgregarArreglo">
+                  <i class="fas fa-plus"></i> Añadir Arreglo
+                </button>
+              </div>
+              <div class="arreglos-content">
+                <div id="arreglosContainer">
+                  <!-- Los arreglos se agregarán dinámicamente aquí -->
+                  <div class="empty-state" id="sinArreglosMensaje">
+                    <i class="fas fa-inbox"></i>
+                    <p>No hay arreglos agregados. Haz clic en el botón para agregar uno nuevo.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Plantilla de Arreglo (oculta) -->
+            <template id="arregloTemplate">
+              <div class="arreglo-card card h-100" data-arreglo-index="{{index}}">
+                <div class="card-header">
+                  <h5 class="mb-0">
+                    <i class="fas fa-user-tie me-2"></i>
+                    Arreglo #<span class="numero">1</span>
+                  </h5>
+                </div>
+                
+                <div class="card-body">
+                  <div class="form-grid">
+                    <!-- Fila 1 -->
+                    <div class="form-group">
+                      <label class="form-label">Tipo de Movimiento <span class="text-danger">*</span></label>
+                      <select class="form-select tipo-movimiento" required>
+                        <option value="saliente">Orador Saliente</option>
+                        <option value="entrante">Orador Entrante</option>
+                        <option value="interno">Presentación Interna</option>
+                      </select>
+                    </div>
+                    
+                    <div class="form-group">
+                      <label class="form-label">Orador <span class="text-danger">*</span></label>
+                      <select class="form-select orador-select" required>
+                        <option value="">Seleccionar orador</option>
+                      </select>
+                    </div>
+                    
+                    <div class="form-group">
+                      <label class="form-label">Bosquejo <span class="text-danger">*</span></label>
+                      <select class="form-select bosquejo-select" required>
+                        <option value="">Seleccionar bosquejo</option>
+                      </select>
+                    </div>
+                    
+                    <!-- Fila 2 -->
+                    <div class="form-group congregacion-destino-container">
+                      <label class="form-label">Congregación de Destino</label>
+                      <select class="form-select congregacion-destino">
+                        <option value="">Seleccionar congregación</option>
+                      </select>
+                    </div>
+                    
+                    <div class="form-group full-width">
+                      <label class="form-label">Notas</label>
+                      <input type="text" class="form-control notas" placeholder="Notas adicionales...">
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="card-footer text-center">
+                  <button type="button" class="btn btn-outline-danger btn-sm btn-remove" title="Eliminar arreglo">
+                    <i class="fas fa-trash me-1"></i> Eliminar Arreglo
+                  </button>
+                </div>
+              </div>
+            </template>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+              <i class="fas fa-times me-1"></i> Cancelar
+            </button>
+            <button type="button" class="btn btn-danger me-auto" id="btnEliminarPrograma" style="display: none;">
+              <i class="fas fa-trash me-1"></i> Eliminar Programa
+            </button>
+            <button type="button" class="btn btn-primary" id="btnGuardarPrograma">
+              <i class="fas fa-save me-1"></i> Guardar Programa
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Nuestros scripts -->
     <script type="module" src="../scripts/app.js"></script>
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        var calendarEl = document.getElementById("calendar");
-        var calendar = new FullCalendar.Calendar(calendarEl, {
-          initialView: "dayGridMonth",
-          locale: "es",
-          headerToolbar: {
-            left: "prev,next today",
-            center: "title",
-            right: "dayGridMonth,timeGridWeek,timeGridDay,listWeek",
-          },
-          events: [
-            {
-              title: "Conferencia de Distrito",
-              start: "2025-09-15T10:00:00",
-              end: "2025-09-15T15:00:00",
-              className: "event-conference",
-            },
-            // More events...
-          ],
-          eventClick: function (info) {
-            // Handle event click
-            console.log("Event: " + info.event.title);
-          },
-        });
-        calendar.render();
-      });
-    </script>
+    <script type="module" src="../scripts/arreglos.js"></script>
     <script type="module" src="../scripts/theme.js"></script>
     <script type="module" src="../scripts/auth/logout-handler.js"></script>
   </body>

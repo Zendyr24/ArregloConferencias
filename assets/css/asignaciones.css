@@ -1,0 +1,277 @@
+/* Estilos específicos para la página de Asignaciones */
+
+/* Contenedor principal de asignaciones */
+.assignments-container {
+  display: grid;
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-lg);
+}
+
+/* Sección de filtros */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  background-color: var(--color-surface);
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  min-width: 200px;
+  flex: 1;
+}
+
+.filter-group label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+/* Grid de tarjetas de asignación */
+.assignments-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-md);
+}
+
+/* Tarjeta de asignación */
+.assignment-card {
+  background-color: var(--color-surface);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: var(--transition);
+  border: 1px solid var(--color-border);
+}
+
+.assignment-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.assignment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-bg-secondary);
+}
+
+.assignment-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.assignment-body {
+  padding: var(--spacing-md);
+}
+
+.assignment-body h4 {
+  margin: 0 0 var(--spacing-md) 0;
+  color: var(--color-text);
+  font-size: var(--font-size-lg);
+}
+
+.assignment-detail {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.assignment-detail i {
+  width: 20px;
+  color: var(--color-primary);
+  text-align: center;
+}
+
+/* Estilos para los badges de estado */
+.badge {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: 20px;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge.bg-warning {
+  background-color: var(--color-warning-light);
+  color: var(--color-warning-dark);
+}
+
+.badge.bg-success {
+  background-color: var(--color-success-light);
+  color: var(--color-success-dark);
+}
+
+.badge.bg-danger {
+  background-color: var(--color-error-light);
+  color: var(--color-error-dark);
+}
+
+/* Botones de acción */
+.btn-icon {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: var(--spacing-xs);
+  border-radius: 4px;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon:hover {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-primary);
+}
+
+.btn-icon:active {
+  transform: scale(0.95);
+}
+
+/* Estilos para pantallas pequeñas */
+@media (max-width: 768px) {
+  .assignments-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .filters {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+  
+  .filter-group {
+    width: 100%;
+  }
+}
+
+/* Estilos para el modal de nueva asignación */
+.modal-content {
+  border: none;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+  background-color: var(--color-primary);
+  color: white;
+  border-bottom: none;
+  padding: var(--spacing-md) var(--spacing-lg);
+}
+
+.modal-title {
+  font-weight: 600;
+}
+
+.modal-body {
+  padding: var(--spacing-lg);
+}
+
+.modal-footer {
+  border-top: 1px solid var(--color-border);
+  padding: var(--spacing-md) var(--spacing-lg);
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+}
+
+/* Mejoras de accesibilidad */
+button:focus-visible,
+[tabindex="0"]:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Transiciones suaves para interacciones */
+.assignment-card,
+.btn-icon,
+.filter-group select,
+.filter-group input {
+  transition: var(--transition);
+}
+
+/* Estilos para el estado deshabilitado */
+:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Estilos para la paginación móvil */
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: var(--color-surface);
+  border-radius: var(--border-radius);
+  margin-top: 1.5rem;
+}
+
+.pagination-info {
+  margin: 0 1rem;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+/* Ajustes para los botones de navegación */
+.page-nav {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-nav:not(:disabled):hover {
+  background-color: var(--color-bg-secondary);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.page-nav:disabled {
+  color: var(--color-text-disabled);
+  background-color: var(--color-bg-secondary);
+  border-color: var(--color-border);
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+.page-nav i {
+  font-size: 0.95em;
+  transition: transform 0.2s ease;
+  color: inherit;
+}
+
+.page-nav:not(:disabled):hover i {
+  transform: translateX(-1px);
+}
+
+.page-nav:not(:disabled):hover:last-child i {
+  transform: translateX(1px);
+}
